@@ -115,9 +115,7 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Flash Deals - COMMENTED OUT FOR NOW */}
-      {/* Flash deals will be managed through the Admin Dashboard. Uncomment when ready. */}
-      {/* 
+      {/* Flash Deals */}
       <section className="bg-destructive/5 py-10">
         <div className="container">
           <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
@@ -129,11 +127,15 @@ const Index = () => {
             <Link to="/shop?deals=true" className="text-sm text-primary flex items-center gap-1 hover:underline">See all <ChevronRight className="w-4 h-4" /></Link>
           </div>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {flashDeals.slice(0, 5).map((p) => <ProductCard key={p.id} product={p} />)}
+            {products.filter(p => p.badge === 'FLASH DEAL').slice(0, 5).map((p) => <ProductCard key={p.id} product={p} />)}
+            {products.filter(p => p.badge === 'FLASH DEAL').length === 0 && (
+              <div className="col-span-full py-10 text-center text-muted-foreground">
+                No active flash deals at the moment. Check back later!
+              </div>
+            )}
           </div>
         </div>
       </section>
-      */}
 
       {/* Loyalty Banner */}
       {/* Removed: LoyaltyBanner */}

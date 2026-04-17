@@ -67,9 +67,10 @@ const ProductCard = ({ product }: { product: Product }) => {
           </div>
           <button
             onClick={() => addItem({ id: product.id, name: product.name, price: product.price, image: product.image })}
-            className="w-8 h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:bg-emerald-light transition-colors"
+            className="w-9 h-9 sm:w-8 sm:h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:bg-emerald-light transition-colors"
+            aria-label="Add to cart"
           >
-            <ShoppingCart className="w-4 h-4" />
+            <ShoppingCart className="w-5 h-5 sm:w-4 sm:h-4" />
           </button>
         </div>
       </div>

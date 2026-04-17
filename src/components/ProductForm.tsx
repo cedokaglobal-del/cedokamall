@@ -6,7 +6,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card } from '@/components/ui/card';
 import { ProductFormData, Product } from '@/types/product';
-import { X } from 'lucide-react';
+import { X, Paperclip } from 'lucide-react';
 
 interface ProductFormProps {
   product?: Product;
@@ -41,7 +41,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
     originalPrice: product?.originalPrice || 0,
     category: product?.category || '',
     description: product?.description || '',
-    inStock: product?.inStock || 0,
+    inStock: product?.inStock !== undefined ? product.inStock : 1,
     seller: product?.seller || '',
     image: product?.image || '',
     images: product?.images || (product?.image ? [product.image] : []),
@@ -189,6 +189,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
           <Input
             id="price"
             type="number"
+            min="0"
             value={formData.price}
             onChange={(e) => handleChange('price', Number(e.target.value))}
             placeholder="0.00"
@@ -204,6 +205,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
           <Input
             id="originalPrice"
             type="number"
+            min="0"
             value={formData.originalPrice}
             onChange={(e) => handleChange('originalPrice', Number(e.target.value))}
             placeholder="0.00"
@@ -217,9 +219,10 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
           <Input
             id="inStock"
             type="number"
+            min="1"
             value={formData.inStock}
             onChange={(e) => handleChange('inStock', Number(e.target.value))}
-            placeholder="0"
+            placeholder="1"
             className={errors.inStock ? 'border-destructive' : ''}
             disabled={isLoading}
           />
@@ -282,20 +285,34 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
 
       {/* Device Image Upload (Max 4) */}
       <div>
-        <Label htmlFor="imageUpload">Product Images (Max 4) *</Label>
-        <div className="flex items-center gap-2 mt-1">
-          <Input
-            id="imageUpload"
-            type="file"
-            accept="image/*"
-            multiple
-            onChange={handleImageUpload}
-            disabled={isLoading || (formData.images && formData.images.length >= 4)}
-            className="flex-1"
-          />
-          <span className="text-sm text-muted-foreground whitespace-nowrap">
-            {(formData.images?.length || 0)} / 4 uploaded
-          </span>
+        <div className="mt-1">
+          <label 
+            htmlFor="imageUpload" 
+            className={`flex flex-col items-center justify-center w-full h-32 border-2 border-dashed rounded-lg cursor-pointer hover:bg-muted/50 transition-colors ${errors.images ? 'border-destructive' : 'border-muted-foreground/20'}`}
+          >
+            <div className="flex flex-col items-center justify-center pt-5 pb-6">
+              <Paperclip className="w-8 h-8 text-muted-foreground mb-2" />
+              <p className="mb-2 text-sm text-muted-foreground">
+                <span className="font-semibold text-primary">Click to upload</span> or drag and drop
+              </p>
+              <p className="text-xs text-muted-foreground">PNG, JPG or WebP (MAX. 800x800px)</p>
+            </div>
+            <input
+              id="imageUpload"
+              type="file"
+              accept="image/*"
+              multiple
+              onChange={handleImageUpload}
+              disabled={isLoading || (formData.images && formData.images.length >= 4)}
+              className="hidden"
+            />
+          </label>
+          <div className="flex justify-between items-center mt-2">
+            <span className="text-xs text-muted-foreground italic">Add up to 4 images</span>
+            <span className="text-sm font-medium">
+              {(formData.images?.length || 0)} / 4 uploaded
+            </span>
+          </div>
         </div>
         {errors.images && <p className="text-sm text-destructive mt-1">{errors.images}</p>}
         {formData.images && formData.images.length > 0 && (
