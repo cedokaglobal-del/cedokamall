@@ -47,7 +47,9 @@ export const categories = [
   { name: 'Smart Home', icon: '🏠', count: 1560, slug: 'smart-home', subcategory: 'Smart Living' },
 ];
 
-export const products: Product[] = [
+import { productStore } from '@/store/productStore';
+
+export const initialProducts: Product[] = [
   // Smartphones
   { id: 'e1', name: 'Samsung Galaxy S25 Ultra 256GB', price: 1250000, originalPrice: 1450000, image: 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=400', category: 'smartphones', rating: 4.8, reviews: 342, badge: 'Best Seller', description: 'Experience the future with Samsung\'s flagship smartphone. 200MP camera, S Pen included, titanium frame.', inStock: 24, seller: 'TechHub Lagos', specs: { processor: 'Snapdragon 8 Elite', ram: '16GB', storage: '256GB' }, warranty: '2 Years' },
   { id: 'p1', name: 'iPhone 16 Pro Max 512GB', price: 1950000, originalPrice: 2200000, image: 'https://images.unsplash.com/photo-1592750475338-74b7b21085ab?w=400', category: 'smartphones', rating: 4.9, reviews: 89, badge: 'New Arrival', description: 'Apple\'s most powerful iPhone ever. A18 Pro chip, 48MP camera system.', inStock: 6, seller: 'Apple Authorized NG', specs: { processor: 'A18 Pro', ram: '12GB', storage: '512GB' }, warranty: '2 Years' },
@@ -126,9 +128,25 @@ export const products: Product[] = [
   { id: 'sound3', name: 'Bose SoundLink Color II', price: 185000, image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400', category: 'sound-systems', rating: 4.7, reviews: 234, badge: 'Best Seller', description: 'Portable waterproof speaker with rich sound and long battery life.', inStock: 28, seller: 'SoundWave NG', specs: { power: '20W', batteryLife: '8 hours', waterproof: 'IPX4', connectivity: 'Bluetooth' }, warranty: '1 Year' },
 ];
 
-export const getProductById = (id: string) => products.find(p => p.id === id);
-export const getProductsByCategory = (cat: string) => products.filter(p => p.category === cat);
-export const getFlashDeals = () => products.filter(p => p.originalPrice);
-export const getBestSellers = () => products.filter(p => p.badge === 'Best Seller');
-export const getTrending = () => products.filter(p => p.badge === 'Trending' || p.reviews > 200);
+export const getProducts = () => productStore ? productStore.products : initialProducts;
+export const products = new Proxy(initialProducts, {
+  get(target, prop) {
+    if (!productStore) return target[prop as keyof typeof target];
+    return productStore.products[prop as any];
+  },
+  getOwnPropertyDescriptor(target, prop) {
+    if (!productStore) return Object.getOwnPropertyDescriptor(target, prop);
+    return Object.getOwnPropertyDescriptor(productStore.products, prop);
+  },
+  ownKeys(target) {
+    if (!productStore) return Reflect.ownKeys(target);
+    return Reflect.ownKeys(productStore.products);
+  }
+});
+
+export const getProductById = (id: string) => getProducts().find(p => p.id === id);
+export const getProductsByCategory = (cat: string) => getProducts().filter(p => p.category === cat);
+export const getFlashDeals = () => getProducts().filter(p => p.originalPrice);
+export const getBestSellers = () => getProducts().filter(p => p.badge === 'Best Seller');
+export const getTrending = () => getProducts().filter(p => p.badge === 'Trending' || p.reviews > 200);
 

@@ -6,14 +6,14 @@
 export const SEO_CONFIG = {
   siteTitle: "Cedokamall - Nigeria's Premium Online Marketplace",
   siteDescription: "Shop 50,000+ products with fast Lagos delivery. Electronics, Home Appliances, Accessories & more. Trusted sellers, secure payments, 24-48hr delivery.",
-  siteUrl: process.env.REACT_APP_SITE_URL || "https://cedokamall.com",
+  siteUrl: import.meta.env.VITE_SITE_URL || "https://cedokamall.com",
   siteName: "Cedokamall",
   locale: "en_NG",
   language: "en",
   country: "NG",
   author: "Cedokamall Team",
   email: "support@cedokamall.com",
-  phone: "+234 (0) 801 234 5678",
+  phone: "+2347045851131",
   twitterHandle: "@cedokamall",
   facebookPage: "https://facebook.com/cedokamall"
 };
@@ -98,7 +98,8 @@ export const getOrganizationSchema = () => ({
   address: {
     "@type": "PostalAddress",
     addressCountry: SEO_CONFIG.country,
-    addressRegion: "Lagos"
+    addressRegion: "Lagos",
+    streetAddress: "35, Ailegun Road, Ejigbo"
   }
 });
 

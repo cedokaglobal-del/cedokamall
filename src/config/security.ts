@@ -29,7 +29,7 @@ export const SECURITY_HEADERS = {
 
 // CORS Configuration
 export const CORS_CONFIG = {
-  origin: process.env.REACT_APP_API_URL || "http://localhost:3000",
+  origin: import.meta.env.VITE_API_URL || "http://localhost:3000",
   credentials: true,
   methods: ["GET", "POST", "PUT", "DELETE", "PATCH"],
   allowedHeaders: ["Content-Type", "Authorization"],

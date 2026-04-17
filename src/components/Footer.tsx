@@ -32,9 +32,9 @@ const Footer = () => (
         </h4>
         <p className="text-sm text-primary-foreground/60 mb-4">Everything you need. Delivered in Lagos, built for Nigeria.</p>
         <div className="space-y-2 text-sm text-primary-foreground/60">
-          <p className="flex items-center gap-2"><MapPin className="w-4 h-4" /> 12 Adeola Odeku St, VI, Lagos</p>
-          <p className="flex items-center gap-2"><Phone className="w-4 h-4" /> +234 801 234 5678</p>
-          <p className="flex items-center gap-2"><Mail className="w-4 h-4" /> hello@cedokamall.com</p>
+          <p className="flex items-center gap-2"><MapPin className="w-4 h-4 flex-shrink-0" /> <span className="flex-1">Showroom 1: 35, Ailegun Road, Ejigbo, Lagos<br />Showroom 2: 1, Kola Rewire Street, Ejigbo</span></p>
+          <p className="flex items-center gap-2"><Phone className="w-4 h-4 flex-shrink-0" /> <span className="flex-1">+2347045851131, +2349074190070, 09128817136, +2348069719884</span></p>
+          <p className="flex items-center gap-2"><Mail className="w-4 h-4 flex-shrink-0" /> <span className="flex-1">hello@cedokamall.com</span></p>
         </div>
       </div>
       <div>

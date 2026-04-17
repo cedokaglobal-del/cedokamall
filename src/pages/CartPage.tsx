@@ -44,7 +44,7 @@ const CartPage = () => {
   };
 
   const sendWhatsAppMessage = (message: string) => {
-    const whatsappNumber = '2348012345678'; // Company WhatsApp number
+    const whatsappNumber = '2347045851131'; // Company WhatsApp number
     const encodedMessage = encodeURIComponent(message);
     window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
   };
@@ -74,9 +74,9 @@ const CartPage = () => {
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 💳 PAYMENT DETAILS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Bank: Access Bank
-Account Name: Cedoka Electronics & Gadgets
-Account Number: 1234567890
+Bank: Fidelity Bank
+Account Name: CEDOKA GLOBAL LIMITED
+Account Number: 5080201438
 Amount: ₦${totalAmount.toLocaleString()}
 
 📎 Payment Receipt: ${receiptFileName}`;
@@ -85,9 +85,9 @@ Amount: ₦${totalAmount.toLocaleString()}
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 💳 PAYMENT DETAILS
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Bank: Access Bank
-Account Name: Cedoka Electronics & Gadgets
-Account Number: 1234567890
+Bank: Fidelity Bank
+Account Name: CEDOKA GLOBAL LIMITED
+Account Number: 5080201438
 Amount: ₦${totalAmount.toLocaleString()}
 
 📎 Payment Receipt: ${receiptFileName}
@@ -116,7 +116,7 @@ ${deliveryMethod === 'delivery' ? 'Cash on Delivery - Pay upon arrival' : 'Cash 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ${deliveryMethod === 'walk-in' 
   ? `Type: 🏪 Walk-in / Store Pickup
-Location: 12 Adeola Odeku St, VI, Lagos
+Location: 35, Ailegun Road, Ejigbo, Lagos
 Hours: 9 AM - 6 PM Daily`
   : `Type: 📦 Home Delivery
 Address: ${address}
@@ -270,7 +270,7 @@ We appreciate your business! 🙏
                     <p className="text-sm text-muted-foreground mb-3">Pick up directly from our store</p>
                     <ul className="text-sm space-y-1 text-muted-foreground mb-4">
                       <li>✓ Free (No delivery charge)</li>
-                      <li>✓ 12 Adeola Odeku St, VI, Lagos</li>
+                      <li>✓ 35 Ailegun Rd / 1 Kola Rewire St, Ejigbo</li>
                       <li>✓ Available 9 AM - 6 PM</li>
                       <li>✓ Pay upon pickup</li>
                     </ul>
@@ -313,16 +313,16 @@ We appreciate your business! 🙏
 
             <div className="bg-accent/10 rounded-lg p-4 border border-accent/20">
               <p className="text-sm font-medium mb-2">📍 Pickup Location</p>
-              <p className="text-sm">12 Adeola Odeku St, Victoria Island, Lagos</p>
+              <p className="text-sm">Showroom 1: 35, Ailegun Road, Ejigbo<br/>Showroom 2: 1, Kola Rewire Street, Ejigbo</p>
               <p className="text-sm text-muted-foreground mt-1">Available 9 AM - 6 PM daily</p>
             </div>
 
             <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
               <p className="text-sm font-medium mb-2">💳 Company Account Details (For Online Transfer)</p>
               <div className="text-sm space-y-1 font-mono">
-                <p><span className="font-semibold">Account Name:</span> Cedoka Electronics</p>
-                <p><span className="font-semibold">Account Number:</span> 1234567890</p>
-                <p><span className="font-semibold">Bank:</span> Access Bank</p>
+                <p><span className="font-semibold">Account Name:</span> CEDOKA GLOBAL LIMITED</p>
+                <p><span className="font-semibold">Account Number:</span> 5080201438</p>
+                <p><span className="font-semibold">Bank:</span> Fidelity Bank</p>
               </div>
             </div>
 
@@ -398,9 +398,9 @@ We appreciate your business! 🙏
                 <div>
                   <p className="text-sm font-medium mb-2">🏦 Company Bank Account Details</p>
                   <div className="bg-white rounded p-3 space-y-1 text-sm font-mono">
-                    <p><span className="font-semibold">Bank:</span> Access Bank</p>
-                    <p><span className="font-semibold">Account Name:</span> Cedoka Electronics & Gadgets</p>
-                    <p><span className="font-semibold">Account Number:</span> 1234567890</p>
+                    <p><span className="font-semibold">Bank:</span> Fidelity Bank</p>
+                    <p><span className="font-semibold">Account Name:</span> CEDOKA GLOBAL LIMITED</p>
+                    <p><span className="font-semibold">Account Number:</span> 5080201438</p>
                     <p><span className="font-semibold">Amount:</span> ₦{(getTotal() + 2500).toLocaleString()}</p>
                   </div>
                 </div>
@@ -477,9 +477,9 @@ We appreciate your business! 🙏
               <div className="bg-amber-50 rounded-lg p-4 border border-amber-200">
                 <p className="text-sm font-medium mb-2">🏦 Payment Details Summary</p>
                 <div className="text-sm font-mono space-y-1 mb-2">
-                  <p><span className="font-semibold">Bank:</span> Access Bank</p>
-                  <p><span className="font-semibold">Account:</span> 1234567890</p>
-                  <p><span className="font-semibold">Name:</span> Cedoka Electronics</p>
+                  <p><span className="font-semibold">Bank:</span> Fidelity Bank</p>
+                  <p><span className="font-semibold">Account:</span> 5080201438</p>
+                  <p><span className="font-semibold">Name:</span> CEDOKA GLOBAL LIMITED</p>
                 </div>
                 {receiptFileName && (
                   <div className="flex items-center gap-2 p-2 bg-white rounded border border-green-300">
@@ -544,7 +544,7 @@ We appreciate your business! 🙏
             </button>
 
             <p className="text-xs text-muted-foreground text-center">
-              A WhatsApp message with your order details will be sent to +234 801 234 5678
+              A WhatsApp message with your order details will be sent to +234 704 585 1131
             </p>
           </div>
         )}

@@ -12,73 +12,7 @@ interface ProductStore {
   getProductById: (id: string) => Product | undefined;
 }
 
-// Mock data for demo
-const mockProducts: Product[] = [
-  {
-    id: '1',
-    name: 'iPhone 15 Pro',
-    price: 799000,
-    originalPrice: 850000,
-    image: 'https://via.placeholder.com/300',
-    category: 'Smartphones',
-    description: 'Latest iPhone with advanced features',
-    inStock: 45,
-    seller: 'Apple',
-    rating: 4.8,
-    reviews: 2341,
-    sku: 'APL-IP15-001',
-    createdAt: new Date('2024-01-15'),
-    updatedAt: new Date('2024-01-15'),
-  },
-  {
-    id: '2',
-    name: 'Samsung Galaxy S24',
-    price: 649000,
-    originalPrice: 720000,
-    image: 'https://via.placeholder.com/300',
-    category: 'Smartphones',
-    description: 'Flagship Samsung phone with 5G',
-    inStock: 32,
-    seller: 'Samsung',
-    rating: 4.7,
-    reviews: 1892,
-    sku: 'SAM-S24-001',
-    createdAt: new Date('2024-01-10'),
-    updatedAt: new Date('2024-01-10'),
-  },
-  {
-    id: '3',
-    name: 'Dell XPS 13 Laptop',
-    price: 1299000,
-    originalPrice: 1450000,
-    image: 'https://via.placeholder.com/300',
-    category: 'Laptops',
-    description: 'Ultra-thin laptop with powerful performance',
-    inStock: 18,
-    seller: 'Dell',
-    rating: 4.6,
-    reviews: 1245,
-    sku: 'DEL-XPS13-001',
-    createdAt: new Date('2024-01-12'),
-    updatedAt: new Date('2024-01-12'),
-  },
-  {
-    id: '4',
-    name: 'Sony WH-1000XM5 Headphones',
-    price: 129000,
-    originalPrice: 149000,
-    image: 'https://via.placeholder.com/300',
-    category: 'Audio & Sound',
-    description: 'Noise-cancelling wireless headphones',
-    inStock: 67,
-    seller: 'Sony',
-    rating: 4.9,
-    reviews: 3421,
-    sku: 'SON-WH-001',
-    createdAt: new Date('2024-01-08'),
-    updatedAt: new Date('2024-01-08'),
-  },
-];
+import { initialProducts } from '@/data/products';
 
 class ProductStoreImpl implements ProductStore {
   products: Product[] = [];
@@ -87,7 +21,7 @@ class ProductStoreImpl implements ProductStore {
   constructor() {
     // Initialize with mock data from localStorage or default
     const stored = localStorage.getItem('products');
-    this.products = stored ? JSON.parse(stored) : mockProducts;
+    this.products = stored ? JSON.parse(stored) : initialProducts;
   }
 
   setProducts(products: Product[]): void {

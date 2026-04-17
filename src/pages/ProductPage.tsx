@@ -15,6 +15,7 @@ const ProductPage = () => {
   const product = getProductById(id || '');
   const [qty, setQty] = useState(1);
   const [activeImg, setActiveImg] = useState(0);
+
   const addItem = useCartStore((s) => s.addItem);
 
   if (!product) return (
@@ -60,8 +61,17 @@ const ProductPage = () => {
           {/* Images */}
           <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
             <div className="rounded-xl overflow-hidden border bg-muted aspect-square">
-              <img src={product.image} alt={product.name} className="w-full h-full object-cover" />
+              <img src={product.images && product.images.length > 0 ? product.images[activeImg] : product.image} alt={product.name} className="w-full h-full object-cover" />
             </div>
+            {product.images && product.images.length > 1 && (
+              <div className="flex gap-2 mt-4 overflow-x-auto pb-2">
+                {product.images.map((img, idx) => (
+                  <button key={idx} onClick={() => setActiveImg(idx)} className={`w-20 h-20 rounded-lg border flex-shrink-0 overflow-hidden ${activeImg === idx ? 'border-primary border-2 shadow-sm scale-105' : 'opacity-70'} transition-all`}>
+                    <img src={img} className="w-full h-full object-cover" />
+                  </button>
+                ))}
+              </div>
+            )}
           </motion.div>
 
           {/* Info */}
@@ -98,7 +108,7 @@ const ProductPage = () => {
               <span>{product.inStock > 10 ? `In Stock (${product.inStock} left)` : `Only ${product.inStock} left — hurry!`}</span>
             </div>
 
-            <p className="text-sm text-muted-foreground">Sold by: <strong>{product.seller}</strong></p>
+            <p className="text-sm text-muted-foreground">Brand: <strong>{product.seller || 'Generic'}</strong></p>
 
             {/* Quantity */}
             <div className="flex items-center gap-4">

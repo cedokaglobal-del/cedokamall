@@ -26,9 +26,12 @@ import { useSEO } from "@/hooks/useSEO";
 
 const queryClient = new QueryClient();
 
-const App = () => {
-  // Initialize SEO hooks
+const SEOUpdater = () => {
   useSEO();
+  return null;
+};
+
+const App = () => {
 
   // Initialize performance optimizations
   useEffect(() => {
@@ -36,7 +39,7 @@ const App = () => {
     addConnectionHints();
 
     // Disable console in production
-    if (process.env.NODE_ENV === "production") {
+    if (import.meta.env.MODE === "production") {
       console.log = () => {};
       console.error = () => {};
       console.warn = () => {};
@@ -50,6 +53,7 @@ const App = () => {
           <Toaster />
           <Sonner />
           <BrowserRouter>
+            <SEOUpdater />
             <Routes>
               {/* Public Routes */}
               <Route path="/" element={<Index />} />

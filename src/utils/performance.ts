@@ -95,7 +95,7 @@ export function measurePerformance<T>(
     timestamp: new Date()
   });
 
-  if (process.env.NODE_ENV === 'development') {
+  if (import.meta.env.MODE === 'development') {
     console.log(`⏱️ ${label}: ${duration.toFixed(2)}ms`);
   }
 
@@ -129,7 +129,7 @@ interface WebVitalsMetric {
 }
 
 export function reportWebVitals(metric: WebVitalsMetric): void {
-  if (process.env.NODE_ENV === 'production') {
+  if (import.meta.env.MODE === 'production') {
     // Send to analytics service
     const body = JSON.stringify(metric);
     // Use sendBeacon if available for reliability

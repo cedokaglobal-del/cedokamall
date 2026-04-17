@@ -155,14 +155,14 @@ const AdminProducts = () => {
                 Category
               </Label>
               <Select
-                value={filter.category || ''}
-                onValueChange={(value) => handleFilterChange('category', value)}
+                value={filter.category || 'all'}
+                onValueChange={(value) => handleFilterChange('category', value === 'all' ? undefined : value)}
               >
                 <SelectTrigger id="category">
                   <SelectValue placeholder="All categories" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Categories</SelectItem>
+                  <SelectItem value="all">All Categories</SelectItem>
                   {categories.map((cat) => (
                     <SelectItem key={cat} value={cat}>
                       {cat}
@@ -206,14 +206,14 @@ const AdminProducts = () => {
                 Stock Status
               </Label>
               <Select
-                value={filter.inStock ? 'true' : ''}
-                onValueChange={(value) => handleFilterChange('inStock', value === 'true')}
+                value={filter.inStock ? 'true' : 'all'}
+                onValueChange={(value) => handleFilterChange('inStock', value === 'true' ? true : undefined)}
               >
                 <SelectTrigger id="inStock">
                   <SelectValue placeholder="All items" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="">All Items</SelectItem>
+                  <SelectItem value="all">All Items</SelectItem>
                   <SelectItem value="true">In Stock Only</SelectItem>
                 </SelectContent>
               </Select>

@@ -50,10 +50,10 @@
     <link rel="alternate" hreflang="en" href="https://cedokamall.com" />
     
     <!-- Icons -->
-    <link rel="icon" type="image/png" href="https://cedokamall.com/favicon-32x32.png" sizes="32x32" />
-    <link rel="icon" type="image/png" href="https://cedokamall.com/favicon-16x16.png" sizes="16x16" />
-    <link rel="apple-touch-icon" href="https://cedokamall.com/apple-touch-icon.png" />
-    <link rel="manifest" href="https://cedokamall.com/manifest.json" />
+    <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32" />
+    <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16" />
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.json" />
     
     <!-- DNS Prefetch & Preconnect -->
     <link rel="dns-prefetch" href="https://images.unsplash.com" />
@@ -62,10 +62,11 @@
     <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
     
     <!-- Security Headers -->
-    <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' *.unsplash.com *.googleapis.com; style-src 'self' 'unsafe-inline' *.googleapis.com; img-src 'self' data: https: *.unsplash.com *.gstatic.com; font-src 'self' data: *.googleapis.com *.gstatic.com; connect-src 'self' *.unsplash.com *.googleapis.com; frame-ancestors 'none'; upgrade-insecure-requests; block-all-mixed-content" />
-    <meta http-equiv="X-Content-Type-Options" content="nosniff" />
-    <meta http-equiv="X-Frame-Options" content="DENY" />
-    <meta http-equiv="X-XSS-Protection" content="1; mode=block" />
+    <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' *.unsplash.com *.googleapis.com; style-src 'self' 'unsafe-inline' *.googleapis.com; img-src 'self' data: https: *.unsplash.com *.gstatic.com; font-src 'self' data: *.googleapis.com *.gstatic.com; connect-src 'self' ws: wss: *.unsplash.com *.googleapis.com; frame-ancestors 'none'; block-all-mixed-content" /> -->
+    <!-- 
+      Security headers like X-Frame-Options and X-XSS-Protection should be 
+      set by the server instead of HTML meta tags. 
+    -->
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="permissions-policy" content="geolocation=(), microphone=(), camera=()" />
     

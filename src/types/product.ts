@@ -4,6 +4,7 @@ export interface Product {
   price: number;
   originalPrice?: number;
   image: string;
+  images?: string[];
   category: string;
   description: string;
   inStock: number;
@@ -26,7 +27,8 @@ export interface ProductFormData {
   description: string;
   inStock: number;
   seller: string;
-  image: string;
+  image?: string;
+  images?: string[];
   specs?: Record<string, string>;
   warranty?: string;
   sku?: string;

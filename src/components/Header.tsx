@@ -20,7 +20,7 @@ const Header = () => {
         <div className="container flex justify-between items-center">
           <div className="flex items-center gap-4">
             <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> Lagos, Nigeria</span>
-            <span className="hidden sm:flex items-center gap-1"><Phone className="w-3 h-3" /> +234 801 234 5678</span>
+            <span className="hidden sm:flex items-center gap-1"><Phone className="w-3 h-3" /> +234 704 585 1131</span>
           </div>
           <div className="flex items-center gap-4">
             {/* Removed: Free shipping banner */}

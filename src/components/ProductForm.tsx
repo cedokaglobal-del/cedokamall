@@ -44,10 +44,69 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
     inStock: product?.inStock || 0,
     seller: product?.seller || '',
     image: product?.image || '',
+    images: product?.images || (product?.image ? [product.image] : []),
     sku: product?.sku || '',
     warranty: product?.warranty || '',
     specs: product?.specs || {},
   });
+
+  const resizeImage = (file: File): Promise<string> => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = (e) => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_SIZE = 800;
+          let { width, height } = img;
+          if (width > height && width > MAX_SIZE) {
+            height *= MAX_SIZE / width;
+            width = MAX_SIZE;
+          } else if (height > MAX_SIZE) {
+            width *= MAX_SIZE / height;
+            height = MAX_SIZE;
+          }
+          canvas.width = width;
+          canvas.height = height;
+          canvas.getContext('2d')?.drawImage(img, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', 0.8));
+        };
+        img.src = e.target?.result as string;
+      };
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+    
+    const currentImages = formData.images || [];
+    const remainingSlots = 4 - currentImages.length;
+    const filesToUpload = files.slice(0, remainingSlots);
+    
+    if (files.length > remainingSlots) {
+      alert(`You can only add up to 4 images max.`);
+    }
+
+    const newBase64Images = await Promise.all(filesToUpload.map(f => resizeImage(f)));
+    const updatedImages = [...currentImages, ...newBase64Images];
+    
+    setFormData(prev => ({ 
+      ...prev, 
+      images: updatedImages, 
+      image: updatedImages[0] || '' 
+    }));
+    
+    if (errors.images) {
+      setErrors(prev => { const n = { ...prev }; delete n.images; return n; });
+    }
+  };
+
+  const removeImage = (index: number) => {
+    const updatedImages = (formData.images || []).filter((_, i) => i !== index);
+    setFormData(prev => ({ ...prev, images: updatedImages, image: updatedImages[0] || '' }));
+  };
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -59,8 +118,8 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
     if (!formData.category) newErrors.category = 'Category is required';
     if (!formData.description.trim()) newErrors.description = 'Description is required';
     if (formData.inStock < 0) newErrors.inStock = 'Stock cannot be negative';
-    if (!formData.seller.trim()) newErrors.seller = 'Seller name is required';
-    if (!formData.image.trim()) newErrors.image = 'Image URL is required';
+    if (!formData.seller.trim()) newErrors.seller = 'Brand name is required';
+    if (!formData.images || formData.images.length === 0) newErrors.images = 'At least 1 product image is required';
 
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -179,14 +238,14 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
           />
         </div>
 
-        {/* Seller */}
+        {/* Brand Name */}
         <div>
-          <Label htmlFor="seller">Seller Name *</Label>
+          <Label htmlFor="seller">Brand Name *</Label>
           <Input
             id="seller"
             value={formData.seller}
             onChange={(e) => handleChange('seller', e.target.value)}
-            placeholder="Enter seller name"
+            placeholder="Enter brand name"
             className={errors.seller ? 'border-destructive' : ''}
             disabled={isLoading}
           />
@@ -221,30 +280,47 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
         {errors.description && <p className="text-sm text-destructive mt-1">{errors.description}</p>}
       </div>
 
-      {/* Image URL */}
+      {/* Device Image Upload (Max 4) */}
       <div>
-        <Label htmlFor="image">Image URL *</Label>
-        <Input
-          id="image"
-          type="url"
-          value={formData.image}
-          onChange={(e) => handleChange('image', e.target.value)}
-          placeholder="https://example.com/image.jpg"
-          className={errors.image ? 'border-destructive' : ''}
-          disabled={isLoading}
-        />
-        {errors.image && <p className="text-sm text-destructive mt-1">{errors.image}</p>}
-        {formData.image && (
-          <div className="mt-3">
-            <p className="text-sm text-muted-foreground mb-2">Preview:</p>
-            <img
-              src={formData.image}
-              alt="Preview"
-              className="h-32 w-32 object-cover rounded-lg border"
-              onError={(e) => {
-                (e.target as HTMLImageElement).src = 'https://via.placeholder.com/128?text=Invalid+Image';
-              }}
-            />
+        <Label htmlFor="imageUpload">Product Images (Max 4) *</Label>
+        <div className="flex items-center gap-2 mt-1">
+          <Input
+            id="imageUpload"
+            type="file"
+            accept="image/*"
+            multiple
+            onChange={handleImageUpload}
+            disabled={isLoading || (formData.images && formData.images.length >= 4)}
+            className="flex-1"
+          />
+          <span className="text-sm text-muted-foreground whitespace-nowrap">
+            {(formData.images?.length || 0)} / 4 uploaded
+          </span>
+        </div>
+        {errors.images && <p className="text-sm text-destructive mt-1">{errors.images}</p>}
+        {formData.images && formData.images.length > 0 && (
+          <div className="mt-3 flex gap-3 overflow-x-auto pb-2">
+            {formData.images.map((imgUrl, i) => (
+              <div key={i} className="relative w-24 h-24 flex-shrink-0 group">
+                <img
+                  src={imgUrl}
+                  alt={`Preview ${i + 1}`}
+                  className="w-full h-full object-cover rounded-lg border border-border group-hover:opacity-80 transition-opacity"
+                />
+                <button
+                  type="button"
+                  onClick={() => removeImage(i)}
+                  className="absolute -top-2 -right-2 bg-destructive text-destructive-foreground w-6 h-6 rounded-full flex items-center justify-center text-xs opacity-0 group-hover:opacity-100 transition-opacity"
+                >
+                  <X className="w-3 h-3" />
+                </button>
+                {i === 0 && (
+                  <span className="absolute bottom-1 right-1 bg-black/60 text-white text-[10px] px-1.5 py-0.5 rounded shadow">
+                    Main
+                  </span>
+                )}
+              </div>
+            ))}
           </div>
         )}
       </div>
