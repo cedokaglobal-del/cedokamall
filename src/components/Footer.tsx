@@ -30,7 +30,7 @@ const Footer = () => (
         <h4 className="font-display text-lg font-bold mb-4">
           <span>Cedoka</span><span className="text-gold">mall</span>
         </h4>
-        <p className="text-sm text-primary-foreground/60 mb-4">Everything you need. Delivered in Lagos, built for Nigeria.</p>
+        <p className="text-sm text-primary-foreground/60 mb-4">Everything you need. Delivered Nationwide, built for Nigeria.</p>
         <div className="space-y-2 text-sm text-primary-foreground/60">
           <p className="flex items-center gap-2"><MapPin className="w-4 h-4 flex-shrink-0" /> <span className="flex-1">Showroom 1: 35, Ailegun Road, Ejigbo, Lagos<br />Showroom 2: 1, Kola Rewire Street, Ejigbo</span></p>
           <p className="flex items-center gap-2"><Phone className="w-4 h-4 flex-shrink-0" /> <span className="flex-1">+2347045851131, +2349074190070, 09128817136, +2348069719884</span></p>

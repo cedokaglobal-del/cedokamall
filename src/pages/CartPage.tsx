@@ -116,12 +116,12 @@ ${deliveryMethod === 'delivery' ? 'Cash on Delivery - Pay upon arrival' : 'Cash 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 ${deliveryMethod === 'walk-in' 
   ? `Type: 🏪 Walk-in / Store Pickup
-Location: 35, Ailegun Road, Ejigbo, Lagos
+Location: Nationwide (Delivery Across Nigeria)
 Hours: 9 AM - 6 PM Daily`
-  : `Type: 📦 Home Delivery
+  : `Type: 📦 Online Delivery
 Address: ${address}
 Phone: ${phone}
-⏱️ Estimated Delivery: 2-4 hours`}
+⏱️ Estimated Delivery: 24-72 hours Nationwide`}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 🛍️ ITEMS ORDERED
@@ -290,8 +290,8 @@ We appreciate your business! 🙏
                     <p className="text-sm text-muted-foreground mb-3">Get items delivered to your address</p>
                     <ul className="text-sm space-y-1 text-muted-foreground mb-4">
                       <li>✓ ₦2,500 delivery fee</li>
-                      <li>✓ 2-4 hours delivery</li>
-                      <li>✓ Lagos locations only</li>
+                      <li>✓ 24-72 hours delivery</li>
+                      <li>✓ Nationwide coverage</li>
                       <li>✓ WhatsApp & Cash on Delivery</li>
                     </ul>
                   </div>

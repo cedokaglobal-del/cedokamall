@@ -68,10 +68,10 @@ const Index = () => {
             </div>
             <h1 className="font-display text-4xl md:text-6xl font-bold leading-tight mb-4">
               Everything You Need.{' '}
-              <span className="text-gradient-gold">Delivered in Lagos.</span>
+              <span className="text-gradient-gold">Delivered Nationwide.</span>
             </h1>
             <p className="text-lg text-primary-foreground/80 mb-8">
-              Nigeria's premium marketplace with 50,000+ products, trusted sellers, and lightning-fast delivery across Lagos.
+              Nigeria's premium marketplace with 50,000+ products, trusted sellers, and lightning-fast delivery across Nigeria.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link to="/shop" className="inline-flex items-center gap-2 px-8 py-4 bg-accent text-accent-foreground rounded-xl font-bold text-lg hover:bg-cta-orange-light transition-colors shadow-lg">
@@ -91,7 +91,7 @@ const Index = () => {
           <span className="flex items-center gap-1.5"><Users className="w-4 h-4 text-primary" /> <strong>1.2M+</strong> Happy Customers</span>
           <span className="flex items-center gap-1.5"><Star className="w-4 h-4 text-gold fill-gold" /> <strong>4.9/5</strong> Average Rating</span>
           <span className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-primary" /> <strong>100%</strong> Secure Payments</span>
-          <span className="flex items-center gap-1.5"><Truck className="w-4 h-4 text-primary" /> <strong>24-48hr</strong> Lagos Delivery</span>
+          <span className="flex items-center gap-1.5"><Truck className="w-4 h-4 text-primary" /> <strong>Nationwide</strong> Delivery</span>
           <span className="flex items-center gap-1.5 text-accent">👁 <strong>{visitorCount.toLocaleString()}</strong> shopping now</span>
         </div>
       </div>
@@ -116,26 +116,23 @@ const Index = () => {
       </section>
 
       {/* Flash Deals */}
-      <section className="bg-destructive/5 py-10">
-        <div className="container">
-          <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
-            <div className="flex items-center gap-3">
-              <Timer className="w-6 h-6 text-destructive" />
-              <h2 className="font-display text-2xl font-bold">Flash Deals</h2>
-              <CountdownTimer />
-            </div>
-            <Link to="/shop?deals=true" className="text-sm text-primary flex items-center gap-1 hover:underline">See all <ChevronRight className="w-4 h-4" /></Link>
-          </div>
-          <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {products.filter(p => p.badge === 'FLASH DEAL').slice(0, 5).map((p) => <ProductCard key={p.id} product={p} />)}
-            {products.filter(p => p.badge === 'FLASH DEAL').length === 0 && (
-              <div className="col-span-full py-10 text-center text-muted-foreground">
-                No active flash deals at the moment. Check back later!
+      {products.filter(p => p.badge === 'FLASH DEAL').length > 0 && (
+        <section className="bg-destructive/5 py-10">
+          <div className="container">
+            <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+              <div className="flex items-center gap-3">
+                <Timer className="w-6 h-6 text-destructive" />
+                <h2 className="font-display text-2xl font-bold">Flash Deals</h2>
+                <CountdownTimer />
               </div>
-            )}
+              <Link to="/shop?deals=true" className="text-sm text-primary flex items-center gap-1 hover:underline">See all <ChevronRight className="w-4 h-4" /></Link>
+            </div>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
+              {products.filter(p => p.badge === 'FLASH DEAL').slice(0, 5).map((p) => <ProductCard key={p.id} product={p} />)}
+            </div>
           </div>
-        </div>
-      </section>
+        </section>
+      )}
 
       {/* Loyalty Banner */}
       {/* Removed: LoyaltyBanner */}

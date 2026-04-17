@@ -51,7 +51,7 @@ const Header = () => {
       <div className="bg-primary text-primary-foreground text-xs py-1.5">
         <div className="container flex justify-between items-center">
           <div className="flex items-center gap-4">
-            <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> Lagos, Nigeria</span>
+            <span className="flex items-center gap-1"><MapPin className="w-3 h-3" /> Delivery Across Nigeria</span>
             <span className="hidden sm:flex items-center gap-1"><Phone className="w-3 h-3" /> +234 704 585 1131</span>
           </div>
           <div className="flex items-center gap-4">
@@ -64,11 +64,8 @@ const Header = () => {
       <header className="sticky top-0 z-50 bg-background border-b shadow-sm">
         <div className="container flex items-center gap-4 py-3">
           {/* Logo */}
-          <Link to="/" className="flex-shrink-0 flex items-center gap-2">
+          <Link to="/" className="flex-shrink-0">
             <img src="/logo.png" alt="Cedokamall" className="h-10 w-auto object-contain" />
-            <span className="font-display text-xl font-bold hidden sm:block">
-              <span className="text-primary">Cedoka</span><span className="text-gold">mall</span>
-            </span>
           </Link>
 
           {/* Categories dropdown */}

@@ -5,7 +5,7 @@
 
 export const SEO_CONFIG = {
   siteTitle: "Cedokamall - Nigeria's Premium Online Marketplace",
-  siteDescription: "Shop 50,000+ products with fast Lagos delivery. Electronics, Home Appliances, Accessories & more. Trusted sellers, secure payments, 24-48hr delivery.",
+  siteDescription: "Shop 50,000+ products with fast Nationwide delivery. Electronics, Home Appliances, Accessories & more. Trusted sellers, secure payments, swift delivery across Nigeria.",
   siteUrl: import.meta.env.VITE_SITE_URL || "https://cedokamall.com",
   siteName: "Cedokamall",
   locale: "en_NG",
@@ -176,13 +176,13 @@ export const PAGE_METAS: Record<string, PageMeta> = {
   home: {
     title: SEO_CONFIG.siteTitle,
     description: SEO_CONFIG.siteDescription,
-    keywords: ["online shopping", "Nigeria", "electronics", "appliances", "fast delivery", "Lagos"],
+    keywords: ["online shopping", "Nigeria", "electronics", "appliances", "fast delivery", "Nationwide"],
     type: "website"
   },
   shop: {
     title: "Shop All Products - Cedokamall",
     description: "Browse our extensive collection of electronics, appliances, and accessories. Trusted brands, great prices.",
-    keywords: ["products", "electronics", "appliances", "shopping", "Nigeria", "Lagos"],
+    keywords: ["products", "electronics", "appliances", "shopping", "Nigeria", "Nationwide"],
     type: "website"
   },
   cart: {

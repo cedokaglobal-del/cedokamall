@@ -143,7 +143,7 @@ const ProductPage = () => {
             {/* Trust */}
             <div className="grid grid-cols-3 gap-3 pt-4 border-t">
               {[
-                { icon: Truck, label: 'Free delivery in Lagos' },
+                { icon: Truck, label: 'Free Nationwide delivery' },
                 { icon: Shield, label: 'Genuine products' },
                 { icon: RotateCcw, label: '7-day returns' },
               ].map(({ icon: Icon, label }) => (
