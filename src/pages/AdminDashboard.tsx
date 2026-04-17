@@ -8,6 +8,7 @@ import { Button } from '@/components/ui/button';
 import { BarChart3, Zap, Users, TrendingUp, ShoppingCart, Package, AlertCircle, ChevronRight, Plus } from 'lucide-react';
 import { transactionStore } from '@/store/transactionStore';
 import { productStore } from '@/store/productStore';
+import { flashDealStore } from '@/store/flashDealStore';
 import { AnalyticsData } from '@/types/transaction';
 
 const AdminDashboard = () => {
@@ -15,16 +16,26 @@ const AdminDashboard = () => {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [lowStockCount, setLowStockCount] = useState(0);
   const [totalProducts, setTotalProducts] = useState(0);
+  const [uniqueCustomers, setUniqueCustomers] = useState(0);
+  const [activeFlashDeals, setActiveFlashDeals] = useState(0);
 
   useEffect(() => {
     // Load analytics
     const data = transactionStore.getAnalyticsData(30);
     setAnalyticsData(data);
 
+    // Get unique customer count
+    const uniqueEmails = new Set(transactionStore.transactions.map((t) => t.customerEmail));
+    setUniqueCustomers(uniqueEmails.size);
+
     // Check for low stock products
     const lowStock = productStore.products.filter((p) => p.inStock < 10).length;
     setLowStockCount(lowStock);
     setTotalProducts(productStore.products.length);
+
+    // Get active flash deals count
+    const activeDeals = flashDealStore.getActiveDealCount();
+    setActiveFlashDeals(activeDeals);
   }, []);
 
   if (!analyticsData) {
@@ -41,16 +52,16 @@ const AdminDashboard = () => {
     {
       icon: Zap,
       label: 'Active Flash Deals',
-      value: '3',
+      value: activeFlashDeals.toString(),
       color: 'bg-yellow-500',
-      trend: '+12%',
+      trend: activeFlashDeals > 0 ? '+' + activeFlashDeals : '0',
     },
     {
       icon: Users,
       label: 'Total Customers',
-      value: '1.2M',
+      value: uniqueCustomers.toLocaleString(),
       color: 'bg-blue-500',
-      trend: '+8%',
+      trend: analyticsData?.customerChange ? `${analyticsData.customerChange > 0 ? '+' : ''}${analyticsData.customerChange.toFixed(1)}%` : '0%',
     },
     {
       icon: TrendingUp,
@@ -59,16 +70,16 @@ const AdminDashboard = () => {
         style: 'currency',
         currency: 'NGN',
         notation: 'compact',
-      }).format(analyticsData.summary.totalRevenue),
+      }).format(analyticsData?.summary.totalRevenue || 0),
       color: 'bg-green-500',
-      trend: `${analyticsData.revenueChange > 0 ? '+' : ''}${analyticsData.revenueChange.toFixed(1)}%`,
+      trend: `${analyticsData?.revenueChange || 0 > 0 ? '+' : ''}${(analyticsData?.revenueChange || 0).toFixed(1)}%`,
     },
     {
       icon: ShoppingCart,
       label: 'Total Orders',
-      value: analyticsData.summary.totalOrders.toString(),
+      value: analyticsData?.summary.totalOrders.toString() || '0',
       color: 'bg-purple-500',
-      trend: `${analyticsData.orderChange > 0 ? '+' : ''}${analyticsData.orderChange.toFixed(1)}%`,
+      trend: `${analyticsData?.orderChange || 0 > 0 ? '+' : ''}${(analyticsData?.orderChange || 0).toFixed(1)}%`,
     },
   ];
 

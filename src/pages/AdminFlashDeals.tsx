@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '@/components/AdminLayout';
 import FlashDealForm from '@/components/FlashDealForm';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { FlashDealRequest, FlashDeal } from '@/types/flashDeal';
+import { flashDealStore } from '@/store/flashDealStore';
 import { Trash2, Edit2, Eye } from 'lucide-react';
 
 const AdminFlashDeals = () => {
@@ -13,25 +14,17 @@ const AdminFlashDeals = () => {
   const [showForm, setShowForm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
 
+  useEffect(() => {
+    // Load deals from store
+    setDeals(flashDealStore.getAllDeals());
+  }, []);
+
   const handleCreateDeal = async (data: FlashDealRequest) => {
     setIsLoading(true);
     try {
-      // TODO: Replace with actual API call
-      // For now, this is a mock implementation
-      const newDeal: FlashDeal = {
-        id: `deal-${Date.now()}`,
-        ...data,
-        currentQuantity: 0,
-        isActive: true,
-        createdAt: new Date(),
-        updatedAt: new Date(),
-        createdBy: 'admin', // Should come from authenticated user
-      };
-
-      setDeals([...deals, newDeal]);
+      flashDealStore.addDeal(data);
+      setDeals(flashDealStore.getAllDeals());
       setShowForm(false);
-      
-      // Show success message
       console.log('Flash deal created successfully');
     } catch (error) {
       console.error('Error creating flash deal:', error);
@@ -41,8 +34,10 @@ const AdminFlashDeals = () => {
   };
 
   const handleDeleteDeal = (dealId: string) => {
-    // TODO: Add confirmation dialog
-    setDeals(deals.filter(deal => deal.id !== dealId));
+    if (confirm('Are you sure you want to delete this flash deal?')) {
+      flashDealStore.deleteDeal(dealId);
+      setDeals(flashDealStore.getAllDeals());
+    }
   };
 
   const formatDate = (date: Date) => {

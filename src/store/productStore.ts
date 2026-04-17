@@ -1,4 +1,5 @@
 import { Product, ProductFormData, ProductFilter } from '@/types/product';
+import { initialProducts } from '@/data/products';
 
 interface ProductStore {
   products: Product[];
@@ -11,8 +12,6 @@ interface ProductStore {
   getFilteredProducts: () => Product[];
   getProductById: (id: string) => Product | undefined;
 }
-
-import { initialProducts } from '@/data/products';
 
 class ProductStoreImpl implements ProductStore {
   products: Product[] = [];

@@ -56,7 +56,7 @@ const ProductTable = ({ products, onEdit, onDelete, isLoading = false }: Product
               <TableHead>Price</TableHead>
               <TableHead>Original</TableHead>
               <TableHead>Stock</TableHead>
-              <TableHead>Seller</TableHead>
+              <TableHead>Brand</TableHead>
               <TableHead>Actions</TableHead>
             </TableRow>
           </TableHeader>

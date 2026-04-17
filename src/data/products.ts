@@ -47,8 +47,6 @@ export const categories = [
   { name: 'Smart Home', icon: '🏠', count: 1560, slug: 'smart-home', subcategory: 'Smart Living' },
 ];
 
-import { productStore } from '@/store/productStore';
-
 export const initialProducts: Product[] = [
   // Smartphones
   { id: 'e1', name: 'Samsung Galaxy S25 Ultra 256GB', price: 1250000, originalPrice: 1450000, image: 'https://images.unsplash.com/photo-1610945265064-0e34e5519bbf?w=400', category: 'smartphones', rating: 4.8, reviews: 342, badge: 'Best Seller', description: 'Experience the future with Samsung\'s flagship smartphone. 200MP camera, S Pen included, titanium frame.', inStock: 24, seller: 'TechHub Lagos', specs: { processor: 'Snapdragon 8 Elite', ram: '16GB', storage: '256GB' }, warranty: '2 Years' },
@@ -128,21 +126,8 @@ export const initialProducts: Product[] = [
   { id: 'sound3', name: 'Bose SoundLink Color II', price: 185000, image: 'https://images.unsplash.com/photo-1608043152269-423dbba4e7e1?w=400', category: 'sound-systems', rating: 4.7, reviews: 234, badge: 'Best Seller', description: 'Portable waterproof speaker with rich sound and long battery life.', inStock: 28, seller: 'SoundWave NG', specs: { power: '20W', batteryLife: '8 hours', waterproof: 'IPX4', connectivity: 'Bluetooth' }, warranty: '1 Year' },
 ];
 
-export const getProducts = () => productStore ? productStore.products : initialProducts;
-export const products = new Proxy(initialProducts, {
-  get(target, prop) {
-    if (!productStore) return target[prop as keyof typeof target];
-    return productStore.products[prop as any];
-  },
-  getOwnPropertyDescriptor(target, prop) {
-    if (!productStore) return Object.getOwnPropertyDescriptor(target, prop);
-    return Object.getOwnPropertyDescriptor(productStore.products, prop);
-  },
-  ownKeys(target) {
-    if (!productStore) return Reflect.ownKeys(target);
-    return Reflect.ownKeys(productStore.products);
-  }
-});
+export const getProducts = () => initialProducts;
+export const products = initialProducts;
 
 export const getProductById = (id: string) => getProducts().find(p => p.id === id);
 export const getProductsByCategory = (cat: string) => getProducts().filter(p => p.category === cat);
