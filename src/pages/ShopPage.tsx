@@ -1,21 +1,30 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, useRef, useEffect } from 'react';
 import { useSearchParams, Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
-import { products, categories } from '@/data/products';
+import { categories } from '@/data/products';
+import { useProductStore } from '@/store/productStore';
 import { SlidersHorizontal, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
-import { useRef, useEffect } from 'react';
 
 const ShopPage = () => {
   const [searchParams] = useSearchParams();
   const categoryParam = searchParams.get('category');
+  const qParam = searchParams.get('q');
+  
+  const { products } = useProductStore();
+  
   const [selectedCategory, setSelectedCategory] = useState(categoryParam || 'all');
   const [sortBy, setSortBy] = useState('popular');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000000]);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+
+  // Update category if param changes
+  useEffect(() => {
+    if (categoryParam) setSelectedCategory(categoryParam);
+  }, [categoryParam]);
 
   const checkScroll = () => {
     if (scrollContainerRef.current) {
@@ -43,17 +52,42 @@ const ShopPage = () => {
   };
 
   const filtered = useMemo(() => {
-    let result = products;
-    if (selectedCategory !== 'all') result = result.filter(p => p.category === selectedCategory);
-    result = result.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
-    switch (sortBy) {
-      case 'price-low': return [...result].sort((a, b) => a.price - b.price);
-      case 'price-high': return [...result].sort((a, b) => b.price - a.price);
-      case 'newest': return [...result].reverse();
-      case 'rating': return [...result].sort((a, b) => b.rating - a.rating);
-      default: return [...result].sort((a, b) => b.reviews - a.reviews);
+    let result = [...products];
+    
+    // Category Filter
+    if (selectedCategory !== 'all') {
+      result = result.filter(p => p.category === selectedCategory);
     }
-  }, [selectedCategory, sortBy, priceRange]);
+    
+    // Search Query Filter
+    if (qParam) {
+      const term = qParam.toLowerCase();
+      result = result.filter(p => 
+        p.name.toLowerCase().includes(term) || 
+        p.description.toLowerCase().includes(term) ||
+        p.seller.toLowerCase().includes(term)
+      );
+    }
+    
+    // Price Filter
+    result = result.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
+    
+    // Sorting
+    switch (sortBy) {
+      case 'price-low': return result.sort((a, b) => a.price - b.price);
+      case 'price-high': return result.sort((a, b) => b.price - a.price);
+      case 'newest': {
+        return result.sort((a, b) => {
+          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+          return dateB - dateA;
+        });
+      }
+      case 'rating': return result.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      default: return result.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
+    }
+  }, [products, selectedCategory, qParam, sortBy, priceRange]);
+
 
   return (
     <div className="min-h-screen bg-background">

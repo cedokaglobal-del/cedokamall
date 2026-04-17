@@ -6,8 +6,9 @@ import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 // Removed: import SpinWheel from '@/components/SpinWheel';
 // Removed: import LoyaltyBanner from '@/components/LoyaltyBanner';
-import { categories, products, getFlashDeals, getTrending } from '@/data/products';
-import { useState, useEffect } from 'react';
+import { categories } from '@/data/products';
+import { useState, useEffect, useMemo } from 'react';
+import { useProductStore } from '@/store/productStore';
 
 const formatPrice = (n: number) => '₦' + n.toLocaleString();
 
@@ -38,9 +39,18 @@ const CountdownTimer = () => {
 };
 
 const Index = () => {
-  const flashDeals = getFlashDeals();
-  const trending = getTrending();
+  const { products } = useProductStore();
+  
+  const trending = useMemo(() => 
+    [...products].sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 5)
+  , [products]);
+
+  const recommended = useMemo(() => 
+    [...products].slice(0, 10)
+  , [products]);
+
   const visitorCount = 2847 + Math.floor(Math.random() * 200);
+
 
   return (
     <div className="min-h-screen bg-background">
@@ -136,7 +146,7 @@ const Index = () => {
           <Link to="/shop" className="text-sm text-primary flex items-center gap-1 hover:underline">View all <ChevronRight className="w-4 h-4" /></Link>
         </div>
         <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-          {trending.slice(0, 5).map((p) => <ProductCard key={p.id} product={p} />)}
+          {trending.map((p) => <ProductCard key={p.id} product={p} />)}
         </div>
       </section>
 
@@ -145,7 +155,7 @@ const Index = () => {
         <div className="container">
           <h2 className="font-display text-2xl font-bold mb-6">Recommended for You</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-4">
-            {products.slice(0, 10).map((p) => <ProductCard key={p.id} product={p} />)}
+            {recommended.map((p) => <ProductCard key={p.id} product={p} />)}
           </div>
           <div className="text-center mt-8">
             <Link to="/shop" className="inline-flex items-center gap-2 px-8 py-3 rounded-xl border-2 border-primary text-primary font-bold hover:bg-primary hover:text-primary-foreground transition-colors">

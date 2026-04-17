@@ -42,9 +42,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           {/* Logo */}
           <div className="p-6 border-b">
             <Link to="/admin" className="flex items-center gap-2" onClick={() => setSidebarOpen(false)}>
-              <div className="w-8 h-8 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-                <span className="text-white font-bold text-lg">C</span>
-              </div>
+              <img src="/logo.png" alt="Cedoka Admin" className="w-8 h-8 object-contain" />
               <span className="font-bold text-lg">Cedoka Admin</span>
             </Link>
           </div>

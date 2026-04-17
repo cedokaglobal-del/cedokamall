@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '@/components/AdminLayout';
 import AnalyticsCharts from '@/components/AnalyticsCharts';
@@ -7,17 +7,20 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { BarChart3, Zap, Users, TrendingUp, ShoppingCart, Package, AlertCircle, ChevronRight, Plus } from 'lucide-react';
 import { transactionStore } from '@/store/transactionStore';
-import { productStore } from '@/store/productStore';
+import { useProductStore } from '@/store/productStore';
 import { flashDealStore } from '@/store/flashDealStore';
 import { AnalyticsData } from '@/types/transaction';
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { products } = useProductStore();
+  
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
-  const [lowStockCount, setLowStockCount] = useState(0);
-  const [totalProducts, setTotalProducts] = useState(0);
   const [uniqueCustomers, setUniqueCustomers] = useState(0);
   const [activeFlashDeals, setActiveFlashDeals] = useState(0);
+
+  const lowStockCount = useMemo(() => products.filter((p) => p.inStock < 10).length, [products]);
+  const totalProducts = products.length;
 
   useEffect(() => {
     // Load analytics
@@ -28,15 +31,11 @@ const AdminDashboard = () => {
     const uniqueEmails = new Set(transactionStore.transactions.map((t) => t.customerEmail));
     setUniqueCustomers(uniqueEmails.size);
 
-    // Check for low stock products
-    const lowStock = productStore.products.filter((p) => p.inStock < 10).length;
-    setLowStockCount(lowStock);
-    setTotalProducts(productStore.products.length);
-
     // Get active flash deals count
     const activeDeals = flashDealStore.getActiveDealCount();
     setActiveFlashDeals(activeDeals);
   }, []);
+
 
   if (!analyticsData) {
     return (

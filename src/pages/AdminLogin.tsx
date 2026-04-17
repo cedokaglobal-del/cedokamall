@@ -53,9 +53,7 @@ const AdminLogin = () => {
         <div className="p-8">
           {/* Logo */}
           <div className="flex items-center justify-center mb-6">
-            <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-primary to-accent flex items-center justify-center">
-              <span className="text-white font-bold text-xl">C</span>
-            </div>
+            <img src="/logo.png" alt="Cedoka Admin" className="w-12 h-12 object-contain" />
             <span className="ml-3 font-bold text-xl">Cedoka Admin</span>
           </div>
 

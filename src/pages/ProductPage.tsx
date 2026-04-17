@@ -1,22 +1,29 @@
 import { useParams, Link } from 'react-router-dom';
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { motion } from 'framer-motion';
 import { Star, Heart, ShoppingCart, Truck, Shield, RotateCcw, Share2, Minus, Plus, ChevronRight, ArrowLeft } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
-import { getProductById, products } from '@/data/products';
+import { useProductStore } from '@/store/productStore';
 import { useCartStore } from '@/store/cartStore';
 
 const formatPrice = (n: number) => '₦' + n.toLocaleString();
 
 const ProductPage = () => {
   const { id } = useParams();
-  const product = getProductById(id || '');
+  const { getProductById, products } = useProductStore();
+  
+  const product = useMemo(() => getProductById(id || ''), [id, getProductById]);
   const [qty, setQty] = useState(1);
   const [activeImg, setActiveImg] = useState(0);
 
   const addItem = useCartStore((s) => s.addItem);
+
+  const related = useMemo(() => {
+    if (!product) return [];
+    return products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 5);
+  }, [product, products]);
 
   if (!product) return (
     <div className="min-h-screen bg-background">
@@ -30,7 +37,6 @@ const ProductPage = () => {
   );
 
   const discount = product.originalPrice ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100) : 0;
-  const related = products.filter(p => p.category === product.category && p.id !== product.id).slice(0, 5);
 
   const handleAddToCart = () => {
     for (let i = 0; i < qty; i++) {

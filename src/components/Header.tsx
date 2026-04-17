@@ -1,17 +1,49 @@
-import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { useState, useEffect } from 'react';
+import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Search, ShoppingCart, Heart, Menu, X, MapPin, Phone, ChevronDown } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { categories } from '@/data/products';
 import MiniCart from './MiniCart';
 
 const Header = () => {
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchParams] = useSearchParams();
+  const location = useLocation();
+  const qParam = searchParams.get('q') || '';
+  
+  const [searchQuery, setSearchQuery] = useState(qParam);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [catMenuOpen, setCatMenuOpen] = useState(false);
+  
+  const navigate = useNavigate();
   const itemCount = useCartStore((s) => s.getItemCount());
   const toggleCart = useCartStore((s) => s.toggleCart);
   const isCartOpen = useCartStore((s) => s.isOpen);
+
+  // Sync state with URL q param whenever it changes
+  useEffect(() => {
+    setSearchQuery(qParam);
+  }, [qParam]);
+
+  const handleSearch = (e: React.FormEvent) => {
+    e.preventDefault();
+    const term = searchQuery.trim();
+    if (term) {
+      navigate(`/shop?q=${encodeURIComponent(term)}`);
+    } else {
+      // If empty and searched, clear the filter
+      navigate('/shop');
+    }
+  };
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const val = e.target.value;
+    setSearchQuery(val);
+    
+    // If user clears the input while on the shop page, automatically reset the search filter
+    if (val === '' && location.pathname === '/shop') {
+      navigate('/shop');
+    }
+  };
 
   return (
     <>
@@ -24,7 +56,6 @@ const Header = () => {
           </div>
           <div className="flex items-center gap-4">
             {/* Removed: Free shipping banner */}
-            {/* <span>🎉 Free shipping on orders over ₦50,000!</span> */}
           </div>
         </div>
       </div>
@@ -33,10 +64,8 @@ const Header = () => {
       <header className="sticky top-0 z-50 bg-background border-b shadow-sm">
         <div className="container flex items-center gap-4 py-3">
           {/* Logo */}
-          <Link to="/" className="flex-shrink-0 flex items-center gap-1">
-            <div className="w-9 h-9 rounded-lg bg-gradient-emerald flex items-center justify-center">
-              <span className="text-primary-foreground font-bold text-lg">C</span>
-            </div>
+          <Link to="/" className="flex-shrink-0 flex items-center gap-2">
+            <img src="/logo.png" alt="Cedokamall" className="h-10 w-auto object-contain" />
             <span className="font-display text-xl font-bold hidden sm:block">
               <span className="text-primary">Cedoka</span><span className="text-gold">mall</span>
             </span>
@@ -69,37 +98,34 @@ const Header = () => {
           </div>
 
           {/* Search */}
-          <div className="flex-1 max-w-xl relative">
+          <form onSubmit={handleSearch} className="flex-1 max-w-xl relative">
             <input
               type="text"
               value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
+              onChange={handleInputChange}
               placeholder="Search products, brands, categories..."
               className="w-full pl-4 pr-10 py-2.5 rounded-lg border bg-muted/50 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
-            <Search className="absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-          </div>
+            <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:text-primary transition-colors">
+              <Search className="w-4 h-4 text-muted-foreground" />
+            </button>
+          </form>
 
           {/* Actions */}
           <div className="flex items-center gap-2">
-            {/* Removed: Account feature */}
-            {/* <Link to="/account" className="hidden sm:flex items-center gap-1.5 text-sm hover:text-primary transition-colors">
-              <User className="w-5 h-5" />
-              <span className="hidden md:inline">Account</span>
-            </Link> */}
-            <Link to="/wishlist" className="hidden sm:flex items-center gap-1.5 text-sm hover:text-primary transition-colors">
+            <Link to="/wishlist" className="hidden sm:flex items-center gap-1.5 text-sm hover:text-primary transition-colors" title="Wishlist">
               <Heart className="w-5 h-5" />
             </Link>
-            <button onClick={toggleCart} className="relative flex items-center gap-1.5 text-sm hover:text-primary transition-colors">
+            <button onClick={toggleCart} className="relative flex items-center gap-1.5 text-sm hover:text-primary transition-colors" title="Cart">
               <ShoppingCart className="w-5 h-5" />
               {itemCount > 0 && (
-                <span className="absolute -top-2 -right-2 w-5 h-5 bg-accent text-accent-foreground text-xs rounded-full flex items-center justify-center font-bold">
+                <span className="absolute -top-2 -right-2 w-5 h-5 bg-accent text-accent-foreground text-xs rounded-full flex items-center justify-center font-bold shadow-sm">
                   {itemCount}
                 </span>
               )}
               <span className="hidden md:inline">Cart</span>
             </button>
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="lg:hidden ml-2">
+            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="lg:hidden ml-2" title="Menu">
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>
@@ -107,7 +133,7 @@ const Header = () => {
 
         {/* Mobile menu */}
         {mobileMenuOpen && (
-          <div className="lg:hidden border-t bg-background p-4">
+          <div className="lg:hidden border-t bg-background p-4 animate-in slide-in-from-top duration-300">
             <div className="grid grid-cols-2 gap-2">
               {categories.map((cat) => (
                 <Link

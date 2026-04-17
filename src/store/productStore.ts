@@ -1,103 +1,96 @@
+import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { Product, ProductFormData, ProductFilter } from '@/types/product';
 import { initialProducts } from '@/data/products';
 
-interface ProductStore {
+interface ProductState {
   products: Product[];
   filter: ProductFilter;
+  
+  // Actions
   setProducts: (products: Product[]) => void;
   addProduct: (product: ProductFormData) => void;
-  updateProduct: (id: string, product: Partial<ProductFormData>) => void;
+  updateProduct: (id: string, updates: Partial<ProductFormData>) => void;
   deleteProduct: (id: string) => void;
   setFilter: (filter: ProductFilter) => void;
+  
+  // Helpers
   getFilteredProducts: () => Product[];
   getProductById: (id: string) => Product | undefined;
 }
 
-class ProductStoreImpl implements ProductStore {
-  products: Product[] = [];
-  filter: ProductFilter = {};
+export const useProductStore = create<ProductState>()(
+  persist(
+    (set, get) => ({
+      products: initialProducts,
+      filter: {},
 
-  constructor() {
-    // Initialize with mock data from localStorage or default
-    const stored = localStorage.getItem('products');
-    this.products = stored ? JSON.parse(stored) : initialProducts;
-  }
+      setProducts: (products) => set({ products }),
 
-  setProducts(products: Product[]): void {
-    this.products = products;
-    localStorage.setItem('products', JSON.stringify(products));
-  }
+      addProduct: (productData) => {
+        const newProduct: Product = {
+          id: Date.now().toString(),
+          ...productData,
+          createdAt: new Date(),
+          updatedAt: new Date(),
+        };
+        set((state) => ({ 
+          products: [...state.products, newProduct] 
+        }));
+      },
 
-  addProduct(productData: ProductFormData): void {
-    const newProduct: Product = {
-      id: Date.now().toString(),
-      ...productData,
-      createdAt: new Date(),
-      updatedAt: new Date(),
-    };
-    this.products.push(newProduct);
-    this.setProducts(this.products);
-  }
+      updateProduct: (id, updates) => {
+        set((state) => ({
+          products: state.products.map((p) => 
+            p.id === id 
+              ? { ...p, ...updates, updatedAt: new Date() } 
+              : p
+          ),
+        }));
+      },
 
-  updateProduct(id: string, updates: Partial<ProductFormData>): void {
-    const index = this.products.findIndex((p) => p.id === id);
-    if (index !== -1) {
-      this.products[index] = {
-        ...this.products[index],
-        ...updates,
-        updatedAt: new Date(),
-      };
-      this.setProducts(this.products);
+      deleteProduct: (id) => {
+        set((state) => ({
+          products: state.products.filter((p) => p.id !== id),
+        }));
+      },
+
+      setFilter: (filter) => set({ filter }),
+
+      getFilteredProducts: () => {
+        const { products, filter } = get();
+        return products.filter((product) => {
+          if (filter.category && product.category !== filter.category) {
+            return false;
+          }
+          if (filter.minPrice !== undefined && product.price < filter.minPrice) {
+            return false;
+          }
+          if (filter.maxPrice !== undefined && product.price > filter.maxPrice) {
+            return false;
+          }
+          if (filter.inStock !== undefined && filter.inStock && product.inStock === 0) {
+            return false;
+          }
+          if (filter.searchTerm) {
+            const term = filter.searchTerm.toLowerCase();
+            return (
+              product.name.toLowerCase().includes(term) ||
+              product.description.toLowerCase().includes(term) ||
+              product.seller.toLowerCase().includes(term)
+            );
+          }
+          return true;
+        });
+      },
+
+      getProductById: (id) => {
+        return get().products.find((p) => p.id === id);
+      },
+    }),
+    {
+      name: 'cedokamall-products', // Key for localStorage
     }
-  }
+  )
+);
 
-  deleteProduct(id: string): void {
-    this.products = this.products.filter((p) => p.id !== id);
-    this.setProducts(this.products);
-  }
-
-  setFilter(filter: ProductFilter): void {
-    this.filter = filter;
-  }
-
-  getFilteredProducts(): Product[] {
-    return this.products.filter((product) => {
-      if (this.filter.category && product.category !== this.filter.category) {
-        return false;
-      }
-      if (
-        this.filter.minPrice !== undefined &&
-        product.price < this.filter.minPrice
-      ) {
-        return false;
-      }
-      if (
-        this.filter.maxPrice !== undefined &&
-        product.price > this.filter.maxPrice
-      ) {
-        return false;
-      }
-      if (this.filter.inStock !== undefined && this.filter.inStock) {
-        if (product.inStock === 0) {
-          return false;
-        }
-      }
-      if (this.filter.searchTerm) {
-        const term = this.filter.searchTerm.toLowerCase();
-        if (
-          !product.name.toLowerCase().includes(term) &&
-          !product.description.toLowerCase().includes(term)
-        ) {
-          return false;
-        }
-      }
-      return true;
-    });
-  }
-
-  getProductById(id: string): Product | undefined {
-    return this.products.find((p) => p.id === id);
-  }
-}
-
-export const productStore = new ProductStoreImpl();

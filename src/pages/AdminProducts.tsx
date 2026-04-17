@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { useNavigate } from 'react-router-dom';
 import AdminLayout from '@/components/AdminLayout';
 import ProductForm from '@/components/ProductForm';
@@ -10,7 +10,7 @@ import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Product, ProductFormData, ProductFilter } from '@/types/product';
-import { productStore } from '@/store/productStore';
+import { useProductStore } from '@/store/productStore';
 import { Plus, Search, Filter } from 'lucide-react';
 
 const categories = [
@@ -34,25 +34,21 @@ const categories = [
 
 const AdminProducts = () => {
   const navigate = useNavigate();
-  const [products, setProducts] = useState<Product[]>([]);
-  const [filteredProducts, setFilteredProducts] = useState<Product[]>([]);
-  const [filter, setFilter] = useState<ProductFilter>({});
+  const { 
+    products, 
+    filter, 
+    setFilter, 
+    addProduct, 
+    updateProduct, 
+    deleteProduct,
+    getFilteredProducts 
+  } = useProductStore();
+  
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | undefined>();
   const [isLoading, setIsLoading] = useState(false);
 
-  // Load products on mount
-  useEffect(() => {
-    const allProducts = productStore.products;
-    setProducts(allProducts);
-    setFilteredProducts(allProducts);
-  }, []);
-
-  // Apply filters
-  useEffect(() => {
-    productStore.setFilter(filter);
-    setFilteredProducts(productStore.getFilteredProducts());
-  }, [filter]);
+  const filteredProducts = useMemo(() => getFilteredProducts(), [products, filter, getFilteredProducts]);
 
   const handleAddProduct = () => {
     setEditingProduct(undefined);
@@ -67,10 +63,7 @@ const AdminProducts = () => {
   const handleDeleteProduct = (productId: string) => {
     setIsLoading(true);
     try {
-      productStore.deleteProduct(productId);
-      setProducts(productStore.products);
-      const updated = productStore.getFilteredProducts();
-      setFilteredProducts(updated);
+      deleteProduct(productId);
     } finally {
       setIsLoading(false);
     }
@@ -80,14 +73,10 @@ const AdminProducts = () => {
     setIsLoading(true);
     try {
       if (editingProduct) {
-        productStore.updateProduct(editingProduct.id, formData);
+        updateProduct(editingProduct.id, formData);
       } else {
-        productStore.addProduct(formData);
+        addProduct(formData);
       }
-
-      setProducts(productStore.products);
-      const updated = productStore.getFilteredProducts();
-      setFilteredProducts(updated);
       setIsFormOpen(false);
       setEditingProduct(undefined);
     } catch (error) {
@@ -97,15 +86,17 @@ const AdminProducts = () => {
     }
   };
 
-  const handleFilterChange = (key: keyof ProductFilter, value: string | number | boolean | undefined) => {
-    setFilter((prev) => ({
-      ...prev,
-      [key]: value || undefined,
-    }));
+  const handleFilterChange = (key: keyof ProductFilter, value: any) => {
+    setFilter({
+      ...filter,
+      [key]: value === 'all' ? undefined : value,
+    });
   };
 
-  const minPrice = Math.min(...(products.length > 0 ? products.map((p) => p.price) : [0]));
-  const maxPrice = Math.max(...(products.length > 0 ? products.map((p) => p.price) : [0]));
+  const maxPrice = useMemo(() => 
+    products.length > 0 ? Math.max(...products.map((p) => p.price)) : 0
+  , [products]);
+
 
   return (
     <AdminLayout>
