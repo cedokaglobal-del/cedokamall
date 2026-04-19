@@ -13,7 +13,7 @@ export const SEO_CONFIG = {
   country: "NG",
   author: "Cedokamall Team",
   email: "support@cedokamall.com",
-  phone: "+2347045851131",
+  phone: "09128817136",
   twitterHandle: "@cedokamall",
   facebookPage: "https://facebook.com/cedokamall"
 };

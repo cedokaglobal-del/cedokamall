@@ -12,6 +12,7 @@ interface ProductState {
   addProduct: (product: ProductFormData) => void;
   updateProduct: (id: string, updates: Partial<ProductFormData>) => void;
   deleteProduct: (id: string) => void;
+  clearAllProducts: () => void;
   setFilter: (filter: ProductFilter) => void;
   
   // Helpers
@@ -53,6 +54,10 @@ export const useProductStore = create<ProductState>()(
         set((state) => ({
           products: state.products.filter((p) => p.id !== id),
         }));
+      },
+
+      clearAllProducts: () => {
+        set({ products: [] });
       },
 
       setFilter: (filter) => set({ filter }),

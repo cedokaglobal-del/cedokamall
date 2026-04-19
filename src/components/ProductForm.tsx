@@ -37,11 +37,11 @@ const categories = [
 const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: ProductFormProps) => {
   const [formData, setFormData] = useState<ProductFormData>({
     name: product?.name || '',
-    price: product?.price || 0,
-    originalPrice: product?.originalPrice || 0,
+    price: product?.price || (undefined as any),
+    originalPrice: product?.originalPrice || (undefined as any),
     category: product?.category || '',
     description: product?.description || '',
-    inStock: product?.inStock !== undefined ? product.inStock : 1,
+    inStock: product?.inStock !== undefined ? product.inStock : (undefined as any),
     seller: product?.seller || '',
     image: product?.image || '',
     images: product?.images || (product?.image ? [product.image] : []),
@@ -132,8 +132,12 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
     }
   };
 
-  const handleChange = (field: keyof ProductFormData, value: string | number) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    if (field === 'price' || field === 'originalPrice' || field === 'inStock') {
+      const numValue = value === '' ? undefined : Number(value);
+      setFormData((prev) => ({ ...prev, [field]: numValue }));
+    } else {
+      setFormData((prev) => ({ ...prev, [field]: value }));
+    }
     // Clear error when field is updated
     if (errors[field]) {
       setErrors((prev) => {
@@ -188,10 +192,15 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
           <Label htmlFor="price">Price (₦) *</Label>
           <Input
             id="price"
-            type="number"
-            min="0"
-            value={formData.price}
-            onChange={(e) => handleChange('price', Number(e.target.value))}
+            type="text"
+            inputMode="decimal"
+            value={formData.price === undefined ? '' : formData.price}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                handleChange('price', val);
+              }
+            }}
             placeholder="0.00"
             className={errors.price ? 'border-destructive' : ''}
             disabled={isLoading}
@@ -204,10 +213,15 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
           <Label htmlFor="originalPrice">Original Price (₦)</Label>
           <Input
             id="originalPrice"
-            type="number"
-            min="0"
-            value={formData.originalPrice}
-            onChange={(e) => handleChange('originalPrice', Number(e.target.value))}
+            type="text"
+            inputMode="decimal"
+            value={formData.originalPrice === undefined ? '' : formData.originalPrice}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                handleChange('originalPrice', val);
+              }
+            }}
             placeholder="0.00"
             disabled={isLoading}
           />
@@ -218,11 +232,16 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
           <Label htmlFor="inStock">Stock Quantity *</Label>
           <Input
             id="inStock"
-            type="number"
-            min="1"
-            value={formData.inStock}
-            onChange={(e) => handleChange('inStock', Number(e.target.value))}
-            placeholder="1"
+            type="text"
+            inputMode="numeric"
+            value={formData.inStock === undefined ? '' : formData.inStock}
+            onChange={(e) => {
+              const val = e.target.value;
+              if (val === '' || /^\d+$/.test(val)) {
+                handleChange('inStock', val);
+              }
+            }}
+            placeholder="Enter quantity"
             className={errors.inStock ? 'border-destructive' : ''}
             disabled={isLoading}
           />
@@ -265,6 +284,19 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
             placeholder="e.g., 1 year"
             disabled={isLoading}
           />
+        </div>
+
+        {/* Color (Optional) */}
+        <div>
+          <Label htmlFor="color">Color (Optional)</Label>
+          <Input
+            id="color"
+            value={formData.color || ''}
+            onChange={(e) => handleChange('color', e.target.value)}
+            placeholder="e.g., Black, Red, Silver"
+            disabled={isLoading}
+          />
+          <p className="text-xs text-muted-foreground mt-1">Leave blank if product doesn't have a specific color</p>
         </div>
       </div>
 

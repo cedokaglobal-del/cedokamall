@@ -40,10 +40,14 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-6 border-b">
-            <Link to="/admin" className="flex items-center gap-2" onClick={() => setSidebarOpen(false)}>
-              <img src="/logo.png" alt="Cedoka Admin" className="w-8 h-8 object-contain" />
-              <span className="font-bold text-lg">Cedoka Admin</span>
+          <div className="p-4 border-b">
+            <Link to="/admin" className="flex items-center gap-3" onClick={() => setSidebarOpen(false)}>
+              <img
+                src="/logo.png"
+                alt="Cedoka Admin"
+                className="object-contain"
+                style={{ height: '40px', width: 'auto', maxWidth: '130px' }}
+              />
             </Link>
           </div>
 
@@ -96,7 +100,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
                 <Menu className="w-5 h-5" />
               )}
             </button>
-            <h1 className="text-xl font-bold">Admin Dashboard</h1>
+            <h1 className="text-base sm:text-xl font-bold">Cedoka Admin</h1>
           </div>
 
           {/* User Menu */}

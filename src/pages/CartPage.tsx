@@ -20,6 +20,8 @@ const CartPage = () => {
   const [paymentMethod, setPaymentMethod] = useState('cash-on-delivery');
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptFileName, setReceiptFileName] = useState('');
+  const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
+  const [attachmentFileNames, setAttachmentFileNames] = useState<string[]>([]);
   const [orderSent, setOrderSent] = useState(false);
 
   const handleCoupon = () => {
@@ -43,8 +45,41 @@ const CartPage = () => {
     }
   };
 
+  const handleFileAttachment = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const files = Array.from(e.target.files || []);
+    const maxFiles = 5;
+    
+    if (files.length + attachmentFiles.length > maxFiles) {
+      toast.error(`You can attach up to ${maxFiles} files. You have ${attachmentFiles.length} already.`);
+      return;
+    }
+
+    const validFiles: File[] = [];
+    const fileNames: string[] = [];
+
+    files.forEach((file) => {
+      if (file.size > 5 * 1024 * 1024) {
+        toast.error(`File "${file.name}" is too large. Max size is 5MB`);
+      } else {
+        validFiles.push(file);
+        fileNames.push(file.name);
+      }
+    });
+
+    if (validFiles.length > 0) {
+      setAttachmentFiles([...attachmentFiles, ...validFiles]);
+      setAttachmentFileNames([...attachmentFileNames, ...fileNames]);
+      toast.success(`${validFiles.length} file(s) attached successfully`);
+    }
+  };
+
+  const removeAttachment = (index: number) => {
+    setAttachmentFiles(attachmentFiles.filter((_, i) => i !== index));
+    setAttachmentFileNames(attachmentFileNames.filter((_, i) => i !== index));
+  };
+
   const sendWhatsAppMessage = (message: string) => {
-    const whatsappNumber = '2347045851131'; // Company WhatsApp number
+    const whatsappNumber = '2349128817136'; // Company WhatsApp number
     const encodedMessage = encodeURIComponent(message);
     window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
   };
@@ -270,7 +305,7 @@ We appreciate your business! 🙏
                     <p className="text-sm text-muted-foreground mb-3">Pick up directly from our store</p>
                     <ul className="text-sm space-y-1 text-muted-foreground mb-4">
                       <li>✓ Free (No delivery charge)</li>
-                      <li>✓ 35 Ailegun Rd / 1 Kola Rewire St, Ejigbo</li>
+                      <li>✓ 2 Mukaila Okunade Street, By Okeafo Bus Stop, Lagos</li>
                       <li>✓ Available 9 AM - 6 PM</li>
                       <li>✓ Pay upon pickup</li>
                     </ul>
@@ -313,7 +348,7 @@ We appreciate your business! 🙏
 
             <div className="bg-accent/10 rounded-lg p-4 border border-accent/20">
               <p className="text-sm font-medium mb-2">📍 Pickup Location</p>
-              <p className="text-sm">Showroom 1: 35, Ailegun Road, Ejigbo<br/>Showroom 2: 1, Kola Rewire Street, Ejigbo</p>
+              <p className="text-sm">2 Mukaila Okunade Street, By Okeafo Bus Stop, Lagos</p>
               <p className="text-sm text-muted-foreground mt-1">Available 9 AM - 6 PM daily</p>
             </div>
 
@@ -490,6 +525,54 @@ We appreciate your business! 🙏
               </div>
             )}
 
+            {/* File Attachment for WhatsApp */}
+            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">
+              <p className="text-sm font-medium mb-3">📎 Attach Files (Optional)</p>
+              <p className="text-xs text-muted-foreground mb-3">
+                Attach payment receipts, documents, or proof of payment to send with your WhatsApp message. 
+                You can attach up to 5 files (max 5MB each).
+              </p>
+              
+              <div className="relative">
+                <input 
+                  type="file" 
+                  multiple
+                  accept="image/*,.pdf,.doc,.docx"
+                  onChange={handleFileAttachment}
+                  className="hidden"
+                  id="file-attachment-upload"
+                />
+                <label htmlFor="file-attachment-upload" className="flex items-center justify-center gap-2 p-3 border-2 border-dashed border-blue-300 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors bg-white">
+                  <Upload className="w-4 h-4" />
+                  <span className="text-sm">Click to attach files</span>
+                </label>
+              </div>
+
+              {/* Attached Files List */}
+              {attachmentFileNames.length > 0 && (
+                <div className="mt-3 space-y-2">
+                  <p className="text-xs font-medium text-gray-600">Attached Files ({attachmentFileNames.length}):</p>
+                  {attachmentFileNames.map((fileName, index) => (
+                    <div key={index} className="flex items-center gap-2 p-2 bg-white rounded border border-blue-200">
+                      <Check className="w-4 h-4 text-blue-600" />
+                      <span className="text-xs text-blue-700 flex-1 truncate">{fileName}</span>
+                      <button 
+                        onClick={() => removeAttachment(index)}
+                        className="text-red-500 hover:text-red-700"
+                        type="button"
+                      >
+                        <X className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <p className="text-xs text-blue-600 mt-3 font-medium">
+                💡 After clicking "Send to WhatsApp", you can attach additional files directly in the WhatsApp chat by clicking the attachment button.
+              </p>
+            </div>
+
             <div className="space-y-3">
               <h3 className="font-medium text-sm">Order Summary:</h3>
               {items.map(item => (
@@ -544,7 +627,7 @@ We appreciate your business! 🙏
             </button>
 
             <p className="text-xs text-muted-foreground text-center">
-              A WhatsApp message with your order details will be sent to +234 704 585 1131
+              A WhatsApp message with your order details will be sent to 09128817136
             </p>
           </div>
         )}

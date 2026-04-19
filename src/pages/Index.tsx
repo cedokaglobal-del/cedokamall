@@ -59,40 +59,56 @@ const Index = () => {
       {/* <SpinWheel /> */}
 
       {/* Hero */}
-      <section className="bg-gradient-hero text-primary-foreground relative overflow-hidden">
+      <section className="bg-gradient-hero text-primary-foreground relative overflow-hidden min-h-[500px] flex items-center">
         <div className="absolute inset-0 opacity-5" style={{ backgroundImage: "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23ffffff' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")" }} />
-        <div className="container py-16 md:py-24 relative">
-          <motion.div initial={{ opacity: 0, y: 30 }} animate={{ opacity: 1, y: 0 }} transition={{ duration: 0.6 }} className="max-w-2xl">
-            <div className="flex items-center gap-2 mb-4">
-              <span className="px-3 py-1 bg-gold text-secondary-foreground text-xs font-bold rounded-full">🔥 MEGA SALE — UP TO 60% OFF</span>
+        <div className="container py-12 md:py-24 relative z-10">
+          <motion.div 
+            initial={{ opacity: 0, x: -50 }} 
+            animate={{ opacity: 1, x: 0 }} 
+            transition={{ duration: 0.8, ease: "easeOut" }} 
+            className="max-w-3xl"
+          >
+            <div className="flex items-center gap-2 mb-6">
+              <motion.span 
+                initial={{ scale: 0.9 }}
+                animate={{ scale: 1 }}
+                transition={{ duration: 1.5, repeat: Infinity, repeatType: "reverse" }}
+                className="px-4 py-1.5 bg-gold text-secondary-foreground text-xs font-black rounded-full shadow-gold uppercase tracking-wider"
+              >
+                🔥 MEGA SALE — UP TO 60% OFF
+              </motion.span>
             </div>
-            <h1 className="font-display text-4xl md:text-6xl font-bold leading-tight mb-4">
-              Everything You Need.{' '}
-              <span className="text-gradient-gold">Delivered Nationwide.</span>
+            <h1 className="font-display text-4xl sm:text-5xl md:text-7xl font-black leading-tight mb-6">
+              Everything You Need.<br />
+              <span className="text-gradient-gold drop-shadow-sm">Delivered Nationwide.</span>
             </h1>
-            <p className="text-lg text-primary-foreground/80 mb-8">
-              Nigeria's premium marketplace with 50,000+ products, trusted sellers, and lightning-fast delivery across Nigeria.
+            <p className="text-lg md:text-xl text-primary-foreground/90 mb-10 max-w-2xl leading-relaxed">
+              Nigeria's premium marketplace with 50,000+ products, trusted brands, and lightning-fast delivery to your doorstep.
             </p>
-            <div className="flex flex-wrap gap-3">
-              <Link to="/shop" className="inline-flex items-center gap-2 px-8 py-4 bg-accent text-accent-foreground rounded-xl font-bold text-lg hover:bg-cta-orange-light transition-colors shadow-lg">
-                Shop Now <ArrowRight className="w-5 h-5" />
+            <div className="flex flex-col sm:flex-row gap-4">
+              <Link to="/shop" className="inline-flex items-center justify-center gap-3 px-10 py-4 bg-accent text-accent-foreground rounded-2xl font-bold text-xl hover:bg-cta-orange-light transition-all hover:scale-105 active:scale-95 shadow-xl">
+                Shop Now <ArrowRight className="w-6 h-6" />
               </Link>
-              <Link to="/shop?deals=true" className="inline-flex items-center gap-2 px-8 py-4 bg-primary-foreground/10 text-primary-foreground rounded-xl font-bold text-lg hover:bg-primary-foreground/20 transition-colors backdrop-blur-sm">
+              <Link to="/shop?deals=true" className="inline-flex items-center justify-center gap-3 px-10 py-4 bg-white/10 text-primary-foreground rounded-2xl font-bold text-xl hover:bg-white/20 transition-all backdrop-blur-md border border-white/20">
                 Today's Deals
               </Link>
             </div>
           </motion.div>
         </div>
+        
+        {/* Abstract background elements for premium feel */}
+        <div className="absolute -bottom-24 -right-24 w-96 h-96 bg-gold/10 rounded-full blur-3xl" />
+        <div className="absolute top-1/4 -right-12 w-64 h-64 bg-primary-foreground/5 rounded-full blur-2xl" />
       </section>
 
       {/* Trust bar */}
-      <div className="bg-muted border-b">
-        <div className="container py-3 flex flex-wrap justify-center gap-6 md:gap-10 text-sm">
-          <span className="flex items-center gap-1.5"><Users className="w-4 h-4 text-primary" /> <strong>1.2M+</strong> Happy Customers</span>
-          <span className="flex items-center gap-1.5"><Star className="w-4 h-4 text-gold fill-gold" /> <strong>4.9/5</strong> Average Rating</span>
-          <span className="flex items-center gap-1.5"><ShieldCheck className="w-4 h-4 text-primary" /> <strong>100%</strong> Secure Payments</span>
-          <span className="flex items-center gap-1.5"><Truck className="w-4 h-4 text-primary" /> <strong>Nationwide</strong> Delivery</span>
-          <span className="flex items-center gap-1.5 text-accent">👁 <strong>{visitorCount.toLocaleString()}</strong> shopping now</span>
+      <div className="bg-muted border-b overflow-hidden">
+        <div className="container py-4 flex flex-nowrap md:flex-wrap justify-start md:justify-center gap-6 md:gap-10 text-sm overflow-x-auto no-scrollbar whitespace-nowrap">
+          <span className="flex items-center gap-2 flex-shrink-0 font-medium"><Users className="w-4 h-4 text-primary" /> <strong>1.2M+</strong> Happy Customers</span>
+          <span className="flex items-center gap-2 flex-shrink-0 font-medium"><Star className="w-4 h-4 text-gold fill-gold" /> <strong>4.9/5</strong> Average Rating</span>
+          <span className="flex items-center gap-2 flex-shrink-0 font-medium"><ShieldCheck className="w-4 h-4 text-primary" /> <strong>100%</strong> Secure</span>
+          <span className="flex items-center gap-2 flex-shrink-0 font-medium"><Truck className="w-4 h-4 text-primary" /> <strong>Nationwide</strong> Delivery</span>
+          <span className="flex items-center gap-2 flex-shrink-0 text-accent font-bold animate-pulse">👁 {visitorCount.toLocaleString()} shopping now</span>
         </div>
       </div>
 
@@ -196,7 +212,7 @@ const Index = () => {
 
       {/* WhatsApp float */}
       <a
-        href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER || '2347045851131'}`}
+        href={`https://wa.me/${import.meta.env.VITE_WHATSAPP_NUMBER || '2349128817136'}`}
         target="_blank"
         rel="noopener noreferrer"
         className="fixed bottom-6 right-6 z-50 w-14 h-14 rounded-full bg-[hsl(142,70%,45%)] text-primary-foreground shadow-lg flex items-center justify-center text-2xl hover:scale-110 transition-transform"

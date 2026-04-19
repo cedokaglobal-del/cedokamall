@@ -9,9 +9,10 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Product, ProductFormData, ProductFilter } from '@/types/product';
 import { useProductStore } from '@/store/productStore';
-import { Plus, Search, Filter } from 'lucide-react';
+import { Plus, Search, Filter, Trash2 } from 'lucide-react';
 
 const categories = [
   'Smartphones',
@@ -41,12 +42,14 @@ const AdminProducts = () => {
     addProduct, 
     updateProduct, 
     deleteProduct,
+    clearAllProducts,
     getFilteredProducts 
   } = useProductStore();
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | undefined>();
   const [isLoading, setIsLoading] = useState(false);
+  const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false);
 
   const filteredProducts = useMemo(() => getFilteredProducts(), [products, filter, getFilteredProducts]);
 
@@ -86,6 +89,16 @@ const AdminProducts = () => {
     }
   };
 
+  const handleClearAllProducts = () => {
+    setIsLoading(true);
+    try {
+      clearAllProducts();
+      setIsClearAllDialogOpen(false);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const handleFilterChange = (key: keyof ProductFilter, value: any) => {
     setFilter({
       ...filter,
@@ -102,17 +115,30 @@ const AdminProducts = () => {
     <AdminLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex items-center justify-between flex-wrap gap-4">
           <div>
             <h1 className="text-3xl font-bold">Products</h1>
             <p className="text-muted-foreground mt-2">
               Manage your product catalog ({filteredProducts.length} products)
             </p>
           </div>
-          <Button onClick={handleAddProduct} size="lg" className="gap-2">
-            <Plus className="w-4 h-4" />
-            Add Product
-          </Button>
+          <div className="flex gap-2">
+            <Button onClick={handleAddProduct} size="lg" className="gap-2">
+              <Plus className="w-4 h-4" />
+              Add Product
+            </Button>
+            {products.length > 0 && (
+              <Button 
+                onClick={() => setIsClearAllDialogOpen(true)} 
+                size="lg" 
+                variant="destructive" 
+                className="gap-2"
+              >
+                <Trash2 className="w-4 h-4" />
+                Clear All
+              </Button>
+            )}
+          </div>
         </div>
 
         {/* Filters */}
@@ -232,6 +258,30 @@ const AdminProducts = () => {
           isLoading={isLoading}
         />
       </div>
+
+      {/* Clear All Dialog */}
+      <AlertDialog open={isClearAllDialogOpen} onOpenChange={setIsClearAllDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Clear All Products?</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete all {products.length} products from your catalog. This action cannot be undone. 
+              <br /><br />
+              You can still add new products after clearing. Are you sure you want to continue?
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-4 justify-end">
+            <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
+            <AlertDialogAction 
+              onClick={handleClearAllProducts} 
+              disabled={isLoading}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isLoading ? 'Clearing...' : 'Clear All'}
+            </AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Product Form Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>

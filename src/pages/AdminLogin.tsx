@@ -1,10 +1,9 @@
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
-import { validateEmail, validatePassword } from '@/config/security';
+import { validateEmail } from '@/config/security';
 import { useAuth } from '@/contexts/AuthContext';
 
 const AdminLogin = () => {
@@ -48,76 +47,83 @@ const AdminLogin = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary to-accent flex items-center justify-center p-4">
-      <Card className="w-full max-w-md">
-        <div className="p-8">
-          {/* Logo */}
-          <div className="flex items-center justify-center mb-6">
-            <img src="/logo.png" alt="Cedoka Admin" className="w-12 h-12 object-contain" />
-            <span className="ml-3 font-bold text-xl">Cedoka Admin</span>
+    <div className="min-h-screen bg-gradient-to-br from-primary via-emerald-800 to-primary/80 flex items-center justify-center p-4">
+      <div className="w-full max-w-md">
+        {/* Card */}
+        <div className="bg-white rounded-2xl shadow-2xl overflow-hidden">
+          {/* Header band */}
+          <div className="bg-gradient-to-r from-primary to-emerald-700 px-8 py-8 flex flex-col items-center">
+            <img
+              src="/logo.png"
+              alt="Cedoka Admin"
+              className="object-contain mb-3"
+              style={{ height: '56px', width: 'auto', maxWidth: '180px' }}
+            />
+            <p className="text-primary-foreground/80 text-sm mt-1">Admin Control Panel</p>
           </div>
 
-          <h1 className="text-2xl font-bold text-center mb-2">Admin Login</h1>
-          <p className="text-center text-muted-foreground mb-6">
-            Sign in to your admin account
-          </p>
-
-          {/* Error Message */}
-          {error && (
-            <div className="mb-4 p-3 bg-destructive/10 text-destructive rounded-lg text-sm">
-              {error}
-            </div>
-          )}
-
-          {/* Login Form */}
-          <form onSubmit={handleLogin} className="space-y-4">
-            <div>
-              <Label htmlFor="email">Email Address</Label>
-              <Input
-                id="email"
-                type="email"
-                placeholder="cedokamall@gmail.com"
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                disabled={isLoading}
-                className="mt-2"
-              />
-            </div>
-
-            <div>
-              <Label htmlFor="password">Password</Label>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                disabled={isLoading}
-                className="mt-2"
-              />
-            </div>
-
-            <Button
-              type="submit"
-              disabled={isLoading}
-              className="w-full"
-            >
-              {isLoading ? 'Signing in...' : 'Sign In'}
-            </Button>
-          </form>
-
-          {/* Demo Notice */}
-          <div className="mt-6 p-4 bg-blue-50 text-blue-700 rounded-lg text-sm">
-            <p className="font-semibold mb-2">Demo Credentials</p>
-            <p className="mb-2 text-xs">
-              <span className="font-mono">Email: cedokamall@gmail.com</span>
-              <br />
-              <span className="font-mono">Password: ckd12_#cedoka</span>
+          {/* Form */}
+          <div className="px-8 py-8">
+            <h1 className="text-2xl font-bold text-center mb-1">Sign In</h1>
+            <p className="text-center text-muted-foreground text-sm mb-6">
+              Enter your credentials to access the dashboard
             </p>
-            <p className="text-xs">In production, implement proper authentication with JWT tokens.</p>
+
+            {error && (
+              <div className="mb-4 p-3 bg-destructive/10 text-destructive rounded-lg text-sm flex items-center gap-2">
+                <span className="font-semibold">⚠</span> {error}
+              </div>
+            )}
+
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div>
+                <Label htmlFor="email" className="text-sm font-medium">Email Address</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="admin@cedokamall.com"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  disabled={isLoading}
+                  className="mt-1.5 h-11"
+                  autoComplete="email"
+                />
+              </div>
+
+              <div>
+                <Label htmlFor="password" className="text-sm font-medium">Password</Label>
+                <Input
+                  id="password"
+                  type="password"
+                  placeholder="••••••••••••"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  disabled={isLoading}
+                  className="mt-1.5 h-11"
+                  autoComplete="current-password"
+                />
+              </div>
+
+              <Button
+                type="submit"
+                disabled={isLoading}
+                className="w-full h-11 text-base font-semibold mt-2"
+              >
+                {isLoading ? (
+                  <span className="flex items-center gap-2">
+                    <span className="w-4 h-4 border-2 border-white/40 border-t-white rounded-full animate-spin" />
+                    Signing in…
+                  </span>
+                ) : 'Sign In'}
+              </Button>
+            </form>
+
+            <p className="text-center text-xs text-muted-foreground mt-6">
+              Authorized personnel only. All access is logged.
+            </p>
           </div>
         </div>
-      </Card>
+      </div>
     </div>
   );
 };

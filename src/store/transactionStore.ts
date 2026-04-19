@@ -58,7 +58,7 @@ class TransactionStoreImpl implements TransactionStore {
 
   constructor() {
     const stored = localStorage.getItem('transactions');
-    this.transactions = stored ? JSON.parse(stored) : generateMockTransactions();
+    this.transactions = stored ? JSON.parse(stored) : [];
   }
 
   setTransactions(transactions: Transaction[]): void {

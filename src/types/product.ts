@@ -15,6 +15,7 @@ export interface Product {
   specs?: Record<string, string>;
   warranty?: string;
   sku?: string;
+  color?: string;
   createdAt: Date;
   updatedAt: Date;
 }
@@ -32,6 +33,7 @@ export interface ProductFormData {
   specs?: Record<string, string>;
   warranty?: string;
   sku?: string;
+  color?: string;
 }
 
 export interface ProductFilter {
