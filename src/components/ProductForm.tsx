@@ -132,6 +132,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
     }
   };
 
+  const handleChange = (field: keyof ProductFormData, value: string | number) => {
     if (field === 'price' || field === 'originalPrice' || field === 'inStock') {
       const numValue = value === '' ? undefined : Number(value);
       setFormData((prev) => ({ ...prev, [field]: numValue }));
