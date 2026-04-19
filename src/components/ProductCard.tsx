@@ -58,16 +58,20 @@ const ProductCard = ({ product }: { product: Product }) => {
           <span className="text-xs font-medium">{product.rating}</span>
           <span className="text-xs text-muted-foreground">({product.reviews})</span>
         </div>
-        <div className="flex items-center justify-between mt-2">
-          <div>
-            <span className="text-base font-bold text-primary">{formatPrice(product.price)}</span>
+        <div className="flex items-center justify-between gap-2 mt-2">
+          <div className="flex flex-wrap items-baseline gap-1 min-w-0">
+            <span className="text-base font-bold text-primary">
+              {formatPrice(product.price)}
+            </span>
             {product.originalPrice && (
-              <span className="text-xs text-muted-foreground line-through ml-1.5">{formatPrice(product.originalPrice)}</span>
+              <span className="text-[11px] text-muted-foreground line-through opacity-70">
+                {formatPrice(product.originalPrice)}
+              </span>
             )}
           </div>
           <button
             onClick={() => addItem({ id: product.id, name: product.name, price: product.price, image: product.image })}
-            className="w-9 h-9 sm:w-8 sm:h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:bg-emerald-light transition-colors"
+            className="w-9 h-9 sm:w-8 sm:h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:bg-emerald-light transition-colors flex-shrink-0 shadow-sm"
             aria-label="Add to cart"
           >
             <ShoppingCart className="w-5 h-5 sm:w-4 sm:h-4" />
