@@ -3,9 +3,12 @@ import { persist } from 'zustand/middleware';
 import { Product, ProductFormData, ProductFilter } from '@/types/product';
 import { initialProducts } from '@/data/products';
 
+const PRODUCT_CATALOG_VERSION = 3;
+
 interface ProductState {
   products: Product[];
   filter: ProductFilter;
+  catalogVersion: number;
   
   // Actions
   setProducts: (products: Product[]) => void;
@@ -25,6 +28,7 @@ export const useProductStore = create<ProductState>()(
     (set, get) => ({
       products: initialProducts,
       filter: {},
+      catalogVersion: PRODUCT_CATALOG_VERSION,
 
       setProducts: (products) => set({ products }),
 
@@ -95,6 +99,24 @@ export const useProductStore = create<ProductState>()(
     }),
     {
       name: 'cedokamall-products', // Key for localStorage
+      version: PRODUCT_CATALOG_VERSION,
+      migrate: (persistedState, version) => {
+        const state = persistedState as Partial<ProductState>;
+
+        if (version !== PRODUCT_CATALOG_VERSION) {
+          return {
+            ...state,
+            products: state.products ?? initialProducts,
+            filter: state.filter ?? {},
+            catalogVersion: PRODUCT_CATALOG_VERSION,
+          };
+        }
+
+        return {
+          ...state,
+          catalogVersion: PRODUCT_CATALOG_VERSION,
+        } as ProductState;
+      },
     }
   )
 );

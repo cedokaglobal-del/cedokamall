@@ -3,7 +3,7 @@ import { useSearchParams, Link } from 'react-router-dom';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
-import { categories } from '@/data/products';
+import { buildCategories, slugifyCategory } from '@/data/products';
 import { useProductStore } from '@/store/productStore';
 import { SlidersHorizontal, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 
@@ -13,6 +13,7 @@ const ShopPage = () => {
   const qParam = searchParams.get('q');
   
   const { products } = useProductStore();
+  const categories = useMemo(() => buildCategories(products), [products]);
   
   const [selectedCategory, setSelectedCategory] = useState(categoryParam || 'all');
   const [sortBy, setSortBy] = useState('popular');
@@ -56,7 +57,7 @@ const ShopPage = () => {
     
     // Category Filter
     if (selectedCategory !== 'all') {
-      result = result.filter(p => p.category === selectedCategory);
+      result = result.filter((p) => slugifyCategory(p.category) === selectedCategory);
     }
     
     // Search Query Filter
@@ -152,7 +153,7 @@ const ShopPage = () => {
                       : 'bg-muted hover:bg-muted/80'
                   }`}
                 >
-                  {c.icon} {c.name}
+                  <c.icon className="w-4 h-4" /> {c.name}
                 </button>
               ))}
             </div>
@@ -191,7 +192,10 @@ const ShopPage = () => {
                       selectedCategory === c.slug ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
                     }`}
                   >
-                    {c.icon} {c.name}
+                    <span className="inline-flex items-center gap-2">
+                      <c.icon className="w-4 h-4" />
+                      {c.name}
+                    </span>
                   </button>
                 ))}
               </div>

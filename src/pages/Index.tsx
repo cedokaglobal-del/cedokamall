@@ -6,7 +6,7 @@ import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 // Removed: import SpinWheel from '@/components/SpinWheel';
 // Removed: import LoyaltyBanner from '@/components/LoyaltyBanner';
-import { categories } from '@/data/products';
+import { buildCategories } from '@/data/products';
 import { useState, useEffect, useMemo } from 'react';
 import { useProductStore } from '@/store/productStore';
 
@@ -40,6 +40,7 @@ const CountdownTimer = () => {
 
 const Index = () => {
   const { products } = useProductStore();
+  const categories = useMemo(() => buildCategories(products), [products]);
   
   const trending = useMemo(() => 
     [...products].sort((a, b) => (b.rating || 0) - (a.rating || 0)).slice(0, 5)
@@ -113,23 +114,25 @@ const Index = () => {
       </div>
 
       {/* Categories */}
-      <section className="container py-10">
-        <div className="flex items-center justify-between mb-6">
-          <h2 className="font-display text-2xl font-bold">Shop by Category</h2>
-          <Link to="/shop" className="text-sm text-primary flex items-center gap-1 hover:underline">View all <ChevronRight className="w-4 h-4" /></Link>
-        </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
-          {categories.map((cat) => (
-            <Link key={cat.slug} to={`/shop?category=${cat.slug}`}>
-              <motion.div whileHover={{ y: -4 }} className="text-center p-4 rounded-xl border bg-card hover:shadow-md transition-all">
-                <span className="text-3xl block mb-2">{cat.icon}</span>
-                <p className="text-xs font-medium">{cat.name}</p>
-                <p className="text-xs text-muted-foreground">{cat.count}+</p>
-              </motion.div>
-            </Link>
-          ))}
-        </div>
-      </section>
+      {categories.length > 0 && (
+        <section className="container py-10">
+          <div className="flex items-center justify-between mb-6">
+            <h2 className="font-display text-2xl font-bold">Shop by Category</h2>
+            <Link to="/shop" className="text-sm text-primary flex items-center gap-1 hover:underline">View all <ChevronRight className="w-4 h-4" /></Link>
+          </div>
+          <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3">
+            {categories.map((cat) => (
+              <Link key={cat.slug} to={`/shop?category=${cat.slug}`}>
+                <motion.div whileHover={{ y: -4 }} className="text-center p-4 rounded-xl border bg-card hover:shadow-md transition-all">
+                  <cat.icon className="w-8 h-8 mx-auto mb-2 text-primary" />
+                  <p className="text-xs font-medium">{cat.name}</p>
+                  <p className="text-xs text-muted-foreground">{cat.count}</p>
+                </motion.div>
+              </Link>
+            ))}
+          </div>
+        </section>
+      )}
 
       {/* Flash Deals */}
       {products.filter(p => p.badge === 'FLASH DEAL').length > 0 && (

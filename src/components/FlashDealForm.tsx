@@ -5,7 +5,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
 import { FlashDealRequest } from '@/types/flashDeal';
-import { products } from '@/data/products';
+import { useProductStore } from '@/store/productStore';
 
 interface FlashDealFormProps {
   onSubmit: (data: FlashDealRequest) => void;
@@ -15,6 +15,7 @@ interface FlashDealFormProps {
 const FlashDealForm = ({ onSubmit, isLoading = false }: FlashDealFormProps) => {
   const { register, handleSubmit, formState: { errors } } = useForm<FlashDealRequest>();
   const [selectedProduct, setSelectedProduct] = useState<string>('');
+  const { products } = useProductStore();
 
   const handleFormSubmit = (data: FlashDealRequest) => {
     if (!selectedProduct) {

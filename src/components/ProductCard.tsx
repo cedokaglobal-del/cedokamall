@@ -1,7 +1,7 @@
 import { Heart, ShoppingCart, Star, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { motion } from 'framer-motion';
-import { Product } from '@/data/products';
+import { Product } from '@/types/product';
 import { useCartStore } from '@/store/cartStore';
 
 const formatPrice = (n: number) => '₦' + n.toLocaleString();

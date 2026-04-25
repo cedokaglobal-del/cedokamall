@@ -11,29 +11,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Product, ProductFormData, ProductFilter } from '@/types/product';
+import { getCategoryOptions } from '@/data/products';
 import { useProductStore } from '@/store/productStore';
 import { Plus, Search, Filter, Trash2 } from 'lucide-react';
-
-const categories = [
-  'Smartphones',
-  'Laptops',
-  'Tablets',
-  'Audio & Sound',
-  'Cameras',
-  'Gaming',
-  'Accessories',
-  'TV',
-  'Refrigerators',
-  'Washing Machines',
-  'Air Conditioners',
-  'Fans',
-  'Generators',
-  'Freezers',
-  'Sound Systems',
-  'Smart Home',
-  'Solar',
-  'Kitchen Accessories',
-];
 
 const AdminProducts = () => {
   const navigate = useNavigate();
@@ -54,6 +34,7 @@ const AdminProducts = () => {
   const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false);
 
   const filteredProducts = useMemo(() => getFilteredProducts(), [products, filter, getFilteredProducts]);
+  const categories = useMemo(() => getCategoryOptions(products), [products]);
 
   const handleAddProduct = () => {
     setEditingProduct(undefined);

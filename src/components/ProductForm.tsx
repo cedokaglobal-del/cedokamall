@@ -1,13 +1,14 @@
 // Product Management Form Component
-import { useState, useEffect } from 'react';
+import { useState, useMemo } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
-import { Card } from '@/components/ui/card';
+import { DEFAULT_CATEGORY_NAMES, getCategoryOptions } from '@/data/products';
 import { ProductFormData, Product } from '@/types/product';
+import { useProductStore } from '@/store/productStore';
 import { X, Paperclip, Plus } from 'lucide-react';
 
 interface ProductFormProps {
@@ -17,45 +18,24 @@ interface ProductFormProps {
   isLoading?: boolean;
 }
 
-const DEFAULT_CATEGORIES = [
-  'Smartphones',
-  'Laptops',
-  'Tablets',
-  'Audio & Sound',
-  'Cameras',
-  'Gaming',
-  'Accessories',
-  'TV',
-  'Refrigerators',
-  'Washing Machines',
-  'Air Conditioners',
-  'Fans',
-  'Generators',
-  'Freezers',
-  'Sound Systems',
-  'Smart Home',
-  'Solar',
-  'Kitchen Accessories',
-];
-
 // Load custom categories from localStorage
 const loadCategories = (): string[] => {
   try {
     const stored = localStorage.getItem('product_categories');
     if (stored) {
       const customCategories = JSON.parse(stored);
-      return Array.from(new Set([...DEFAULT_CATEGORIES, ...customCategories])).sort();
+      return Array.from(new Set([...DEFAULT_CATEGORY_NAMES, ...customCategories])).sort();
     }
   } catch (e) {
     console.error('Error loading categories:', e);
   }
-  return DEFAULT_CATEGORIES;
+  return DEFAULT_CATEGORY_NAMES;
 };
 
 // Save custom categories to localStorage
 const saveCategories = (cats: string[]): void => {
   try {
-    const custom = cats.filter(c => !DEFAULT_CATEGORIES.includes(c));
+    const custom = cats.filter(c => !DEFAULT_CATEGORY_NAMES.includes(c));
     localStorage.setItem('product_categories', JSON.stringify(custom));
   } catch (e) {
     console.error('Error saving categories:', e);
@@ -63,10 +43,15 @@ const saveCategories = (cats: string[]): void => {
 };
 
 const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: ProductFormProps) => {
-  const [categories, setCategories] = useState<string[]>(loadCategories());
+  const { products } = useProductStore();
+  const [customCategories, setCustomCategories] = useState<string[]>(loadCategories());
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategory, setNewCategory] = useState('');
   const [categoryError, setCategoryError] = useState('');
+  const categories = useMemo(
+    () => getCategoryOptions(products, customCategories),
+    [products, customCategories]
+  );
 
   const [formData, setFormData] = useState<ProductFormData>({
     name: product?.name || '',
@@ -103,8 +88,8 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
       return;
     }
 
-    const updatedCategories = [...categories, trimmed].sort();
-    setCategories(updatedCategories);
+    const updatedCategories = [...customCategories, trimmed].sort();
+    setCustomCategories(updatedCategories);
     saveCategories(updatedCategories);
     setFormData((prev) => ({ ...prev, category: trimmed }));
     setNewCategory('');

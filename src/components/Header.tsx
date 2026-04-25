@@ -1,8 +1,9 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Search, ShoppingCart, Heart, Menu, X, MapPin, Phone, ChevronDown } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
-import { categories } from '@/data/products';
+import { buildCategories } from '@/data/products';
+import { useProductStore } from '@/store/productStore';
 import MiniCart from './MiniCart';
 
 const Header = () => {
@@ -15,9 +16,11 @@ const Header = () => {
   const [catMenuOpen, setCatMenuOpen] = useState(false);
   
   const navigate = useNavigate();
+  const { products } = useProductStore();
   const itemCount = useCartStore((s) => s.getItemCount());
   const toggleCart = useCartStore((s) => s.toggleCart);
   const isCartOpen = useCartStore((s) => s.isOpen);
+  const categories = useMemo(() => buildCategories(products), [products]);
 
   // Sync state with URL q param whenever it changes
   useEffect(() => {
@@ -72,31 +75,33 @@ const Header = () => {
           </Link>
 
           {/* Categories dropdown - hidden on mobile and tablet */}
-          <div className="relative hidden xl:block">
-            <button
-              type="button"
-              onClick={() => setCatMenuOpen(!catMenuOpen)}
-              className="flex items-center gap-1 bg-primary text-primary-foreground px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-emerald-light transition-colors whitespace-nowrap"
-            >
-              <Menu className="w-4 h-4" /> Categories <ChevronDown className="w-3 h-3" />
-            </button>
-            {catMenuOpen && (
-              <div className="absolute top-full left-0 mt-1 bg-background rounded-lg shadow-xl border p-2 w-56 z-50">
-                {categories.map((cat) => (
-                  <Link
-                    key={cat.slug}
-                    to={`/shop?category=${cat.slug}`}
-                    className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-muted transition-colors text-sm"
-                    onClick={() => setCatMenuOpen(false)}
-                  >
-                    <span className="text-lg">{cat.icon}</span>
-                    <span>{cat.name}</span>
-                    <span className="ml-auto text-xs text-muted-foreground">{cat.count}</span>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
+          {categories.length > 0 && (
+            <div className="relative hidden xl:block">
+              <button
+                type="button"
+                onClick={() => setCatMenuOpen(!catMenuOpen)}
+                className="flex items-center gap-1 bg-primary text-primary-foreground px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-emerald-light transition-colors whitespace-nowrap"
+              >
+                <Menu className="w-4 h-4" /> Categories <ChevronDown className="w-3 h-3" />
+              </button>
+              {catMenuOpen && (
+                <div className="absolute top-full left-0 mt-1 bg-background rounded-lg shadow-xl border p-2 w-56 z-50">
+                  {categories.map((cat) => (
+                    <Link
+                      key={cat.slug}
+                      to={`/shop?category=${cat.slug}`}
+                      className="flex items-center gap-3 px-3 py-2.5 rounded-md hover:bg-muted transition-colors text-sm"
+                      onClick={() => setCatMenuOpen(false)}
+                    >
+                      <cat.icon className="w-4 h-4" />
+                      <span>{cat.name}</span>
+                      <span className="ml-auto text-xs text-muted-foreground">{cat.count}</span>
+                    </Link>
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Search - full width on mobile, constrained on desktop */}
           <form onSubmit={handleSearch} className="flex-1 min-w-0 w-full md:max-w-xl relative order-3 md:order-none">
@@ -133,7 +138,7 @@ const Header = () => {
         </div>
 
         {/* Mobile menu */}
-        {mobileMenuOpen && (
+        {mobileMenuOpen && categories.length > 0 && (
           <div className="md:hidden border-t bg-background p-4 animate-in slide-in-from-top duration-300 max-h-96 overflow-y-auto">
             <div className="grid grid-cols-2 gap-2 text-sm">
               {categories.map((cat) => (
@@ -143,7 +148,7 @@ const Header = () => {
                   className="flex items-center gap-2 px-3 py-2 rounded-md bg-muted hover:bg-muted/80 transition-colors overflow-hidden"
                   onClick={() => setMobileMenuOpen(false)}
                 >
-                  <span className="flex-shrink-0">{cat.icon}</span> 
+                  <cat.icon className="w-4 h-4 flex-shrink-0" />
                   <span className="truncate">{cat.name}</span>
                 </Link>
               ))}
