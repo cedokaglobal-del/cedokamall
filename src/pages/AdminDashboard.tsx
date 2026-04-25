@@ -132,22 +132,22 @@ const AdminDashboard = () => {
 
   return (
     <AdminLayout>
-      <div className="space-y-6 pb-8">
+      <div className="space-y-6 pb-8 min-h-screen">
 
-        {/* Page title */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+        {/* Page title with gradient accent */}
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4 md:gap-6">
           <div>
-            <h1 className="text-2xl sm:text-3xl font-bold">Dashboard</h1>
-            <p className="text-muted-foreground text-sm mt-1">Full store management at a glance</p>
+            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-emerald bg-clip-text text-transparent">Dashboard</h1>
+            <p className="text-muted-foreground text-sm mt-2">Welcome back! Here's your store performance at a glance.</p>
           </div>
-          <div className="flex flex-wrap gap-2">
-            <Button onClick={handleAddProduct} className="gap-2 h-10">
+          <div className="flex flex-wrap gap-2 sm:gap-3">
+            <Button onClick={handleAddProduct} size="lg" className="gap-2 flex-1 sm:flex-none shadow-emerald hover:shadow-lg transition-shadow">
               <Plus className="w-4 h-4" /> Add Product
             </Button>
-            <Button variant="outline" onClick={() => navigate('/admin/products')} className="gap-2 h-10">
+            <Button variant="outline" size="lg" onClick={() => navigate('/admin/products')} className="gap-2 flex-1 sm:flex-none hover:border-primary">
               <Package className="w-4 h-4" /> All Products
             </Button>
-            <Button variant="outline" onClick={() => navigate('/admin/analytics')} className="gap-2 h-10">
+            <Button variant="outline" size="lg" onClick={() => navigate('/admin/analytics')} className="gap-2 hidden lg:flex hover:border-primary">
               <BarChart3 className="w-4 h-4" /> Analytics
             </Button>
           </div>
@@ -177,40 +177,43 @@ const AdminDashboard = () => {
         )}
 
         {/* Stats grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 md:gap-6">
           {stats.map((stat, index) => {
             const Icon = stat.icon;
             const isPositive = stat.trend.startsWith('+') || stat.trend === '0' || stat.trend === '0%';
             return (
-              <Card key={index} className="p-4 sm:p-6">
-                <div className="flex items-center justify-between mb-3">
-                  <div className={`w-10 h-10 rounded-lg ${stat.color} flex items-center justify-center`}>
-                    <Icon className="w-5 h-5 text-white" />
+              <Card key={index} className="p-6 sm:p-8 hover:shadow-lg transition-all duration-300 border-l-4 border-l-primary/30 hover:border-l-primary">
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`p-3 rounded-xl text-white ${stat.color}`}>
+                    <Icon className="w-6 h-6" />
                   </div>
-                  <p className={`text-xs font-semibold ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
-                    {stat.trend}
-                  </p>
+                  <div className={`text-sm font-semibold px-2.5 py-1 rounded-full ${isPositive ? 'bg-green-100 text-green-700' : 'bg-red-100 text-red-700'}`}>
+                    {isPositive ? '↑' : '↓'} {stat.trend}
+                  </div>
                 </div>
-                <p className="text-xs text-muted-foreground leading-tight">{stat.label}</p>
-                <p className="text-xl sm:text-2xl font-bold mt-1">{stat.value}</p>
+                <p className="text-muted-foreground text-xs uppercase font-semibold tracking-wider mb-2">{stat.label}</p>
+                <p className="text-2xl sm:text-3xl font-bold">{stat.value}</p>
               </Card>
             );
           })}
         </div>
 
         {/* ─── STOCK CONTROL PANEL ─── */}
-        <Card className="overflow-hidden">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 sm:p-6 border-b bg-muted/30">
+        <Card className="overflow-hidden shadow-md">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 sm:p-8 border-b bg-gradient-to-r from-muted/50 to-transparent">
             <div>
-              <h2 className="text-lg font-bold flex items-center gap-2">
-                <Package className="w-5 h-5" /> Stock Control
+              <h2 className="text-xl font-bold flex items-center gap-3">
+                <div className="p-2.5 bg-primary/10 rounded-lg">
+                  <Package className="w-5 h-5 text-primary" />
+                </div>
+                Stock Control
               </h2>
-              <p className="text-sm text-muted-foreground mt-0.5">
-                {totalProducts} product{totalProducts !== 1 ? 's' : ''} in catalogue
+              <p className="text-sm text-muted-foreground mt-2">
+                <strong className="text-foreground">{totalProducts}</strong> product{totalProducts !== 1 ? 's' : ''} in catalogue
               </p>
             </div>
-            <div className="flex flex-wrap gap-2">
-              <Button onClick={handleAddProduct} size="sm" className="gap-1.5">
+            <div className="flex flex-wrap gap-2 sm:gap-3">
+              <Button onClick={handleAddProduct} size="sm" className="gap-1.5 shadow-emerald hover:shadow-lg transition-shadow">
                 <Plus className="w-4 h-4" /> Add Product
               </Button>
               {totalProducts > 0 && (

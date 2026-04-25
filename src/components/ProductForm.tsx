@@ -1,13 +1,14 @@
 // Product Management Form Component
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog';
 import { Card } from '@/components/ui/card';
 import { ProductFormData, Product } from '@/types/product';
-import { X, Paperclip } from 'lucide-react';
+import { X, Paperclip, Plus } from 'lucide-react';
 
 interface ProductFormProps {
   product?: Product;
@@ -16,7 +17,7 @@ interface ProductFormProps {
   isLoading?: boolean;
 }
 
-const categories = [
+const DEFAULT_CATEGORIES = [
   'Smartphones',
   'Laptops',
   'Tablets',
@@ -33,9 +34,40 @@ const categories = [
   'Freezers',
   'Sound Systems',
   'Smart Home',
+  'Solar',
+  'Kitchen Accessories',
 ];
 
+// Load custom categories from localStorage
+const loadCategories = (): string[] => {
+  try {
+    const stored = localStorage.getItem('product_categories');
+    if (stored) {
+      const customCategories = JSON.parse(stored);
+      return Array.from(new Set([...DEFAULT_CATEGORIES, ...customCategories])).sort();
+    }
+  } catch (e) {
+    console.error('Error loading categories:', e);
+  }
+  return DEFAULT_CATEGORIES;
+};
+
+// Save custom categories to localStorage
+const saveCategories = (cats: string[]): void => {
+  try {
+    const custom = cats.filter(c => !DEFAULT_CATEGORIES.includes(c));
+    localStorage.setItem('product_categories', JSON.stringify(custom));
+  } catch (e) {
+    console.error('Error saving categories:', e);
+  }
+};
+
 const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: ProductFormProps) => {
+  const [categories, setCategories] = useState<string[]>(loadCategories());
+  const [isAddingCategory, setIsAddingCategory] = useState(false);
+  const [newCategory, setNewCategory] = useState('');
+  const [categoryError, setCategoryError] = useState('');
+
   const [formData, setFormData] = useState<ProductFormData>({
     name: product?.name || '',
     price: product?.price || (undefined as any),
@@ -49,7 +81,35 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
     sku: product?.sku || '',
     warranty: product?.warranty || '',
     specs: product?.specs || {},
+    color: product?.color || '',
   });
+
+  const handleAddCategory = () => {
+    setCategoryError('');
+    const trimmed = newCategory.trim();
+
+    if (!trimmed) {
+      setCategoryError('Category name cannot be empty');
+      return;
+    }
+
+    if (categories.includes(trimmed)) {
+      setCategoryError('This category already exists');
+      return;
+    }
+
+    if (trimmed.length > 50) {
+      setCategoryError('Category name must be less than 50 characters');
+      return;
+    }
+
+    const updatedCategories = [...categories, trimmed].sort();
+    setCategories(updatedCategories);
+    saveCategories(updatedCategories);
+    setFormData((prev) => ({ ...prev, category: trimmed }));
+    setNewCategory('');
+    setIsAddingCategory(false);
+  };
 
   const resizeImage = (file: File): Promise<string> => {
     return new Promise((resolve) => {
@@ -170,22 +230,94 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
         {/* Category */}
         <div>
           <Label htmlFor="category">Category *</Label>
-          <Select
-            value={formData.category}
-            onValueChange={(value) => handleChange('category', value)}
-            disabled={isLoading}
-          >
-            <SelectTrigger className={errors.category ? 'border-destructive' : ''}>
-              <SelectValue placeholder="Select a category" />
-            </SelectTrigger>
-            <SelectContent>
-              {categories.map((cat) => (
-                <SelectItem key={cat} value={cat}>
-                  {cat}
-                </SelectItem>
-              ))}
-            </SelectContent>
-          </Select>
+          <div className="flex gap-2">
+            <Select
+              value={formData.category}
+              onValueChange={(value) => handleChange('category', value)}
+              disabled={isLoading}
+            >
+              <SelectTrigger className={`flex-1 ${errors.category ? 'border-destructive' : ''}`}>
+                <SelectValue placeholder="Select a category" />
+              </SelectTrigger>
+              <SelectContent>
+                {categories.map((cat) => (
+                  <SelectItem key={cat} value={cat}>
+                    {cat}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+
+            {/* Add New Category Dialog */}
+            <Dialog open={isAddingCategory} onOpenChange={setIsAddingCategory}>
+              <DialogTrigger asChild>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  title="Add new category"
+                  disabled={isLoading}
+                  className="h-10 w-10"
+                >
+                  <Plus className="w-4 h-4" />
+                </Button>
+              </DialogTrigger>
+              <DialogContent>
+                <DialogHeader>
+                  <DialogTitle>Add New Category</DialogTitle>
+                  <DialogDescription>
+                    Enter the name of the new product category. It will be automatically added to the list.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="space-y-4 py-4">
+                  <div>
+                    <Label htmlFor="newCat">Category Name</Label>
+                    <Input
+                      id="newCat"
+                      placeholder="e.g., Solar, Kitchen Accessories"
+                      value={newCategory}
+                      onChange={(e) => {
+                        setNewCategory(e.target.value);
+                        if (categoryError) setCategoryError('');
+                      }}
+                      onKeyPress={(e) => {
+                        if (e.key === 'Enter') {
+                          e.preventDefault();
+                          handleAddCategory();
+                        }
+                      }}
+                      disabled={isLoading}
+                      autoFocus
+                    />
+                    {categoryError && (
+                      <p className="text-sm text-destructive mt-1">{categoryError}</p>
+                    )}
+                  </div>
+                </div>
+                <div className="flex justify-end gap-2">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => {
+                      setIsAddingCategory(false);
+                      setNewCategory('');
+                      setCategoryError('');
+                    }}
+                    disabled={isLoading}
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    type="button"
+                    onClick={handleAddCategory}
+                    disabled={isLoading || !newCategory.trim()}
+                  >
+                    Add Category
+                  </Button>
+                </div>
+              </DialogContent>
+            </Dialog>
+          </div>
           {errors.category && <p className="text-sm text-destructive mt-1">{errors.category}</p>}
         </div>
 

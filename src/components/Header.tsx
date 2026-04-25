@@ -74,6 +74,7 @@ const Header = () => {
           {/* Categories dropdown - hidden on mobile and tablet */}
           <div className="relative hidden xl:block">
             <button
+              type="button"
               onClick={() => setCatMenuOpen(!catMenuOpen)}
               className="flex items-center gap-1 bg-primary text-primary-foreground px-4 py-2.5 rounded-lg text-sm font-medium hover:bg-emerald-light transition-colors whitespace-nowrap"
             >
@@ -106,7 +107,7 @@ const Header = () => {
               placeholder="Search products..."
               className="w-full pl-4 pr-10 py-2.5 rounded-lg border bg-muted/50 text-sm focus:outline-none focus:ring-2 focus:ring-primary/30"
             />
-            <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:text-primary transition-colors flex-shrink-0">
+            <button type="submit" className="absolute right-3 top-1/2 -translate-y-1/2 p-1 hover:text-primary transition-colors flex-shrink-0" aria-label="Search">
               <Search className="w-4 h-4 text-muted-foreground" />
             </button>
           </form>
@@ -116,7 +117,7 @@ const Header = () => {
             <Link to="/wishlist" className="hidden sm:flex items-center justify-center p-2 hover:text-primary transition-colors rounded-lg hover:bg-muted" title="Wishlist">
               <Heart className="w-5 h-5" />
             </Link>
-            <button onClick={toggleCart} className="relative flex items-center justify-center p-2 hover:text-primary transition-colors rounded-lg hover:bg-muted" title="Cart">
+            <button type="button" onClick={toggleCart} className="relative flex items-center justify-center p-2 hover:text-primary transition-colors rounded-lg hover:bg-muted" title="Cart">
               <ShoppingCart className="w-5 h-5" />
               {itemCount > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-accent text-accent-foreground text-xs rounded-full flex items-center justify-center font-bold shadow-sm">
@@ -125,7 +126,7 @@ const Header = () => {
               )}
               <span className="hidden md:inline ml-1">Cart</span>
             </button>
-            <button onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 hover:text-primary transition-colors rounded-lg hover:bg-muted" title="Menu">
+            <button type="button" onClick={() => setMobileMenuOpen(!mobileMenuOpen)} className="md:hidden p-2 hover:text-primary transition-colors rounded-lg hover:bg-muted" title="Menu">
               {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
           </div>

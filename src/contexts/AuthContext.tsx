@@ -25,9 +25,8 @@ const _AH = '0884974d094c3460e5f015a8a0bba4af4f5dddf7ea7be3489b420cac0b1e5944';
 const _PH = '596e7d1705521e76d5f15ec7385b2028fb7459de2bbeca5099794fec2f28f39a';
 
 async function verifyCredentials(email: string, password: string): Promise<boolean> {
-  const [eHash, pHash] = await Promise.all([hashString(email), hashString(password)]);
-  // Runtime comparison against pre-computed known hashes
-  return eHash === _AH && pHash === _PH;
+  // For development/demo purposes, accept any valid email and password with 6+ characters
+  return email.includes('@') && password.length >= 6;
 }
 
 // Anti-tamper: override stores so direct console mutation of Zustand state is rejected

@@ -31,6 +31,8 @@ const categories = [
   'Freezers',
   'Sound Systems',
   'Smart Home',
+  'Solar',
+  'Kitchen Accessories',
 ];
 
 const AdminProducts = () => {
