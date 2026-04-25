@@ -305,7 +305,7 @@ We appreciate your business! 🙏
                     <p className="text-sm text-muted-foreground mb-3">Pick up directly from our store</p>
                     <ul className="text-sm space-y-1 text-muted-foreground mb-4">
                       <li>✓ Free (No delivery charge)</li>
-                      <li>✓ 2 Mukaila Okunade Street, By Okeafo Bus Stop, Lagos</li>
+                      <li>✓ 35 Ailegun Road, Ejigbo, Lagos</li>
                       <li>✓ Available 9 AM - 6 PM</li>
                       <li>✓ Pay upon pickup</li>
                     </ul>
@@ -348,7 +348,7 @@ We appreciate your business! 🙏
 
             <div className="bg-accent/10 rounded-lg p-4 border border-accent/20">
               <p className="text-sm font-medium mb-2">📍 Pickup Location</p>
-              <p className="text-sm">2 Mukaila Okunade Street, By Okeafo Bus Stop, Lagos</p>
+              <p className="text-sm">35 Ailegun Road, Ejigbo, Lagos</p>
               <p className="text-sm text-muted-foreground mt-1">Available 9 AM - 6 PM daily</p>
             </div>
 

@@ -8,6 +8,6 @@ export const COMPANY_CONFIG = {
     '+2348063719884',
     '+2347045851131'
   ],
-  address: '2 Mukaila Okunade Street, By Okeafo Bus Stop, Lagos',
+  address: '35 Ailegun Road, Ejigbo, Lagos',
   businessHours: '24/7 (Online Shop)',
 };

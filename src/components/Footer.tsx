@@ -32,7 +32,7 @@ const Footer = () => (
         </h4>
         <p className="text-sm text-primary-foreground/60 mb-4">Everything you need. Delivered Nationwide, built for Nigeria.</p>
         <div className="space-y-2 text-sm text-primary-foreground/60">
-          <p className="flex items-start gap-2"><MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" /> <span className="flex-1 break-words">2 Mukaila Okunade Street, By Okeafo Bus Stop, Lagos</span></p>
+          <p className="flex items-start gap-2"><MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" /> <span className="flex-1 break-words">35 Ailegun Road, Ejigbo, Lagos</span></p>
           <p className="flex items-start gap-2"><Phone className="w-4 h-4 flex-shrink-0 mt-0.5" /> <Link to="tel:09128817136" className="flex-1 break-words hover:text-gold transition-colors">09128817136 (Primary)</Link></p>
           <div className="pl-6 space-y-1">
             <p className="text-[10px] uppercase tracking-wider font-bold text-primary-foreground/40 mb-1">Other Lines:</p>
