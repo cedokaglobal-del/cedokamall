@@ -1,0 +1,3 @@
+# Netlify / SPA redirect — ensures React Router handles all client-side routes
+# Without this, refreshing /shop or /product/:id returns a 404
+/*    /index.html   200

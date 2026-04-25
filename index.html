@@ -1,23 +1,51 @@
 <!doctype html>
-<html lang="en">
+<html lang="en-NG">
   <head>
     <!-- Charset and Viewport -->
     <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-    
-    <!-- Basic Meta Tags -->
-    <title>Cedokamall — Nigeria's Premium Online Marketplace | Electronics, Appliances & More</title>
-    <meta name="description" content="Shop 50,000+ premium products on Nigeria's trusted marketplace. Electronics, home appliances, smartphones, and more with lightning-fast Nationwide delivery. 1.2M+ happy customers." />
-    <meta name="keywords" content="online shopping Nigeria, electronics Nigeria, home appliances Lagos, fast delivery Nigeria, Cedoka Mall, buy smartphones online Nigeria" />
-    <meta name="author" content="Cedokamall" />
-    <meta name="creator" content="Cedoka Global Limited" />
-    <meta name="publisher" content="Cedoka Mall" />
-    <meta name="language" content="en-NG" />
+
+    <!-- ===== PRIMARY SEO ===== -->
+    <title>Cedokamall — Nigeria's #1 Electronics & Appliances Marketplace</title>
+    <meta name="description" content="Shop top electronics, smartphones, TVs, home appliances & more on Cedokamall. Fast Nationwide delivery across Nigeria. Secure payment. 24/7 support. Order via WhatsApp!" />
+    <meta name="keywords" content="online shopping Nigeria, buy electronics Nigeria, home appliances Lagos, smartphones Nigeria, Cedoka Mall, fast delivery Nigeria, buy TV online Nigeria, refrigerators Nigeria, laptops Nigeria" />
+    <meta name="author" content="Cedoka Global Limited" />
     <meta name="robots" content="index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1" />
     <meta name="googlebot" content="index, follow" />
-    
-    <!-- Mobile & App -->
+    <meta name="language" content="en-NG" />
+    <meta name="geo.region" content="NG-LA" />
+    <meta name="geo.placename" content="Lagos, Nigeria" />
+
+    <!-- Google Search Console Verification (replace with your actual token) -->
+    <!-- <meta name="google-site-verification" content="YOUR_VERIFICATION_TOKEN" /> -->
+
+    <!-- ===== OPEN GRAPH (Facebook / WhatsApp previews) ===== -->
+    <meta property="og:title" content="Cedokamall — Nigeria's #1 Electronics & Appliances Marketplace" />
+    <meta property="og:description" content="Shop 10,000+ products with fast Nationwide delivery. Electronics, TVs, phones, appliances & more. Trusted. Secure. Swift." />
+    <meta property="og:type" content="website" />
+    <meta property="og:site_name" content="Cedokamall" />
+    <meta property="og:locale" content="en_NG" />
+    <meta property="og:url" content="https://cedokamall.com" />
+    <meta property="og:image" content="https://cedokamall.com/og-image.jpg" />
+    <meta property="og:image:width" content="1200" />
+    <meta property="og:image:height" content="630" />
+    <meta property="og:image:alt" content="Cedokamall — Nigeria's Premium Online Marketplace" />
+
+    <!-- ===== TWITTER / X CARD ===== -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:site" content="@cedokamall" />
+    <meta name="twitter:creator" content="@cedokamall" />
+    <meta name="twitter:title" content="Cedokamall — Nigeria's #1 Electronics & Appliances Marketplace" />
+    <meta name="twitter:description" content="Shop electronics, TVs, phones, appliances & more. Fast Nationwide delivery. Order via WhatsApp." />
+    <meta name="twitter:image" content="https://cedokamall.com/og-image.jpg" />
+
+    <!-- ===== CANONICAL & ALTERNATES ===== -->
+    <link rel="canonical" href="https://cedokamall.com" />
+    <link rel="alternate" hreflang="en-NG" href="https://cedokamall.com" />
+    <link rel="alternate" hreflang="en" href="https://cedokamall.com" />
+
+    <!-- ===== PWA / APP ===== -->
     <meta name="mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
@@ -25,83 +53,87 @@
     <meta name="theme-color" content="#ff6b35" />
     <meta name="msapplication-TileColor" content="#ff6b35" />
     <meta name="format-detection" content="telephone=no" />
-    
-    <!-- Open Graph Meta Tags (Social Sharing) -->
-    <meta property="og:title" content="Cedokamall — Nigeria's Premium Online Marketplace" />
-    <meta property="og:description" content="Shop 50,000+ products with fast Lagos delivery. Electronics, appliances, accessories & more. Trusted sellers, secure payments, 24-48hr delivery." />
-    <meta property="og:type" content="website" />
-    <meta property="og:site_name" content="Cedokamall" />
-    <meta property="og:locale" content="en_NG" />
-    <meta property="og:image" content="https://cedokamall.com/og-image.jpg" />
-    <meta property="og:url" content="https://cedokamall.com" />
-    
-    <!-- Twitter Card Meta Tags -->
-    <meta name="twitter:card" content="summary_large_image" />
-    <meta name="twitter:title" content="Cedokamall — Nigeria's Premium Online Marketplace" />
-    <meta name="twitter:description" content="Shop 50,000+ products with fast Lagos delivery. Electronics, appliances, accessories & more." />
-    <meta name="twitter:creator" content="@cedokamall" />
-    <meta name="twitter:image" content="https://cedokamall.com/og-image.jpg" />
-    
-    <!-- Canonical URL -->
-    <link rel="canonical" href="https://cedokamall.com" />
-    
-    <!-- Alternate Links -->
-    <link rel="alternate" hreflang="en-NG" href="https://cedokamall.com" />
-    <link rel="alternate" hreflang="en" href="https://cedokamall.com" />
-    
-    <!-- Icons -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- ===== ICONS ===== -->
     <link rel="icon" type="image/png" href="/favicon-32x32.png" sizes="32x32" />
     <link rel="icon" type="image/png" href="/favicon-16x16.png" sizes="16x16" />
     <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
-    <link rel="manifest" href="/manifest.json" />
-    
-    <!-- DNS Prefetch & Preconnect -->
-    <link rel="dns-prefetch" href="https://images.unsplash.com" />
+
+    <!-- ===== PERFORMANCE: DNS prefetch & preconnect ===== -->
     <link rel="dns-prefetch" href="https://fonts.googleapis.com" />
+    <link rel="dns-prefetch" href="https://fonts.gstatic.com" />
+    <link rel="dns-prefetch" href="https://images.unsplash.com" />
+    <link rel="dns-prefetch" href="https://wa.me" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link rel="preconnect" href="https://images.unsplash.com" crossorigin />
-    
-    <!-- Security Headers -->
-    <!-- <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' *.unsplash.com *.googleapis.com; style-src 'self' 'unsafe-inline' *.googleapis.com; img-src 'self' data: https: *.unsplash.com *.gstatic.com; font-src 'self' data: *.googleapis.com *.gstatic.com; connect-src 'self' ws: wss: *.unsplash.com *.googleapis.com; frame-ancestors 'none'; block-all-mixed-content" /> -->
-    <!-- 
-      Security headers like X-Frame-Options and X-XSS-Protection should be 
-      set by the server instead of HTML meta tags. 
-    -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" crossorigin />
+
+    <!-- ===== PERFORMANCE: Google Fonts (Inter) with display=swap ===== -->
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap"
+      media="print"
+      onload="this.media='all'"
+    />
+    <noscript>
+      <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" />
+    </noscript>
+
+    <!-- ===== SECURITY ===== -->
     <meta name="referrer" content="strict-origin-when-cross-origin" />
     <meta name="permissions-policy" content="geolocation=(), microphone=(), camera=()" />
-    
-    <!-- Structured Data (JSON-LD) -->
+
+    <!-- ===== INLINE CRITICAL CSS — prevents blank flash during JS hydration ===== -->
+    <style>
+      *,::before,::after{box-sizing:border-box}
+      html{font-family:Inter,system-ui,-apple-system,sans-serif;-webkit-text-size-adjust:100%}
+      body{margin:0;background:#0f1117;color:#f0f0f0;min-height:100vh}
+      #root{min-height:100vh}
+      /* Page loader (matches React PageLoader component) */
+      #initial-loader{position:fixed;inset:0;display:flex;align-items:center;justify-content:center;background:#0f1117;z-index:9999}
+      #initial-loader div{width:40px;height:40px;border:3px solid #ff6b35;border-top-color:transparent;border-radius:50%;animation:spin .7s linear infinite}
+      @keyframes spin{to{transform:rotate(360deg)}}
+    </style>
+
+    <!-- ===== STRUCTURED DATA: Organization ===== -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
       "@type": "Organization",
       "name": "Cedokamall",
+      "alternateName": "Cedoka Global Limited",
       "url": "https://cedokamall.com",
       "logo": "https://cedokamall.com/logo.png",
       "image": "https://cedokamall.com/og-image.jpg",
-      "description": "Nigeria's premium online marketplace with 50,000+ products including electronics, home appliances, and more with fast 24-48hr Lagos delivery",
+      "description": "Nigeria's premium online marketplace for electronics, home appliances, smartphones, TVs and more. Fast Nationwide delivery.",
+      "foundingDate": "2024",
       "sameAs": [
         "https://facebook.com/cedokamall",
         "https://twitter.com/cedokamall",
-        "https://instagram.com/cedokamall"
+        "https://instagram.com/cedokamall",
+        "https://wa.me/2349128817136"
       ],
-      "contactPoint": {
-        "@type": "ContactPoint",
-        "telephone": "09128817136",
-        "contactType": "Customer Service",
-        "email": "hello@cedokamall.com"
-      },
+      "contactPoint": [
+        {
+          "@type": "ContactPoint",
+          "telephone": "+234-912-881-7136",
+          "contactType": "Customer Service",
+          "contactOption": "TollFree",
+          "areaServed": "NG",
+          "availableLanguage": "English"
+        }
+      ],
       "address": {
         "@type": "PostalAddress",
         "streetAddress": "35 Ailegun Road, Ejigbo",
         "addressLocality": "Lagos",
-        "addressCountry": "NG",
-        "postalCode": "100001"
+        "addressRegion": "Lagos",
+        "addressCountry": "NG"
       }
     }
     </script>
-    
-    <!-- Website Schema -->
+
+    <!-- ===== STRUCTURED DATA: WebSite + Sitelinks Searchbox ===== -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -112,14 +144,14 @@
         "@type": "SearchAction",
         "target": {
           "@type": "EntryPoint",
-          "urlTemplate": "https://cedokamall.com/shop?q={search_term_string}"
+          "urlTemplate": "https://cedokamall.com/shop?search={search_term_string}"
         },
         "query-input": "required name=search_term_string"
       }
     }
     </script>
-    
-    <!-- LocalBusiness Schema for better local SEO -->
+
+    <!-- ===== STRUCTURED DATA: LocalBusiness ===== -->
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -127,20 +159,23 @@
       "name": "Cedokamall",
       "image": "https://cedokamall.com/og-image.jpg",
       "description": "Premium online marketplace for electronics, home appliances and more in Nigeria",
+      "url": "https://cedokamall.com",
+      "telephone": "+234-912-881-7136",
+      "email": "hello@cedokamall.com",
+      "priceRange": "₦₦",
+      "currenciesAccepted": "NGN",
+      "paymentAccepted": "Cash, Bank Transfer, Card",
+      "areaServed": "Nigeria",
       "address": {
         "@type": "PostalAddress",
         "streetAddress": "35 Ailegun Road, Ejigbo",
         "addressLocality": "Lagos",
+        "addressRegion": "Lagos",
         "addressCountry": "NG"
       },
-      "telephone": "09128817136",
-      "email": "hello@cedokamall.com",
-      "url": "https://cedokamall.com",
-      "priceRange": "₦1,000 - ₦5,000,000",
-      "areaServed": "NG",
       "openingHoursSpecification": {
         "@type": "OpeningHoursSpecification",
-        "dayOfWeek": ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"],
+        "dayOfWeek": ["Monday","Tuesday","Wednesday","Thursday","Friday","Saturday","Sunday"],
         "opens": "09:00",
         "closes": "18:00"
       },
@@ -151,21 +186,29 @@
       ]
     }
     </script>
-    
-    <!-- Google Analytics Placeholder -->
-    <!-- 
-    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
-    <script>
-      window.dataLayer = window.dataLayer || [];
-      function gtag(){dataLayer.push(arguments);}
-      gtag('js', new Date());
-      gtag('config', 'GA_MEASUREMENT_ID');
-    </script>
-    -->
   </head>
 
   <body>
+    <!-- Initial loader — hidden by JS once React mounts -->
+    <div id="initial-loader" aria-hidden="true">
+      <div></div>
+    </div>
+
     <div id="root"></div>
+
+    <!-- Hide the native loader once React takes over -->
+    <script>
+      (function(){
+        var r = document.getElementById('root');
+        var l = document.getElementById('initial-loader');
+        if (!r || !l) return;
+        var obs = new MutationObserver(function(){
+          if (r.children.length > 0) { l.style.display = 'none'; obs.disconnect(); }
+        });
+        obs.observe(r, { childList: true });
+      })();
+    </script>
+
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>
