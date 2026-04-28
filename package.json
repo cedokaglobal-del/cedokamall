@@ -1,7 +1,8 @@
 {
-  "name": "vite_react_shadcn_ts",
+  "name": "cedokamall",
   "private": true,
-  "version": "0.0.0",
+  "version": "1.0.0",
+  "description": "Cedokamall - Nigeria's premium online marketplace built with React, TypeScript, and Vite.",
   "type": "module",
   "scripts": {
     "dev": "vite",

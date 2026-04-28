@@ -34,14 +34,14 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
 
   const [formData, setFormData] = useState<ProductFormData>({
     name: product?.name || '',
-    price: product?.price || (undefined as any),
-    originalPrice: product?.originalPrice || (undefined as any),
+    price: product?.price ?? 0,
+    originalPrice: product?.originalPrice,
     category: product?.category || '',
     description: product?.description || '',
-    inStock: product?.inStock !== undefined ? product.inStock : (undefined as any),
+    inStock: product?.inStock ?? 0,
     seller: product?.seller || '',
     image: product?.image || '',
-    images: product?.images || (product?.image ? [product.image] : []),
+    images: product?.images?.length ? product.images : product?.image ? [product.image] : [],
     sku: product?.sku || '',
     warranty: product?.warranty || '',
     specs: product?.specs || {},

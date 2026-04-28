@@ -58,30 +58,30 @@ const parseSpecs = (value: unknown) => {
   return value as Record<string, string>;
 };
 
-const mapSupabaseToProduct = (row: any): Product => {
-  const mainImage = row.image || fallbackImage;
+const mapSupabaseToProduct = (row: Record<string, unknown>): Product => {
+  const mainImage = typeof row.image === 'string' && row.image.length > 0 ? row.image : fallbackImage;
   const images = parseImages(row.images, mainImage);
 
   return {
-    id: row.id,
-    name: row.name,
-    description: row.description,
-    price: Number(row.price),
+    id: String(row.id),
+    name: String(row.name ?? ''),
+    description: String(row.description ?? ''),
+    price: Number(row.price ?? 0),
     originalPrice: row.original_price ? Number(row.original_price) : undefined,
     image: mainImage,
     images,
-    category: row.category,
-    inStock: Number(row.stock),
-    seller: row.seller,
-    rating: Number(row.rating || 0),
-    reviews: Number(row.reviews || 0),
-    badge: row.badge || undefined,
+    category: String(row.category ?? ''),
+    inStock: Number(row.stock ?? 0),
+    seller: String(row.seller ?? ''),
+    rating: Number(row.rating ?? 0),
+    reviews: Number(row.reviews ?? 0),
+    badge: typeof row.badge === 'string' ? row.badge : undefined,
     specs: parseSpecs(row.specs),
-    warranty: row.warranty || undefined,
-    sku: row.sku || undefined,
-    color: row.color || undefined,
-    createdAt: new Date(row.created_at),
-    updatedAt: new Date(row.updated_at || row.created_at),
+    warranty: typeof row.warranty === 'string' ? row.warranty : undefined,
+    sku: typeof row.sku === 'string' ? row.sku : undefined,
+    color: typeof row.color === 'string' ? row.color : undefined,
+    createdAt: new Date(String(row.created_at)),
+    updatedAt: new Date(String(row.updated_at ?? row.created_at)),
   };
 };
 

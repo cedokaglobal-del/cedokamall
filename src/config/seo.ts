@@ -54,13 +54,17 @@ export const DEFAULT_META_TAGS: MetaTag[] = [
 /**
  * Open Graph Meta Tags
  */
+const DEFAULT_SOCIAL_IMAGE = `${SEO_CONFIG.siteUrl}/logo.png`;
+
 export const getOpenGraphTags = (meta: PageMeta): MetaTag[] => [
   { property: "og:title", content: meta.title },
   { property: "og:description", content: meta.description },
   { property: "og:type", content: meta.type || "website" },
   { property: "og:site_name", content: SEO_CONFIG.siteName },
   { property: "og:locale", content: SEO_CONFIG.locale },
-  ...(meta.image ? [{ property: "og:image", content: meta.image }] : []),
+  { property: "og:image", content: meta.image || DEFAULT_SOCIAL_IMAGE },
+  { property: "og:image:secure_url", content: meta.image || DEFAULT_SOCIAL_IMAGE },
+  { property: "og:image:type", content: "image/png" },
   ...(meta.url ? [{ property: "og:url", content: meta.url }] : []),
 ];
 
@@ -72,7 +76,7 @@ export const getTwitterCardTags = (meta: PageMeta): MetaTag[] => [
   { name: "twitter:title", content: meta.title },
   { name: "twitter:description", content: meta.description },
   { name: "twitter:creator", content: SEO_CONFIG.twitterHandle },
-  ...(meta.image ? [{ name: "twitter:image", content: meta.image }] : []),
+  { name: "twitter:image", content: meta.image || DEFAULT_SOCIAL_IMAGE },
 ];
 
 /**
