@@ -46,47 +46,50 @@ const AdminProducts = () => {
     setIsFormOpen(true);
   };
 
-  const handleDeleteProduct = (productId: string) => {
-    setIsLoading(true);
+  const handleDeleteProduct = async (productId: string) => {
     try {
-      deleteProduct(productId);
+      setIsLoading(true);
+      await deleteProduct(productId);
     } finally {
       setIsLoading(false);
     }
   };
 
-  const handleFormSubmit = async (formData: ProductFormData) => {
-    setIsLoading(true);
-    try {
-      if (editingProduct) {
-        updateProduct(editingProduct.id, formData);
-      } else {
-        addProduct(formData);
-      }
-      setIsFormOpen(false);
-      setEditingProduct(undefined);
-    } catch (error) {
-      console.error('Error saving product:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleClearAllProducts = () => {
-    setIsLoading(true);
-    try {
-      clearAllProducts();
-      setIsClearAllDialogOpen(false);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  const handleFilterChange = (key: keyof ProductFilter, value: any) => {
+  const handleFilterChange = <K extends keyof ProductFilter>(
+    key: K,
+    value: ProductFilter[K]
+  ) => {
     setFilter({
       ...filter,
       [key]: value === 'all' ? undefined : value,
     });
+  };
+
+  const handleFormSubmit = async (formData: ProductFormData) => {
+    try {
+      setIsLoading(true);
+
+      if (editingProduct) {
+        await updateProduct(editingProduct.id, formData);
+      } else {
+        await addProduct(formData);
+      }
+
+      setIsFormOpen(false);
+      setEditingProduct(undefined);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleClearAllProducts = async () => {
+    try {
+      setIsLoading(true);
+      await clearAllProducts();
+      setIsClearAllDialogOpen(false);
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const maxPrice = useMemo(() => 

@@ -9,45 +9,23 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { DEFAULT_CATEGORY_NAMES, getCategoryOptions } from '@/data/products';
 import { ProductFormData, Product } from '@/types/product';
 import { useProductStore } from '@/store/productStore';
+import { uploadProductImages } from '@/lib/productImages';
 import { X, Paperclip, Plus } from 'lucide-react';
 
 interface ProductFormProps {
   product?: Product;
-  onSubmit: (data: ProductFormData) => void;
+  onSubmit: (data: ProductFormData) => Promise<void> | void;
   onCancel: () => void;
   isLoading?: boolean;
 }
 
-// Load custom categories from localStorage
-const loadCategories = (): string[] => {
-  try {
-    const stored = localStorage.getItem('product_categories');
-    if (stored) {
-      const customCategories = JSON.parse(stored);
-      return Array.from(new Set([...DEFAULT_CATEGORY_NAMES, ...customCategories])).sort();
-    }
-  } catch (e) {
-    console.error('Error loading categories:', e);
-  }
-  return DEFAULT_CATEGORY_NAMES;
-};
-
-// Save custom categories to localStorage
-const saveCategories = (cats: string[]): void => {
-  try {
-    const custom = cats.filter(c => !DEFAULT_CATEGORY_NAMES.includes(c));
-    localStorage.setItem('product_categories', JSON.stringify(custom));
-  } catch (e) {
-    console.error('Error saving categories:', e);
-  }
-};
-
 const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: ProductFormProps) => {
   const { products } = useProductStore();
-  const [customCategories, setCustomCategories] = useState<string[]>(loadCategories());
+  const [customCategories, setCustomCategories] = useState<string[]>([]);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategory, setNewCategory] = useState('');
   const [categoryError, setCategoryError] = useState('');
+  const [isUploadingImages, setIsUploadingImages] = useState(false);
   const categories = useMemo(
     () => getCategoryOptions(products, customCategories),
     [products, customCategories]
@@ -90,37 +68,9 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
 
     const updatedCategories = [...customCategories, trimmed].sort();
     setCustomCategories(updatedCategories);
-    saveCategories(updatedCategories);
     setFormData((prev) => ({ ...prev, category: trimmed }));
     setNewCategory('');
     setIsAddingCategory(false);
-  };
-
-  const resizeImage = (file: File): Promise<string> => {
-    return new Promise((resolve) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        const img = new Image();
-        img.onload = () => {
-          const canvas = document.createElement('canvas');
-          const MAX_SIZE = 800;
-          let { width, height } = img;
-          if (width > height && width > MAX_SIZE) {
-            height *= MAX_SIZE / width;
-            width = MAX_SIZE;
-          } else if (height > MAX_SIZE) {
-            width *= MAX_SIZE / height;
-            height = MAX_SIZE;
-          }
-          canvas.width = width;
-          canvas.height = height;
-          canvas.getContext('2d')?.drawImage(img, 0, 0, width, height);
-          resolve(canvas.toDataURL('image/jpeg', 0.8));
-        };
-        img.src = e.target?.result as string;
-      };
-      reader.readAsDataURL(file);
-    });
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -135,17 +85,32 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
       alert(`You can only add up to 4 images max.`);
     }
 
-    const newBase64Images = await Promise.all(filesToUpload.map(f => resizeImage(f)));
-    const updatedImages = [...currentImages, ...newBase64Images];
-    
-    setFormData(prev => ({ 
-      ...prev, 
-      images: updatedImages, 
-      image: updatedImages[0] || '' 
-    }));
-    
-    if (errors.images) {
-      setErrors(prev => { const n = { ...prev }; delete n.images; return n; });
+    try {
+      setIsUploadingImages(true);
+      const uploadedUrls = await uploadProductImages(filesToUpload);
+      const updatedImages = [...currentImages, ...uploadedUrls];
+
+      setFormData(prev => ({
+        ...prev,
+        images: updatedImages,
+        image: updatedImages[0] || '',
+      }));
+
+      if (errors.images) {
+        setErrors(prev => {
+          const nextErrors = { ...prev };
+          delete nextErrors.images;
+          return nextErrors;
+        });
+      }
+    } catch (error) {
+      console.error('Error uploading product images:', error);
+      setErrors((prev) => ({
+        ...prev,
+        images: 'Image upload failed. Check your storage bucket and try again.',
+      }));
+    } finally {
+      setIsUploadingImages(false);
     }
   };
 
@@ -171,11 +136,13 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (validateForm()) {
-      onSubmit(formData);
+    if (!validateForm() || isUploadingImages) {
+      return;
     }
+
+    await onSubmit(formData);
   };
 
   const handleChange = (field: keyof ProductFormData, value: string | number) => {
@@ -446,7 +413,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
               <p className="mb-2 text-sm text-muted-foreground">
                 <span className="font-semibold text-primary">Click to upload</span> or drag and drop
               </p>
-              <p className="text-xs text-muted-foreground">PNG, JPG or WebP (MAX. 800x800px)</p>
+              <p className="text-xs text-muted-foreground">PNG, JPG or WebP (optimized and uploaded to Supabase Storage)</p>
             </div>
             <input
               id="imageUpload"
@@ -454,12 +421,14 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
               accept="image/*"
               multiple
               onChange={handleImageUpload}
-              disabled={isLoading || (formData.images && formData.images.length >= 4)}
+              disabled={isLoading || isUploadingImages || (formData.images && formData.images.length >= 4)}
               className="hidden"
             />
           </label>
           <div className="flex justify-between items-center mt-2">
-            <span className="text-xs text-muted-foreground italic">Add up to 4 images</span>
+            <span className="text-xs text-muted-foreground italic">
+              {isUploadingImages ? 'Uploading images...' : 'Add up to 4 images'}
+            </span>
             <span className="text-sm font-medium">
               {(formData.images?.length || 0)} / 4 uploaded
             </span>
@@ -503,8 +472,8 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
         >
           Cancel
         </Button>
-        <Button type="submit" disabled={isLoading}>
-          {isLoading ? 'Saving...' : product ? 'Update Product' : 'Add Product'}
+        <Button type="submit" disabled={isLoading || isUploadingImages}>
+          {isUploadingImages ? 'Uploading images...' : isLoading ? 'Saving...' : product ? 'Update Product' : 'Add Product'}
         </Button>
       </div>
     </form>

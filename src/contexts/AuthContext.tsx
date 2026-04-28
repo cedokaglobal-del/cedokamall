@@ -1,81 +1,124 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from 'react';
+import {
+  createContext,
+  useContext,
+  useEffect,
+  useState,
+  type ReactNode,
+} from 'react';
+import type { Session } from '@supabase/supabase-js';
+import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 interface AuthContextType {
   isAuthenticated: boolean;
   isAdmin: boolean;
   adminEmail: string | null;
   login: (email: string, password: string) => Promise<boolean>;
-  logout: () => void;
+  logout: () => Promise<void>;
   checkAuth: () => boolean;
   isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Secure hash verification — credentials are never stored as plain strings at runtime
-async function hashString(input: string): Promise<string> {
-  const msgBuffer = new TextEncoder().encode(input);
-  const hashBuffer = await crypto.subtle.digest('SHA-256', msgBuffer);
-  const hashArray = Array.from(new Uint8Array(hashBuffer));
-  return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
+const adminEmailList = (import.meta.env.VITE_ADMIN_EMAILS ||
+  import.meta.env.VITE_ADMIN_EMAIL ||
+  '')
+  .split(',')
+  .map((email) => email.trim().toLowerCase())
+  .filter(Boolean);
+
+function isAuthorizedAdmin(email: string | null | undefined): boolean {
+  if (!email) return false;
+  if (adminEmailList.length === 0) return true;
+  return adminEmailList.includes(email.toLowerCase());
 }
 
-// Pre-computed SHA-256 hashes — credentials cannot be read from runtime
-const _AH = '0884974d094c3460e5f015a8a0bba4af4f5dddf7ea7be3489b420cac0b1e5944';
-const _PH = '596e7d1705521e76d5f15ec7385b2028fb7459de2bbeca5099794fec2f28f39a';
-
-async function verifyCredentials(email: string, password: string): Promise<boolean> {
-  // For development/demo purposes, accept any valid email and password with 6+ characters
-  return email.includes('@') && password.length >= 6;
-}
-
-// Anti-tamper: override stores so direct console mutation of Zustand state is rejected
 function installAntiTamper() {
   if (typeof window === 'undefined') return;
 
-  // Block common devtools storage manipulation patterns
-  const _setItem = localStorage.setItem.bind(localStorage);
-  const _removeItem = localStorage.removeItem.bind(localStorage);
+  const protectedKeys = ['adminToken', 'adminEmail'];
+  let authFlowActive = false;
 
-  // Freeze critical keys — only our app code can set them via the auth flow
-  const PROTECTED_KEYS = ['adminToken', 'adminEmail'];
-  let _authFlowActive = false;
+  (window as Window & { __setAuthFlowActive?: (active: boolean) => void }).__setAuthFlowActive =
+    (active: boolean) => {
+      authFlowActive = active;
+    };
 
-  (window as any).__setAuthFlowActive = (v: boolean) => { _authFlowActive = v; };
-
-  const origSetItem = Storage.prototype.setItem;
-  Storage.prototype.setItem = function (key: string, value: string) {
-    if (PROTECTED_KEYS.includes(key) && !_authFlowActive) {
+  const originalSetItem = Storage.prototype.setItem;
+  Storage.prototype.setItem = function setProtectedItem(key: string, value: string) {
+    if (protectedKeys.includes(key) && !authFlowActive) {
       console.warn('[Security] Unauthorized attempt to modify protected storage key:', key);
       return;
     }
-    origSetItem.call(this, key, value);
+
+    originalSetItem.call(this, key, value);
   };
 
-  const origRemoveItem = Storage.prototype.removeItem;
-  Storage.prototype.removeItem = function (key: string) {
-    if (PROTECTED_KEYS.includes(key) && !_authFlowActive) {
+  const originalRemoveItem = Storage.prototype.removeItem;
+  Storage.prototype.removeItem = function removeProtectedItem(key: string) {
+    if (protectedKeys.includes(key) && !authFlowActive) {
       console.warn('[Security] Unauthorized attempt to remove protected storage key:', key);
       return;
     }
-    origRemoveItem.call(this, key);
+
+    originalRemoveItem.call(this, key);
   };
 
-  // Disable console in production to prevent JS exploration
   if (import.meta.env.MODE === 'production') {
     const noop = () => {};
-    (window as any).console = {
+    (window as Window & { console: Console }).console = {
       ...console,
-      log: noop, warn: noop, error: noop, info: noop,
-      debug: noop, table: noop, dir: noop, group: noop,
-      groupEnd: noop, trace: noop, assert: noop,
+      log: noop,
+      warn: noop,
+      error: noop,
+      info: noop,
+      debug: noop,
+      table: noop,
+      dir: noop,
+      group: noop,
+      groupEnd: noop,
+      trace: noop,
+      assert: noop,
     };
-    // Block eval and Function constructor abuse
-    (window as any).__defineGetter__ = undefined;
-    (window as any).__defineSetter__ = undefined;
+  }
+}
+
+async function applySession(session: Session | null) {
+  const email = session?.user?.email ?? null;
+  const authorized = isAuthorizedAdmin(email);
+
+  if (session && !authorized) {
+    await supabase.auth.signOut();
+    return {
+      isAuthenticated: false,
+      isAdmin: false,
+      adminEmail: null,
+    };
   }
 
-  void _setItem; void _removeItem; // suppress unused warnings
+  if (session && authorized) {
+    (window as Window & { __setAuthFlowActive?: (active: boolean) => void }).__setAuthFlowActive?.(true);
+    localStorage.setItem('adminToken', session.access_token);
+    localStorage.setItem('adminEmail', email ?? '');
+    (window as Window & { __setAuthFlowActive?: (active: boolean) => void }).__setAuthFlowActive?.(false);
+
+    return {
+      isAuthenticated: true,
+      isAdmin: true,
+      adminEmail: email,
+    };
+  }
+
+  (window as Window & { __setAuthFlowActive?: (active: boolean) => void }).__setAuthFlowActive?.(true);
+  localStorage.removeItem('adminToken');
+  localStorage.removeItem('adminEmail');
+  (window as Window & { __setAuthFlowActive?: (active: boolean) => void }).__setAuthFlowActive?.(false);
+
+  return {
+    isAuthenticated: false,
+    isAdmin: false,
+    adminEmail: null,
+  };
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -87,61 +130,91 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   useEffect(() => {
     installAntiTamper();
 
-    const token = localStorage.getItem('adminToken');
-    const email = localStorage.getItem('adminEmail');
-
-    if (token && email) {
-      setIsAuthenticated(true);
-      setIsAdmin(true);
-      setAdminEmail(email);
+    if (!isSupabaseConfigured) {
+      setIsLoading(false);
+      return;
     }
-    setIsLoading(false);
+
+    const syncSession = async (session: Session | null) => {
+      const nextState = await applySession(session);
+      setIsAuthenticated(nextState.isAuthenticated);
+      setIsAdmin(nextState.isAdmin);
+      setAdminEmail(nextState.adminEmail);
+    };
+
+    void supabase.auth.getSession().then(async ({ data }) => {
+      await syncSession(data.session);
+      setIsLoading(false);
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((_event, session) => {
+      void syncSession(session).finally(() => setIsLoading(false));
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
 
-      // Verify via hash comparison — no plaintext exposure
-      const valid = await verifyCredentials(email, password);
-
-      if (valid) {
-        // Temporarily allow auth flow to write to protected keys
-        (window as any).__setAuthFlowActive?.(true);
-        const token = `ck-${Date.now().toString(36)}-${Math.random().toString(36).slice(2)}`;
-        localStorage.setItem('adminToken', token);
-        localStorage.setItem('adminEmail', email);
-        (window as any).__setAuthFlowActive?.(false);
-
-        setIsAuthenticated(true);
-        setIsAdmin(true);
-        setAdminEmail(email);
-        return true;
+      if (!isSupabaseConfigured) {
+        console.error('Supabase is not configured. Add the required environment variables.');
+        return false;
       }
-      return false;
-    } catch {
+
+      const normalizedEmail = email.trim().toLowerCase();
+      if (!isAuthorizedAdmin(normalizedEmail)) {
+        return false;
+      }
+
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email: normalizedEmail,
+        password,
+      });
+
+      if (error) {
+        console.error('Supabase login failed:', error.message);
+        return false;
+      }
+
+      const sessionEmail = data.user?.email ?? data.session?.user?.email ?? null;
+      if (!isAuthorizedAdmin(sessionEmail)) {
+        await supabase.auth.signOut();
+        return false;
+      }
+
+      setIsAuthenticated(true);
+      setIsAdmin(true);
+      setAdminEmail(sessionEmail);
+      return true;
+    } catch (error) {
+      console.error('Unexpected login error:', error);
       return false;
     } finally {
       setIsLoading(false);
     }
   };
 
-  const logout = () => {
-    (window as any).__setAuthFlowActive?.(true);
+  const logout = async () => {
+    if (isSupabaseConfigured) {
+      await supabase.auth.signOut();
+    }
+
+    (window as Window & { __setAuthFlowActive?: (active: boolean) => void }).__setAuthFlowActive?.(true);
     localStorage.removeItem('adminToken');
     localStorage.removeItem('adminEmail');
-    (window as any).__setAuthFlowActive?.(false);
+    (window as Window & { __setAuthFlowActive?: (active: boolean) => void }).__setAuthFlowActive?.(false);
     setIsAuthenticated(false);
     setIsAdmin(false);
     setAdminEmail(null);
   };
 
-  const checkAuth = (): boolean => {
-    const token = localStorage.getItem('adminToken');
-    const isValid = !!token;
-    if (!isValid) logout();
-    return isValid;
-  };
+  const checkAuth = () => isAuthenticated;
 
   return (
     <AuthContext.Provider
@@ -154,8 +227,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
 export const useAuth = () => {
   const context = useContext(AuthContext);
+
   if (context === undefined) {
     throw new Error('useAuth must be used within an AuthProvider');
   }
+
   return context;
 };

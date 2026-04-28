@@ -76,7 +76,7 @@ const ProductTable = ({ products, onEdit, onDelete, isLoading = false }: Product
                         alt={product.name}
                         className="w-10 h-10 rounded object-cover"
                         onError={(e) => {
-                          (e.target as HTMLImageElement).src = 'https://via.placeholder.com/40?text=No+Image';
+                          (e.target as HTMLImageElement).src = '/image.png';
                         }}
                       />
                       <div>

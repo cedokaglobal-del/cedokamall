@@ -11,6 +11,7 @@ import ProtectedRoute from "@/components/ProtectedRoute.tsx";
 // Utilities
 import { addConnectionHints } from "@/utils/performance";
 import { useSEO } from "@/hooks/useSEO";
+import { useProductStore } from "@/store/productStore";
 
 // --- Route-level code splitting (each page loads on demand) ---
 const Index        = lazy(() => import("./pages/Index"));
@@ -21,9 +22,7 @@ const NotFound     = lazy(() => import("./pages/NotFound"));
 // Admin pages (heavy, only loaded when admin visits)
 const AdminLogin      = lazy(() => import("./pages/AdminLogin"));
 const AdminDashboard  = lazy(() => import("./pages/AdminDashboard"));
-const AdminFlashDeals = lazy(() => import("./pages/AdminFlashDeals"));
 const AdminProducts   = lazy(() => import("./pages/AdminProducts"));
-const AdminAnalytics  = lazy(() => import("./pages/AdminAnalytics"));
 
 // Lightweight page spinner shown while a chunk is loading
 const PageLoader = () => (
@@ -41,18 +40,15 @@ const SEOUpdater = () => {
 };
 
 const App = () => {
+  const fetchProducts = useProductStore((state) => state.fetchProducts);
 
   // Initialize performance optimizations
   useEffect(() => {
+    // Fetch products from Supabase
+    fetchProducts();
+
     // Add DNS prefetch and preconnect hints
     addConnectionHints();
-
-    // Disable console in production
-    if (import.meta.env.MODE === "production") {
-      console.log = () => {};
-      console.error = () => {};
-      console.warn = () => {};
-    }
   }, []);
 
   return (
@@ -84,14 +80,6 @@ const App = () => {
                   }
                 />
                 <Route
-                  path="/admin/flash-deals"
-                  element={
-                    <ProtectedRoute>
-                      <AdminFlashDeals />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
                   path="/admin/products"
                   element={
                     <ProtectedRoute>
@@ -99,15 +87,6 @@ const App = () => {
                     </ProtectedRoute>
                   }
                 />
-                <Route
-                  path="/admin/analytics"
-                  element={
-                    <ProtectedRoute>
-                      <AdminAnalytics />
-                    </ProtectedRoute>
-                  }
-                />
-
                 {/* 404 */}
                 <Route path="*" element={<NotFound />} />
               </Routes>

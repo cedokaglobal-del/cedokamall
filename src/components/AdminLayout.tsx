@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, Menu, X, Home, Zap, Package, BarChart3 } from 'lucide-react';
+import { LogOut, Menu, X, Home, Package } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/AuthContext';
 
@@ -22,8 +22,6 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const menuItems = [
     { icon: Home, label: 'Dashboard', href: '/admin' },
     { icon: Package, label: 'Products', href: '/admin/products' },
-    { icon: Zap, label: 'Flash Deals', href: '/admin/flash-deals' },
-    { icon: BarChart3, label: 'Analytics', href: '/admin/analytics' },
   ];
 
   const isActive = (href: string) => {

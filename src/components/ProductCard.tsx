@@ -26,6 +26,9 @@ const ProductCard = ({ product }: { product: Product }) => {
             alt={product.name}
             className="w-full aspect-square object-cover group-hover:scale-105 transition-transform duration-500"
             loading="lazy"
+            onError={(event) => {
+              (event.target as HTMLImageElement).src = '/image.png';
+            }}
           />
         </Link>
         {product.badge && (
