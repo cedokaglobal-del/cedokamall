@@ -37,10 +37,10 @@ const AdminLogin = () => {
       if (success) {
         navigate('/admin');
       } else {
-        setError('Invalid credentials. Please try again.');
+        setError('Login failed. Check your email, password, and admin access.');
       }
     } catch (err) {
-      setError('Login failed. Please try again.');
+      setError('Login failed. Check your email, password, and admin access.');
     } finally {
       setIsLoading(false);
     }

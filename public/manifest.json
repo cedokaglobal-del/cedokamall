@@ -1,7 +1,7 @@
 {
-  "name": "Cedokamall — Nigeria's Premium Online Marketplace",
+  "name": "Cedokamall - Nigeria's Premium Online Marketplace",
   "short_name": "Cedokamall",
-  "description": "Shop 50,000+ products on Nigeria's trusted marketplace. Electronics, home appliances, fashion, and more with fast 24-48hr Lagos delivery.",
+  "description": "Shop trusted electronics, appliances, fashion, and more with fast delivery across Nigeria.",
   "start_url": "/",
   "display": "standalone",
   "background_color": "#ffffff",
@@ -9,25 +9,7 @@
   "orientation": "portrait-primary",
   "icons": [
     {
-      "src": "/favicon-16x16.png",
-      "sizes": "16x16",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/favicon-32x32.png",
-      "sizes": "32x32",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/apple-touch-icon.png",
-      "sizes": "180x180",
-      "type": "image/png",
-      "purpose": "any"
-    },
-    {
-      "src": "/logo.png",
+      "src": "/image.png",
       "sizes": "192x192",
       "type": "image/png",
       "purpose": "any"
@@ -41,19 +23,19 @@
   ],
   "categories": [
     "shopping",
-    "shopping-ecommerce"
+    "business"
   ],
   "screenshots": [
     {
-      "src": "/og-image.jpg",
+      "src": "/image.png",
       "sizes": "540x720",
-      "type": "image/jpeg",
+      "type": "image/png",
       "form_factor": "narrow"
     },
     {
-      "src": "/og-image.jpg",
+      "src": "/image.png",
       "sizes": "1280x720",
-      "type": "image/jpeg",
+      "type": "image/png",
       "form_factor": "wide"
     }
   ],
@@ -61,24 +43,26 @@
     {
       "name": "Shop Now",
       "short_name": "Shop",
-      "description": "Browse our shop",
+      "description": "Browse our latest products",
       "url": "/shop",
       "icons": [
         {
           "src": "/logo.png",
-          "sizes": "96x96"
+          "sizes": "96x96",
+          "type": "image/png"
         }
       ]
     },
     {
       "name": "View Cart",
       "short_name": "Cart",
-      "description": "View your shopping cart",
+      "description": "Review items in your shopping cart",
       "url": "/cart",
       "icons": [
         {
           "src": "/logo.png",
-          "sizes": "96x96"
+          "sizes": "96x96",
+          "type": "image/png"
         }
       ]
     }

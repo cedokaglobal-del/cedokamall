@@ -7,21 +7,29 @@ interface ProductState {
   filter: ProductFilter;
   isLoading: boolean;
   error: string | null;
+  hasLoaded: boolean;
+  lastSyncedAt: string | null;
 
-  // Actions
-  fetchProducts: () => Promise<void>;
+  fetchProducts: (force?: boolean) => Promise<void>;
   addProduct: (product: ProductFormData) => Promise<void>;
   updateProduct: (id: string, updates: Partial<ProductFormData>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
   clearAllProducts: () => Promise<void>;
   setFilter: (filter: ProductFilter) => void;
 
-  // Helpers
   getFilteredProducts: () => Product[];
   getProductById: (id: string) => Product | undefined;
 }
 
+type CachedProduct = Omit<Product, 'createdAt' | 'updatedAt'> & {
+  createdAt: string;
+  updatedAt: string;
+};
+
 const fallbackImage = '/image.png';
+const PRODUCT_CACHE_KEY = 'cedokamall.products.cache.v1';
+
+let pendingFetch: Promise<void> | null = null;
 
 const parseImages = (value: unknown, fallback: string) => {
   if (Array.isArray(value)) {
@@ -55,26 +63,75 @@ const mapSupabaseToProduct = (row: any): Product => {
   const images = parseImages(row.images, mainImage);
 
   return {
-  id: row.id,
-  name: row.name,
-  description: row.description,
-  price: Number(row.price),
-  originalPrice: row.original_price ? Number(row.original_price) : undefined,
-  image: mainImage,
-  images,
-  category: row.category,
-  inStock: Number(row.stock),
-  seller: row.seller,
-  rating: Number(row.rating || 0),
-  reviews: Number(row.reviews || 0),
-  badge: row.badge || undefined,
-  specs: parseSpecs(row.specs),
-  warranty: row.warranty || undefined,
-  sku: row.sku || undefined,
-  color: row.color || undefined,
-  createdAt: new Date(row.created_at),
-  updatedAt: new Date(row.updated_at || row.created_at),
+    id: row.id,
+    name: row.name,
+    description: row.description,
+    price: Number(row.price),
+    originalPrice: row.original_price ? Number(row.original_price) : undefined,
+    image: mainImage,
+    images,
+    category: row.category,
+    inStock: Number(row.stock),
+    seller: row.seller,
+    rating: Number(row.rating || 0),
+    reviews: Number(row.reviews || 0),
+    badge: row.badge || undefined,
+    specs: parseSpecs(row.specs),
+    warranty: row.warranty || undefined,
+    sku: row.sku || undefined,
+    color: row.color || undefined,
+    createdAt: new Date(row.created_at),
+    updatedAt: new Date(row.updated_at || row.created_at),
   };
+};
+
+const serializeProducts = (products: Product[]): CachedProduct[] =>
+  products.map((product) => ({
+    ...product,
+    createdAt: product.createdAt.toISOString(),
+    updatedAt: product.updatedAt.toISOString(),
+  }));
+
+const deserializeProducts = (products: CachedProduct[]): Product[] =>
+  products.map((product) => ({
+    ...product,
+    createdAt: new Date(product.createdAt),
+    updatedAt: new Date(product.updatedAt),
+  }));
+
+const persistProducts = (products: Product[]) => {
+  if (typeof window === 'undefined') {
+    return;
+  }
+
+  try {
+    window.localStorage.setItem(PRODUCT_CACHE_KEY, JSON.stringify(serializeProducts(products)));
+  } catch (error) {
+    console.error('Unable to cache products:', error);
+  }
+};
+
+const loadCachedProducts = (): Product[] => {
+  if (typeof window === 'undefined') {
+    return [];
+  }
+
+  try {
+    const raw = window.localStorage.getItem(PRODUCT_CACHE_KEY);
+    if (!raw) {
+      return [];
+    }
+
+    const parsed = JSON.parse(raw) as CachedProduct[];
+    if (!Array.isArray(parsed)) {
+      return [];
+    }
+
+    return deserializeProducts(parsed);
+  } catch (error) {
+    console.error('Unable to hydrate cached products:', error);
+    return [];
+  }
 };
 
 const buildProductPayload = (productData: ProductFormData) => {
@@ -97,29 +154,60 @@ const buildProductPayload = (productData: ProductFormData) => {
   };
 };
 
+const cachedProducts = loadCachedProducts();
+
 export const useProductStore = create<ProductState>((set, get) => ({
-  products: [],
+  products: cachedProducts,
   filter: {},
   isLoading: false,
   error: null,
+  hasLoaded: cachedProducts.length > 0,
+  lastSyncedAt: cachedProducts.length > 0 ? new Date().toISOString() : null,
 
-  fetchProducts: async () => {
-    set({ isLoading: true, error: null });
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .select('*')
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-
-      set({ products: (data || []).map(mapSupabaseToProduct) });
-    } catch (error) {
-      console.error('Error fetching products:', error);
-      set({ error: 'We could not load products from the database.' });
-    } finally {
-      set({ isLoading: false });
+  fetchProducts: async (force = false) => {
+    const state = get();
+    if (!force && pendingFetch) {
+      return pendingFetch;
     }
+
+    if (!force && state.hasLoaded && state.products.length > 0) {
+      return;
+    }
+
+    set((current) => ({ isLoading: current.products.length === 0, error: null }));
+
+    pendingFetch = (async () => {
+      try {
+        const { data, error } = await supabase
+          .from('products')
+          .select('*')
+          .order('created_at', { ascending: false });
+
+        if (error) {
+          throw error;
+        }
+
+        const products = (data || []).map(mapSupabaseToProduct);
+        persistProducts(products);
+        set({
+          products,
+          hasLoaded: true,
+          lastSyncedAt: new Date().toISOString(),
+          error: null,
+        });
+      } catch (error) {
+        console.error('Error fetching products:', error);
+        set((current) => ({
+          error: current.products.length > 0 ? null : 'We could not load products from the database.',
+          hasLoaded: true,
+        }));
+      } finally {
+        set({ isLoading: false });
+        pendingFetch = null;
+      }
+    })();
+
+    return pendingFetch;
   },
 
   addProduct: async (productData) => {
@@ -136,12 +224,21 @@ export const useProductStore = create<ProductState>((set, get) => ({
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       if (data) {
-        set((state) => ({ 
-          products: [mapSupabaseToProduct(data), ...state.products] 
-        }));
+        set((state) => {
+          const products = [mapSupabaseToProduct(data), ...state.products];
+          persistProducts(products);
+          return {
+            products,
+            error: null,
+            hasLoaded: true,
+            lastSyncedAt: new Date().toISOString(),
+          };
+        });
       }
     } catch (error) {
       console.error('Error adding product:', error);
@@ -175,14 +272,21 @@ export const useProductStore = create<ProductState>((set, get) => ({
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
       if (data) {
-        set((state) => ({
-          products: state.products.map((p) => 
-            p.id === id ? mapSupabaseToProduct(data) : p
-          ),
-        }));
+        set((state) => {
+          const products = state.products.map((product) =>
+            product.id === id ? mapSupabaseToProduct(data) : product
+          );
+          persistProducts(products);
+          return {
+            products,
+            lastSyncedAt: new Date().toISOString(),
+          };
+        });
       }
     } catch (error) {
       console.error('Error updating product:', error);
@@ -192,16 +296,20 @@ export const useProductStore = create<ProductState>((set, get) => ({
 
   deleteProduct: async (id) => {
     try {
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .eq('id', id);
+      const { error } = await supabase.from('products').delete().eq('id', id);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
-      set((state) => ({
-        products: state.products.filter((p) => p.id !== id),
-      }));
+      set((state) => {
+        const products = state.products.filter((product) => product.id !== id);
+        persistProducts(products);
+        return {
+          products,
+          lastSyncedAt: new Date().toISOString(),
+        };
+      });
     } catch (error) {
       console.error('Error deleting product:', error);
       throw error;
@@ -210,14 +318,18 @@ export const useProductStore = create<ProductState>((set, get) => ({
 
   clearAllProducts: async () => {
     try {
-      const { error } = await supabase
-        .from('products')
-        .delete()
-        .not('id', 'is', null);
+      const { error } = await supabase.from('products').delete().not('id', 'is', null);
 
-      if (error) throw error;
+      if (error) {
+        throw error;
+      }
 
-      set({ products: [] });
+      persistProducts([]);
+      set({
+        products: [],
+        hasLoaded: true,
+        lastSyncedAt: new Date().toISOString(),
+      });
     } catch (error) {
       console.error('Error clearing products:', error);
       throw error;
@@ -253,7 +365,5 @@ export const useProductStore = create<ProductState>((set, get) => ({
     });
   },
 
-  getProductById: (id) => {
-    return get().products.find((p) => p.id === id);
-  },
+  getProductById: (id) => get().products.find((product) => product.id === id),
 }));

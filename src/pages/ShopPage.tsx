@@ -1,141 +1,170 @@
-import { useState, useMemo, useRef, useEffect } from 'react';
-import { useSearchParams, Link } from 'react-router-dom';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import { Link, useSearchParams } from 'react-router-dom';
+import {
+  ArrowLeft,
+  ChevronLeft,
+  ChevronRight,
+  SlidersHorizontal,
+} from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import { buildCategories, slugifyCategory } from '@/data/products';
 import { useProductStore } from '@/store/productStore';
-import { SlidersHorizontal, ArrowLeft, ChevronLeft, ChevronRight } from 'lucide-react';
 
 const ShopPage = () => {
   const [searchParams] = useSearchParams();
   const categoryParam = searchParams.get('category');
-  const qParam = searchParams.get('q');
-  
-  const { products } = useProductStore();
+  const searchTerm = searchParams.get('q') || searchParams.get('search');
+  const dealsOnly = searchParams.get('deals') === 'true';
+
+  const { products, isLoading, error, hasLoaded } = useProductStore();
   const categories = useMemo(() => buildCategories(products), [products]);
-  
+
   const [selectedCategory, setSelectedCategory] = useState(categoryParam || 'all');
   const [sortBy, setSortBy] = useState('popular');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000000]);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
+  const scrollContainerRef = useRef<HTMLDivElement>(null);
 
-  // Update category if param changes
   useEffect(() => {
-    if (categoryParam) setSelectedCategory(categoryParam);
+    if (categoryParam) {
+      setSelectedCategory(categoryParam);
+      return;
+    }
+
+    setSelectedCategory('all');
   }, [categoryParam]);
 
   const checkScroll = () => {
-    if (scrollContainerRef.current) {
-      const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-      setCanScrollLeft(scrollLeft > 0);
-      setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
+    if (!scrollContainerRef.current) {
+      return;
     }
+
+    const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
+    setCanScrollLeft(scrollLeft > 0);
+    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
   };
 
   useEffect(() => {
     checkScroll();
     window.addEventListener('resize', checkScroll);
     return () => window.removeEventListener('resize', checkScroll);
-  }, []);
+  }, [categories.length]);
 
   const scroll = (direction: 'left' | 'right') => {
-    if (scrollContainerRef.current) {
-      const scrollAmount = 200;
-      scrollContainerRef.current.scrollBy({
-        left: direction === 'left' ? -scrollAmount : scrollAmount,
-        behavior: 'smooth',
-      });
-      setTimeout(checkScroll, 300);
+    if (!scrollContainerRef.current) {
+      return;
     }
+
+    scrollContainerRef.current.scrollBy({
+      left: direction === 'left' ? -200 : 200,
+      behavior: 'smooth',
+    });
+
+    window.setTimeout(checkScroll, 300);
   };
 
-  const filtered = useMemo(() => {
-    let result = [...products];
-    
-    // Category Filter
-    if (selectedCategory !== 'all') {
-      result = result.filter((p) => slugifyCategory(p.category) === selectedCategory);
+  const filteredProducts = useMemo(() => {
+    let next = [...products];
+
+    if (dealsOnly) {
+      next = next.filter((product) => product.badge === 'FLASH DEAL');
     }
-    
-    // Search Query Filter
-    if (qParam) {
-      const term = qParam.toLowerCase();
-      result = result.filter(p => 
-        p.name.toLowerCase().includes(term) || 
-        p.description.toLowerCase().includes(term) ||
-        p.seller.toLowerCase().includes(term)
+
+    if (selectedCategory !== 'all') {
+      next = next.filter((product) => slugifyCategory(product.category) === selectedCategory);
+    }
+
+    if (searchTerm) {
+      const normalizedTerm = searchTerm.toLowerCase();
+      next = next.filter(
+        (product) =>
+          product.name.toLowerCase().includes(normalizedTerm) ||
+          product.description.toLowerCase().includes(normalizedTerm) ||
+          product.seller.toLowerCase().includes(normalizedTerm)
       );
     }
-    
-    // Price Filter
-    result = result.filter(p => p.price >= priceRange[0] && p.price <= priceRange[1]);
-    
-    // Sorting
-    switch (sortBy) {
-      case 'price-low': return result.sort((a, b) => a.price - b.price);
-      case 'price-high': return result.sort((a, b) => b.price - a.price);
-      case 'newest': {
-        return result.sort((a, b) => {
-          const dateA = a.createdAt ? new Date(a.createdAt).getTime() : 0;
-          const dateB = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-          return dateB - dateA;
-        });
-      }
-      case 'rating': return result.sort((a, b) => (b.rating || 0) - (a.rating || 0));
-      default: return result.sort((a, b) => (b.reviews || 0) - (a.reviews || 0));
-    }
-  }, [products, selectedCategory, qParam, sortBy, priceRange]);
 
+    next = next.filter(
+      (product) => product.price >= priceRange[0] && product.price <= priceRange[1]
+    );
+
+    switch (sortBy) {
+      case 'price-low':
+        return next.sort((left, right) => left.price - right.price);
+      case 'price-high':
+        return next.sort((left, right) => right.price - left.price);
+      case 'newest':
+        return next.sort(
+          (left, right) => right.updatedAt.getTime() - left.updatedAt.getTime()
+        );
+      case 'rating':
+        return next.sort((left, right) => (right.rating || 0) - (left.rating || 0));
+      default:
+        return next.sort((left, right) => (right.reviews || 0) - (left.reviews || 0));
+    }
+  }, [dealsOnly, priceRange, products, searchTerm, selectedCategory, sortBy]);
 
   return (
     <div className="min-h-screen bg-background">
       <Header />
       <div className="container py-6">
-        <div className="flex items-center justify-between mb-6 flex-wrap gap-3">
+        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
           <div>
-            <h1 className="font-display text-2xl font-bold">Shop All Products</h1>
-            <p className="text-sm text-muted-foreground">{filtered.length} products found</p>
+            <h1 className="font-display text-2xl font-bold">
+              {dealsOnly ? 'Flash Deals' : 'Shop All Products'}
+            </h1>
+            <p className="text-sm text-muted-foreground">
+              {filteredProducts.length} products found
+            </p>
           </div>
-          <div className="flex items-center gap-3 flex-wrap">
-            <select value={sortBy} onChange={(e) => setSortBy(e.target.value)} className="border rounded-lg px-3 py-2 text-sm bg-background">
+          <div className="flex flex-wrap items-center gap-3">
+            <select
+              value={sortBy}
+              onChange={(event) => setSortBy(event.target.value)}
+              className="rounded-lg border bg-background px-3 py-2 text-sm"
+            >
               <option value="popular">Most Popular</option>
               <option value="price-low">Price: Low to High</option>
               <option value="price-high">Price: High to Low</option>
               <option value="newest">Newest</option>
               <option value="rating">Top Rated</option>
             </select>
-            <Link to="/" className="flex items-center gap-1.5 px-4 py-2 rounded-lg border hover:bg-muted transition-colors text-sm whitespace-nowrap">
-              <ArrowLeft className="w-4 h-4" /> Home
+            <Link
+              to="/"
+              className="flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-4 py-2 text-sm transition-colors hover:bg-muted"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Home
             </Link>
           </div>
         </div>
 
-        {/* Mobile Categories (visible on small/medium screens) */}
-        <div className="lg:hidden mb-6">
-          <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
-            <SlidersHorizontal className="w-4 h-4" /> Categories
+        <div className="mb-6 lg:hidden">
+          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold">
+            <SlidersHorizontal className="h-4 w-4" />
+            Categories
           </h3>
           <div className="relative">
             {canScrollLeft && (
               <button
                 onClick={() => scroll('left')}
-                className="absolute left-0 top-1/2 -translate-y-1/2 z-10 bg-background border rounded-full p-1.5 hover:bg-muted transition-colors"
+                className="absolute left-0 top-1/2 z-10 -translate-y-1/2 rounded-full border bg-background p-1.5 transition-colors hover:bg-muted"
               >
-                <ChevronLeft className="w-4 h-4" />
+                <ChevronLeft className="h-4 w-4" />
               </button>
             )}
             <div
               ref={scrollContainerRef}
               onScroll={checkScroll}
-              className="flex gap-2 overflow-x-auto pb-2 px-8 scroll-smooth"
+              className="flex gap-2 overflow-x-auto px-8 pb-2 scroll-smooth"
               style={{ scrollBehavior: 'smooth' }}
             >
               <button
                 onClick={() => setSelectedCategory('all')}
-                className={`flex-shrink-0 px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
+                className={`flex-shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm transition-colors ${
                   selectedCategory === 'all'
                     ? 'bg-primary text-primary-foreground'
                     : 'bg-muted hover:bg-muted/80'
@@ -143,90 +172,111 @@ const ShopPage = () => {
               >
                 All
               </button>
-              {categories.map((c) => (
+              {categories.map((category) => (
                 <button
-                  key={c.slug}
-                  onClick={() => setSelectedCategory(c.slug)}
-                  className={`flex-shrink-0 px-4 py-2 rounded-full text-sm whitespace-nowrap transition-colors ${
-                    selectedCategory === c.slug
+                  key={category.slug}
+                  onClick={() => setSelectedCategory(category.slug)}
+                  className={`flex-shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm transition-colors ${
+                    selectedCategory === category.slug
                       ? 'bg-primary text-primary-foreground'
                       : 'bg-muted hover:bg-muted/80'
                   }`}
                 >
-                  <c.icon className="w-4 h-4" /> {c.name}
+                  <category.icon className="mr-2 inline h-4 w-4" />
+                  {category.name}
                 </button>
               ))}
             </div>
             {canScrollRight && (
               <button
                 onClick={() => scroll('right')}
-                className="absolute right-0 top-1/2 -translate-y-1/2 z-10 bg-background border rounded-full p-1.5 hover:bg-muted transition-colors"
+                className="absolute right-0 top-1/2 z-10 -translate-y-1/2 rounded-full border bg-background p-1.5 transition-colors hover:bg-muted"
               >
-                <ChevronRight className="w-4 h-4" />
+                <ChevronRight className="h-4 w-4" />
               </button>
             )}
           </div>
         </div>
 
         <div className="flex gap-6">
-          {/* Desktop Sidebar filters */}
-          <aside className="hidden lg:block w-56 flex-shrink-0 space-y-6">
+          <aside className="hidden w-56 flex-shrink-0 space-y-6 lg:block">
             <div>
-              <h3 className="font-semibold text-sm mb-3 flex items-center gap-2">
-                <SlidersHorizontal className="w-4 h-4" /> Categories
+              <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold">
+                <SlidersHorizontal className="h-4 w-4" />
+                Categories
               </h3>
               <div className="space-y-1">
                 <button
                   onClick={() => setSelectedCategory('all')}
-                  className={`block w-full text-left text-sm px-3 py-1.5 rounded-md transition-colors ${
-                    selectedCategory === 'all' ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+                  className={`block w-full rounded-md px-3 py-1.5 text-left text-sm transition-colors ${
+                    selectedCategory === 'all'
+                      ? 'bg-primary text-primary-foreground'
+                      : 'hover:bg-muted'
                   }`}
                 >
                   All Categories
                 </button>
-                {categories.map((c) => (
+                {categories.map((category) => (
                   <button
-                    key={c.slug}
-                    onClick={() => setSelectedCategory(c.slug)}
-                    className={`block w-full text-left text-sm px-3 py-1.5 rounded-md transition-colors ${
-                      selectedCategory === c.slug ? 'bg-primary text-primary-foreground' : 'hover:bg-muted'
+                    key={category.slug}
+                    onClick={() => setSelectedCategory(category.slug)}
+                    className={`block w-full rounded-md px-3 py-1.5 text-left text-sm transition-colors ${
+                      selectedCategory === category.slug
+                        ? 'bg-primary text-primary-foreground'
+                        : 'hover:bg-muted'
                     }`}
                   >
                     <span className="inline-flex items-center gap-2">
-                      <c.icon className="w-4 h-4" />
-                      {c.name}
+                      <category.icon className="h-4 w-4" />
+                      {category.name}
                     </span>
                   </button>
                 ))}
               </div>
             </div>
             <div>
-              <h3 className="font-semibold text-sm mb-3">Price Range</h3>
+              <h3 className="mb-3 text-sm font-semibold">Price Range</h3>
               <input
                 type="range"
                 min={0}
                 max={2000000}
                 step={10000}
                 value={priceRange[1]}
-                onChange={(e) => setPriceRange([0, Number(e.target.value)])}
+                onChange={(event) => setPriceRange([0, Number(event.target.value)])}
                 className="w-full accent-primary"
               />
-              <p className="text-xs text-muted-foreground">Up to ₦{priceRange[1].toLocaleString()}</p>
+              <p className="text-xs text-muted-foreground">
+                Up to ₦{priceRange[1].toLocaleString()}
+              </p>
             </div>
           </aside>
 
-          {/* Products grid */}
-          <div className="flex-1 w-full lg:w-auto">
-            <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-3 sm:gap-4">
-              {filtered.map((p) => (
-                <ProductCard key={p.id} product={p} />
-              ))}
-            </div>
-            {filtered.length === 0 && (
-              <div className="text-center py-20 text-muted-foreground">
-                <p className="text-lg">No products found</p>
-                <p className="text-sm">Try adjusting your filters</p>
+          <div className="w-full flex-1 lg:w-auto">
+            {isLoading && products.length === 0 ? (
+              <div className="flex min-h-[320px] items-center justify-center">
+                <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
               </div>
+            ) : error ? (
+              <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-6 text-center">
+                <p className="text-lg font-semibold text-destructive">Unable to load products</p>
+                <p className="mt-2 text-sm text-muted-foreground">
+                  We could not reach the catalog right now. Please refresh the page shortly.
+                </p>
+              </div>
+            ) : (
+              <>
+                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+                  {filteredProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
+                {filteredProducts.length === 0 && hasLoaded && (
+                  <div className="py-20 text-center text-muted-foreground">
+                    <p className="text-lg">No products found</p>
+                    <p className="text-sm">Try adjusting your filters</p>
+                  </div>
+                )}
+              </>
             )}
           </div>
         </div>

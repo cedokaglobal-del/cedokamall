@@ -42,14 +42,28 @@ const SEOUpdater = () => {
 const App = () => {
   const fetchProducts = useProductStore((state) => state.fetchProducts);
 
-  // Initialize performance optimizations
   useEffect(() => {
-    // Fetch products from Supabase
-    fetchProducts();
-
-    // Add DNS prefetch and preconnect hints
+    void fetchProducts();
     addConnectionHints();
-  }, []);
+
+    const handleReconnect = () => {
+      void fetchProducts(true);
+    };
+
+    const handleVisibilityChange = () => {
+      if (document.visibilityState === 'visible') {
+        void fetchProducts(true);
+      }
+    };
+
+    window.addEventListener('online', handleReconnect);
+    document.addEventListener('visibilitychange', handleVisibilityChange);
+
+    return () => {
+      window.removeEventListener('online', handleReconnect);
+      document.removeEventListener('visibilitychange', handleVisibilityChange);
+    };
+  }, [fetchProducts]);
 
   return (
     <QueryClientProvider client={queryClient}>

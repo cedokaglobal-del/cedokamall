@@ -26,6 +26,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
   const [newCategory, setNewCategory] = useState('');
   const [categoryError, setCategoryError] = useState('');
   const [isUploadingImages, setIsUploadingImages] = useState(false);
+  const [submitError, setSubmitError] = useState('');
   const categories = useMemo(
     () => getCategoryOptions(products, customCategories),
     [products, customCategories]
@@ -142,7 +143,14 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
       return;
     }
 
-    await onSubmit(formData);
+    setSubmitError('');
+
+    try {
+      await onSubmit(formData);
+    } catch (error) {
+      console.error('Error saving product form:', error);
+      setSubmitError('We could not save this product. Please check your details and try again.');
+    }
   };
 
   const handleChange = (field: keyof ProductFormData, value: string | number) => {
@@ -463,6 +471,12 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
       </div>
 
       {/* Form Actions */}
+      {submitError && (
+        <div className="rounded-lg border border-destructive/20 bg-destructive/5 px-4 py-3 text-sm text-destructive">
+          {submitError}
+        </div>
+      )}
+
       <div className="flex gap-2 justify-end">
         <Button
           type="button"

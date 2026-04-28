@@ -18,6 +18,12 @@ interface AuthContextType {
   isLoading: boolean;
 }
 
+type AuthStateSnapshot = {
+  isAuthenticated: boolean;
+  isAdmin: boolean;
+  adminEmail: string | null;
+};
+
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const adminEmailList = (import.meta.env.VITE_ADMIN_EMAILS ||
@@ -27,68 +33,15 @@ const adminEmailList = (import.meta.env.VITE_ADMIN_EMAILS ||
   .map((email) => email.trim().toLowerCase())
   .filter(Boolean);
 
-function isAuthorizedAdmin(email: string | null | undefined): boolean {
+function isListedAdmin(email: string | null | undefined): boolean {
   if (!email) return false;
   if (adminEmailList.length === 0) return true;
   return adminEmailList.includes(email.toLowerCase());
 }
 
-function installAntiTamper() {
-  if (typeof window === 'undefined') return;
-
-  const protectedKeys = ['adminToken', 'adminEmail'];
-  let authFlowActive = false;
-
-  (window as Window & { __setAuthFlowActive?: (active: boolean) => void }).__setAuthFlowActive =
-    (active: boolean) => {
-      authFlowActive = active;
-    };
-
-  const originalSetItem = Storage.prototype.setItem;
-  Storage.prototype.setItem = function setProtectedItem(key: string, value: string) {
-    if (protectedKeys.includes(key) && !authFlowActive) {
-      console.warn('[Security] Unauthorized attempt to modify protected storage key:', key);
-      return;
-    }
-
-    originalSetItem.call(this, key, value);
-  };
-
-  const originalRemoveItem = Storage.prototype.removeItem;
-  Storage.prototype.removeItem = function removeProtectedItem(key: string) {
-    if (protectedKeys.includes(key) && !authFlowActive) {
-      console.warn('[Security] Unauthorized attempt to remove protected storage key:', key);
-      return;
-    }
-
-    originalRemoveItem.call(this, key);
-  };
-
-  if (import.meta.env.MODE === 'production') {
-    const noop = () => {};
-    (window as Window & { console: Console }).console = {
-      ...console,
-      log: noop,
-      warn: noop,
-      error: noop,
-      info: noop,
-      debug: noop,
-      table: noop,
-      dir: noop,
-      group: noop,
-      groupEnd: noop,
-      trace: noop,
-      assert: noop,
-    };
-  }
-}
-
-async function applySession(session: Session | null) {
+async function resolveAdminStatus(session: Session | null): Promise<AuthStateSnapshot> {
   const email = session?.user?.email ?? null;
-  const authorized = isAuthorizedAdmin(email);
-
-  if (session && !authorized) {
-    await supabase.auth.signOut();
+  if (!session || !email) {
     return {
       isAuthenticated: false,
       isAdmin: false,
@@ -96,29 +49,36 @@ async function applySession(session: Session | null) {
     };
   }
 
-  if (session && authorized) {
-    (window as Window & { __setAuthFlowActive?: (active: boolean) => void }).__setAuthFlowActive?.(true);
-    localStorage.setItem('adminToken', session.access_token);
-    localStorage.setItem('adminEmail', email ?? '');
-    (window as Window & { __setAuthFlowActive?: (active: boolean) => void }).__setAuthFlowActive?.(false);
-
-    return {
-      isAuthenticated: true,
-      isAdmin: true,
-      adminEmail: email,
-    };
+  try {
+    const { data, error } = await supabase.rpc('is_admin');
+    if (!error) {
+      const isAdmin = Boolean(data);
+      return {
+        isAuthenticated: isAdmin,
+        isAdmin,
+        adminEmail: isAdmin ? email : null,
+      };
+    }
+  } catch (error) {
+    console.error('Admin role check failed:', error);
   }
 
-  (window as Window & { __setAuthFlowActive?: (active: boolean) => void }).__setAuthFlowActive?.(true);
-  localStorage.removeItem('adminToken');
-  localStorage.removeItem('adminEmail');
-  (window as Window & { __setAuthFlowActive?: (active: boolean) => void }).__setAuthFlowActive?.(false);
-
+  const isAdmin = isListedAdmin(email);
   return {
-    isAuthenticated: false,
-    isAdmin: false,
-    adminEmail: null,
+    isAuthenticated: isAdmin,
+    isAdmin,
+    adminEmail: isAdmin ? email : null,
   };
+}
+
+async function applySession(session: Session | null) {
+  const nextState = await resolveAdminStatus(session);
+
+  if (session && !nextState.isAdmin) {
+    await supabase.auth.signOut();
+  }
+
+  return nextState;
 }
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
@@ -128,8 +88,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    installAntiTamper();
-
     if (!isSupabaseConfigured) {
       setIsLoading(false);
       return;
@@ -168,10 +126,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       const normalizedEmail = email.trim().toLowerCase();
-      if (!isAuthorizedAdmin(normalizedEmail)) {
-        return false;
-      }
-
       const { data, error } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
         password,
@@ -182,15 +136,15 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return false;
       }
 
-      const sessionEmail = data.user?.email ?? data.session?.user?.email ?? null;
-      if (!isAuthorizedAdmin(sessionEmail)) {
+      const nextState = await resolveAdminStatus(data.session);
+      if (!nextState.isAdmin) {
         await supabase.auth.signOut();
         return false;
       }
 
-      setIsAuthenticated(true);
-      setIsAdmin(true);
-      setAdminEmail(sessionEmail);
+      setIsAuthenticated(nextState.isAuthenticated);
+      setIsAdmin(nextState.isAdmin);
+      setAdminEmail(nextState.adminEmail);
       return true;
     } catch (error) {
       console.error('Unexpected login error:', error);
@@ -205,16 +159,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       await supabase.auth.signOut();
     }
 
-    (window as Window & { __setAuthFlowActive?: (active: boolean) => void }).__setAuthFlowActive?.(true);
-    localStorage.removeItem('adminToken');
-    localStorage.removeItem('adminEmail');
-    (window as Window & { __setAuthFlowActive?: (active: boolean) => void }).__setAuthFlowActive?.(false);
     setIsAuthenticated(false);
     setIsAdmin(false);
     setAdminEmail(null);
   };
 
-  const checkAuth = () => isAuthenticated;
+  const checkAuth = () => isAuthenticated && isAdmin;
 
   return (
     <AuthContext.Provider

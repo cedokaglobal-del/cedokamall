@@ -237,10 +237,17 @@ export function addConnectionHints(): void {
   const hints = [
     { rel: 'dns-prefetch', href: 'https://images.unsplash.com' },
     { rel: 'dns-prefetch', href: 'https://fonts.googleapis.com' },
+    { rel: 'dns-prefetch', href: 'https://rxpyehmubnzdshncpqbw.supabase.co' },
     { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossOrigin: 'anonymous' },
+    { rel: 'preconnect', href: 'https://rxpyehmubnzdshncpqbw.supabase.co', crossOrigin: 'anonymous' },
   ];
 
   hints.forEach(hint => {
+    const selector = `link[rel="${hint.rel}"][href="${hint.href}"]`;
+    if (document.head.querySelector(selector)) {
+      return;
+    }
+
     const link = document.createElement('link');
     link.rel = hint.rel;
     link.href = hint.href;

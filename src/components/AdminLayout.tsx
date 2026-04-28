@@ -14,8 +14,8 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const location = useLocation();
   const { logout, adminEmail } = useAuth();
 
-  const handleLogout = () => {
-    logout();
+  const handleLogout = async () => {
+    await logout();
     navigate('/admin/login');
   };
 

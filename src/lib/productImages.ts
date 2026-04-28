@@ -18,36 +18,45 @@ async function optimizeImage(file: File): Promise<File> {
     return file;
   }
 
-  const bitmap = await createImageBitmap(file);
-  const scale = Math.min(
-    1,
-    MAX_IMAGE_DIMENSION / bitmap.width,
-    MAX_IMAGE_DIMENSION / bitmap.height
-  );
-
-  const width = Math.max(1, Math.round(bitmap.width * scale));
-  const height = Math.max(1, Math.round(bitmap.height * scale));
-  const canvas = document.createElement('canvas');
-  canvas.width = width;
-  canvas.height = height;
-
-  const context = canvas.getContext('2d');
-  if (!context) {
+  if (typeof createImageBitmap !== 'function') {
     return file;
   }
 
-  context.drawImage(bitmap, 0, 0, width, height);
-  const blob = await new Promise<Blob | null>((resolve) => {
-    canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY);
-  });
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(
+      1,
+      MAX_IMAGE_DIMENSION / bitmap.width,
+      MAX_IMAGE_DIMENSION / bitmap.height
+    );
 
-  if (!blob) {
+    const width = Math.max(1, Math.round(bitmap.width * scale));
+    const height = Math.max(1, Math.round(bitmap.height * scale));
+    const canvas = document.createElement('canvas');
+    canvas.width = width;
+    canvas.height = height;
+
+    const context = canvas.getContext('2d');
+    if (!context) {
+      return file;
+    }
+
+    context.drawImage(bitmap, 0, 0, width, height);
+    const blob = await new Promise<Blob | null>((resolve) => {
+      canvas.toBlob(resolve, 'image/jpeg', JPEG_QUALITY);
+    });
+
+    if (!blob) {
+      return file;
+    }
+
+    const extension = '.jpg';
+    const nextName = file.name.replace(/\.[^.]+$/, '') + extension;
+    return new File([blob], nextName, { type: 'image/jpeg' });
+  } catch (error) {
+    console.error('Image optimization failed, using original file instead:', error);
     return file;
   }
-
-  const extension = '.jpg';
-  const nextName = file.name.replace(/\.[^.]+$/, '') + extension;
-  return new File([blob], nextName, { type: 'image/jpeg' });
 }
 
 export async function uploadProductImage(file: File) {
