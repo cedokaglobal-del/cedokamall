@@ -57,7 +57,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
       return;
     }
 
-    if (categories.includes(trimmed)) {
+    if (categories.some((cat) => cat.toLowerCase() === trimmed.toLowerCase())) {
       setCategoryError('This category already exists');
       return;
     }
@@ -67,11 +67,19 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
       return;
     }
 
-    const updatedCategories = [...customCategories, trimmed].sort();
+    const updatedCategories = [...customCategories, trimmed].sort((a, b) => a.localeCompare(b));
     setCustomCategories(updatedCategories);
     setFormData((prev) => ({ ...prev, category: trimmed }));
     setNewCategory('');
     setIsAddingCategory(false);
+  };
+
+  const removeCustomCategory = (category: string) => {
+    setCustomCategories((prev) => prev.filter((cat) => cat !== category));
+    setFormData((prev) => ({
+      ...prev,
+      category: prev.category === category ? '' : prev.category,
+    }));
   };
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -253,6 +261,36 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
                       <p className="text-sm text-destructive mt-1">{categoryError}</p>
                     )}
                   </div>
+
+                  {customCategories.length > 0 && (
+                    <div className="space-y-3">
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm font-medium">Pending categories</p>
+                        <p className="text-xs text-muted-foreground">
+                          Remove unused categories before saving.
+                        </p>
+                      </div>
+                      <div className="space-y-2">
+                        {customCategories.map((category) => (
+                          <div
+                            key={category}
+                            className="flex items-center justify-between rounded-lg border border-border px-3 py-2"
+                          >
+                            <span className="text-sm">{category}</span>
+                            <Button
+                              type="button"
+                              variant="ghost"
+                              size="icon"
+                              onClick={() => removeCustomCategory(category)}
+                              title={`Remove ${category}`}
+                            >
+                              <X className="w-4 h-4" />
+                            </Button>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
                 <div className="flex justify-end gap-2">
                   <Button

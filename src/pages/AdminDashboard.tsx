@@ -65,10 +65,15 @@ const AdminDashboard = () => {
     () => products.filter((product) => product.inStock <= 0),
     [products]
   );
-  const categoryCount = useMemo(
-    () => new Set(products.map((product) => product.category)).size,
-    [products]
-  );
+  const categoryCount = useMemo(() => {
+    const uniqueCategories = new Set(
+      products
+        .map((product) => product.category?.trim())
+        .filter((category): category is string => Boolean(category))
+    );
+    return uniqueCategories.size;
+  }, [products]);
+
   const totalInventoryValue = useMemo(
     () =>
       products.reduce(
