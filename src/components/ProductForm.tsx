@@ -137,7 +137,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
     if (formData.price <= 0) newErrors.price = 'Price must be greater than 0';
     if (!formData.category) newErrors.category = 'Category is required';
     if (!formData.description.trim()) newErrors.description = 'Description is required';
-    if (formData.inStock < 0) newErrors.inStock = 'Stock cannot be negative';
+    if (!formData.inStock || formData.inStock < 1) newErrors.inStock = 'Product must have at least 1 unit in stock';
     if (!formData.seller.trim()) newErrors.seller = 'Brand name is required';
     if (!formData.images || formData.images.length === 0) newErrors.images = 'At least 1 product image is required';
 
@@ -179,256 +179,272 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
   };
 
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {/* Product Name */}
-        <div>
-          <Label htmlFor="name">Product Name *</Label>
-          <Input
-            id="name"
-            value={formData.name}
-            onChange={(e) => handleChange('name', e.target.value)}
-            placeholder="Enter product name"
-            className={errors.name ? 'border-destructive' : ''}
-            disabled={isLoading}
-          />
-          {errors.name && <p className="text-sm text-destructive mt-1">{errors.name}</p>}
-        </div>
-
-        {/* Category */}
-        <div>
-          <Label htmlFor="category">Category *</Label>
-          <div className="flex gap-2">
-            <Select
-              value={formData.category}
-              onValueChange={(value) => handleChange('category', value)}
+    <form onSubmit={handleSubmit} className="space-y-8">
+      {/* Core Product Information */}
+      <div className="space-y-4 pb-6 border-b border-border/50">
+        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">Basic Information</h3>
+        <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+          {/* Product Name */}
+          <div>
+            <Label htmlFor="name">Product Name *</Label>
+            <Input
+              id="name"
+              value={formData.name}
+              onChange={(e) => handleChange('name', e.target.value)}
+              placeholder="Enter product name"
+              className={errors.name ? 'border-destructive' : ''}
               disabled={isLoading}
-            >
-              <SelectTrigger className={`flex-1 ${errors.category ? 'border-destructive' : ''}`}>
-                <SelectValue placeholder="Select a category" />
-              </SelectTrigger>
-              <SelectContent>
-                {categories.map((cat) => (
-                  <SelectItem key={cat} value={cat}>
-                    {cat}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+            />
+            {errors.name && <p className="text-sm text-destructive mt-1">{errors.name}</p>}
+          </div>
 
-            {/* Add New Category Dialog */}
-            <Dialog open={isAddingCategory} onOpenChange={setIsAddingCategory}>
-              <DialogTrigger asChild>
-                <Button
-                  type="button"
-                  variant="outline"
-                  size="icon"
-                  title="Add new category"
-                  disabled={isLoading}
-                  className="h-10 w-10"
-                >
-                  <Plus className="w-4 h-4" />
-                </Button>
-              </DialogTrigger>
-              <DialogContent>
-                <DialogHeader>
-                  <DialogTitle>Add New Category</DialogTitle>
-                  <DialogDescription>
-                    Enter the name of the new product category. It will be automatically added to the list.
-                  </DialogDescription>
-                </DialogHeader>
-                <div className="space-y-4 py-4">
-                  <div>
-                    <Label htmlFor="newCat">Category Name</Label>
-                    <Input
-                      id="newCat"
-                      placeholder="e.g., Solar, Kitchen Accessories"
-                      value={newCategory}
-                      onChange={(e) => {
-                        setNewCategory(e.target.value);
-                        if (categoryError) setCategoryError('');
-                      }}
-                      onKeyPress={(e) => {
-                        if (e.key === 'Enter') {
-                          e.preventDefault();
-                          handleAddCategory();
-                        }
-                      }}
-                      disabled={isLoading}
-                      autoFocus
-                    />
-                    {categoryError && (
-                      <p className="text-sm text-destructive mt-1">{categoryError}</p>
-                    )}
-                  </div>
+          {/* Category */}
+          <div>
+            <Label htmlFor="category">Category *</Label>
+            <div className="flex gap-2">
+              <Select
+                value={formData.category}
+                onValueChange={(value) => handleChange('category', value)}
+                disabled={isLoading}
+              >
+                <SelectTrigger className={`flex-1 ${errors.category ? 'border-destructive' : ''}`}>
+                  <SelectValue placeholder="Select a category" />
+                </SelectTrigger>
+                <SelectContent>
+                  {categories.map((cat) => (
+                    <SelectItem key={cat} value={cat}>
+                      {cat}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
 
-                  {customCategories.length > 0 && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm font-medium">Pending categories</p>
-                        <p className="text-xs text-muted-foreground">
-                          Remove unused categories before saving.
-                        </p>
-                      </div>
-                      <div className="space-y-2">
-                        {customCategories.map((category) => (
-                          <div
-                            key={category}
-                            className="flex items-center justify-between rounded-lg border border-border px-3 py-2"
-                          >
-                            <span className="text-sm">{category}</span>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => removeCustomCategory(category)}
-                              title={`Remove ${category}`}
-                            >
-                              <X className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-                <div className="flex justify-end gap-2">
+              {/* Add New Category Dialog */}
+              <Dialog open={isAddingCategory} onOpenChange={setIsAddingCategory}>
+                <DialogTrigger asChild>
                   <Button
                     type="button"
                     variant="outline"
-                    onClick={() => {
-                      setIsAddingCategory(false);
-                      setNewCategory('');
-                      setCategoryError('');
-                    }}
+                    size="icon"
+                    title="Add new category"
                     disabled={isLoading}
+                    className="h-10 w-10"
                   >
-                    Cancel
+                    <Plus className="w-4 h-4" />
                   </Button>
-                  <Button
-                    type="button"
-                    onClick={handleAddCategory}
-                    disabled={isLoading || !newCategory.trim()}
-                  >
-                    Add Category
-                  </Button>
-                </div>
-              </DialogContent>
-            </Dialog>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New Category</DialogTitle>
+                    <DialogDescription>
+                      Enter the name of the new product category. It will be automatically added to the list.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div>
+                      <Label htmlFor="newCat">Category Name</Label>
+                      <Input
+                        id="newCat"
+                        placeholder="e.g., Solar, Kitchen Accessories"
+                        value={newCategory}
+                        onChange={(e) => {
+                          setNewCategory(e.target.value);
+                          if (categoryError) setCategoryError('');
+                        }}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter') {
+                            e.preventDefault();
+                            handleAddCategory();
+                          }
+                        }}
+                        disabled={isLoading}
+                        autoFocus
+                      />
+                      {categoryError && (
+                        <p className="text-sm text-destructive mt-1">{categoryError}</p>
+                      )}
+                    </div>
+
+                    {customCategories.length > 0 && (
+                      <div className="space-y-3">
+                        <div className="flex items-center justify-between">
+                          <p className="text-sm font-medium">Pending categories</p>
+                          <p className="text-xs text-muted-foreground">
+                            Remove unused categories before saving.
+                          </p>
+                        </div>
+                        <div className="space-y-2">
+                          {customCategories.map((category) => (
+                            <div
+                              key={category}
+                              className="flex items-center justify-between rounded-lg border border-border px-3 py-2"
+                            >
+                              <span className="text-sm">{category}</span>
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                onClick={() => removeCustomCategory(category)}
+                                title={`Remove ${category}`}
+                              >
+                                <X className="w-4 h-4" />
+                              </Button>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <div className="flex justify-end gap-2">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      onClick={() => {
+                        setIsAddingCategory(false);
+                        setNewCategory('');
+                        setCategoryError('');
+                      }}
+                      disabled={isLoading}
+                    >
+                      Cancel
+                    </Button>
+                    <Button
+                      type="button"
+                      onClick={handleAddCategory}
+                      disabled={isLoading || !newCategory.trim()}
+                    >
+                      Add Category
+                    </Button>
+                  </div>
+                </DialogContent>
+              </Dialog>
+            </div>
+            {errors.category && <p className="text-sm text-destructive mt-1">{errors.category}</p>}
           </div>
-          {errors.category && <p className="text-sm text-destructive mt-1">{errors.category}</p>}
-        </div>
 
-        {/* Price */}
-        <div>
-          <Label htmlFor="price">Price (₦) *</Label>
-          <Input
-            id="price"
-            type="text"
-            inputMode="decimal"
-            value={formData.price === undefined ? '' : formData.price}
-            onChange={(e) => {
-              const val = e.target.value;
-              if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                handleChange('price', val);
-              }
-            }}
-            placeholder="0.00"
-            className={errors.price ? 'border-destructive' : ''}
-            disabled={isLoading}
-          />
-          {errors.price && <p className="text-sm text-destructive mt-1">{errors.price}</p>}
-        </div>
+          {/* Brand Name */}
+          <div>
+            <Label htmlFor="seller">Brand Name *</Label>
+            <Input
+              id="seller"
+              value={formData.seller}
+              onChange={(e) => handleChange('seller', e.target.value)}
+              placeholder="Enter brand name"
+              className={errors.seller ? 'border-destructive' : ''}
+              disabled={isLoading}
+            />
+            {errors.seller && <p className="text-sm text-destructive mt-1">{errors.seller}</p>}
+          </div>
 
-        {/* Original Price */}
-        <div>
-          <Label htmlFor="originalPrice">Original Price (₦)</Label>
-          <Input
-            id="originalPrice"
-            type="text"
-            inputMode="decimal"
-            value={formData.originalPrice === undefined ? '' : formData.originalPrice}
-            onChange={(e) => {
-              const val = e.target.value;
-              if (val === '' || /^\d*\.?\d*$/.test(val)) {
-                handleChange('originalPrice', val);
-              }
-            }}
-            placeholder="0.00"
-            disabled={isLoading}
-          />
+          {/* SKU */}
+          <div>
+            <Label htmlFor="sku">SKU (Stock Keeping Unit)</Label>
+            <Input
+              id="sku"
+              value={formData.sku}
+              onChange={(e) => handleChange('sku', e.target.value)}
+              placeholder="e.g., SKU-12345"
+              disabled={isLoading}
+            />
+          </div>
         </div>
+      </div>
 
-        {/* Stock */}
-        <div>
-          <Label htmlFor="inStock">Stock Quantity *</Label>
-          <Input
-            id="inStock"
-            type="text"
-            inputMode="numeric"
-            value={formData.inStock === undefined ? '' : formData.inStock}
-            onChange={(e) => {
-              const val = e.target.value;
-              if (val === '' || /^\d+$/.test(val)) {
-                handleChange('inStock', val);
-              }
-            }}
-            placeholder="Enter quantity"
-            className={errors.inStock ? 'border-destructive' : ''}
-            disabled={isLoading}
-          />
-          {errors.inStock && <p className="text-sm text-destructive mt-1">{errors.inStock}</p>}
+      {/* Pricing & Inventory */}
+      <div className="space-y-4 pb-6 border-b border-border/50">
+        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">Pricing & Inventory</h3>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          {/* Price */}
+          <div>
+            <Label htmlFor="price">Sale Price (₦) *</Label>
+            <Input
+              id="price"
+              type="text"
+              inputMode="decimal"
+              value={formData.price === undefined ? '' : formData.price}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                  handleChange('price', val);
+                }
+              }}
+              placeholder="0.00"
+              className={errors.price ? 'border-destructive' : ''}
+              disabled={isLoading}
+            />
+            {errors.price && <p className="text-sm text-destructive mt-1">{errors.price}</p>}
+          </div>
+
+          {/* Original Price */}
+          <div>
+            <Label htmlFor="originalPrice">Original Price (₦)</Label>
+            <Input
+              id="originalPrice"
+              type="text"
+              inputMode="decimal"
+              value={formData.originalPrice === undefined ? '' : formData.originalPrice}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === '' || /^\d*\.?\d*$/.test(val)) {
+                  handleChange('originalPrice', val);
+                }
+              }}
+              placeholder="0.00"
+              disabled={isLoading}
+            />
+            <p className="text-xs text-muted-foreground mt-1">For discounts</p>
+          </div>
+
+          {/* Stock */}
+          <div>
+            <Label htmlFor="inStock">Stock Quantity * (min. 1)</Label>
+            <Input
+              id="inStock"
+              type="text"
+              inputMode="numeric"
+              value={formData.inStock === undefined ? '' : formData.inStock}
+              onChange={(e) => {
+                const val = e.target.value;
+                if (val === '' || /^\d+$/.test(val)) {
+                  handleChange('inStock', val);
+                }
+              }}
+              placeholder="Enter quantity"
+              className={errors.inStock ? 'border-destructive' : ''}
+              disabled={isLoading}
+            />
+            {errors.inStock && <p className="text-sm text-destructive mt-1">{errors.inStock}</p>}
+          </div>
         </div>
+      </div>
 
-        {/* SKU */}
-        <div>
-          <Label htmlFor="sku">SKU</Label>
-          <Input
-            id="sku"
-            value={formData.sku}
-            onChange={(e) => handleChange('sku', e.target.value)}
-            placeholder="e.g., SKU-12345"
-            disabled={isLoading}
-          />
-        </div>
+      {/* Product Specifications */}
+      <div className="space-y-4 pb-6 border-b border-border/50">
+        <h3 className="text-sm font-semibold text-foreground uppercase tracking-wide">Specifications</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {/* Warranty */}
+          <div>
+            <Label htmlFor="warranty">Warranty Period</Label>
+            <Input
+              id="warranty"
+              value={formData.warranty}
+              onChange={(e) => handleChange('warranty', e.target.value)}
+              placeholder="e.g., 1 year, 2 years"
+              disabled={isLoading}
+            />
+          </div>
 
-        {/* Brand Name */}
-        <div>
-          <Label htmlFor="seller">Brand Name *</Label>
-          <Input
-            id="seller"
-            value={formData.seller}
-            onChange={(e) => handleChange('seller', e.target.value)}
-            placeholder="Enter brand name"
-            className={errors.seller ? 'border-destructive' : ''}
-            disabled={isLoading}
-          />
-          {errors.seller && <p className="text-sm text-destructive mt-1">{errors.seller}</p>}
-        </div>
-
-        {/* Warranty */}
-        <div>
-          <Label htmlFor="warranty">Warranty</Label>
-          <Input
-            id="warranty"
-            value={formData.warranty}
-            onChange={(e) => handleChange('warranty', e.target.value)}
-            placeholder="e.g., 1 year"
-            disabled={isLoading}
-          />
-        </div>
-
-        {/* Color (Optional) */}
-        <div>
-          <Label htmlFor="color">Color (Optional)</Label>
-          <Input
-            id="color"
-            value={formData.color || ''}
-            onChange={(e) => handleChange('color', e.target.value)}
-            placeholder="e.g., Black, Red, Silver"
-            disabled={isLoading}
-          />
-          <p className="text-xs text-muted-foreground mt-1">Leave blank if product doesn't have a specific color</p>
+          {/* Color */}
+          <div>
+            <Label htmlFor="color">Color / Variant</Label>
+            <Input
+              id="color"
+              value={formData.color || ''}
+              onChange={(e) => handleChange('color', e.target.value)}
+              placeholder="e.g., Black, Red, Silver"
+              disabled={isLoading}
+            />
+          </div>
         </div>
       </div>
 

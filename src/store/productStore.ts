@@ -166,8 +166,39 @@ export const useProductStore = create<ProductState>((set, get) => ({
 
   fetchProducts: async (force = false) => {
     const state = get();
-    if (!force && pendingFetch) {
-      return pendingFetch;
+    
+    // If we have cached products and not forcing, return immediately
+    if (!force && state.products.length > 0) {
+      // Silently try to sync in background after a delay
+      setTimeout(async () => {
+        try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+          const { data, error } = await supabase
+            .from('products')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+          clearTimeout(timeoutId);
+
+          if (error) throw error;
+
+          const products = (data || []).map(mapSupabaseToProduct);
+          if (JSON.stringify(products) !== JSON.stringify(state.products)) {
+            persistProducts(products);
+            set({
+              products,
+              lastSyncedAt: new Date().toISOString(),
+              error: null,
+            });
+          }
+        } catch (err) {
+          // Silent failure in background sync
+          console.debug('Background sync failed (non-blocking):', err);
+        }
+      }, 2000);
+      return;
     }
 
     if (!force && state.hasLoaded && state.products.length > 0) {
@@ -178,7 +209,6 @@ export const useProductStore = create<ProductState>((set, get) => ({
 
     pendingFetch = (async () => {
       try {
-        // Add 10-second timeout to prevent hanging
         const controller = new AbortController();
         const timeoutId = setTimeout(() => controller.abort(), 10000);
 
@@ -204,7 +234,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
       } catch (error) {
         console.error('Error fetching products:', error);
         set((current) => ({
-          error: current.products.length > 0 ? null : 'We could not load products from the database.',
+          error: current.products.length > 0 ? null : 'Database temporarily unavailable. Showing cached products.',
           hasLoaded: true,
         }));
       } finally {

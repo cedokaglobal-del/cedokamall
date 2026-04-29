@@ -10,6 +10,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute.tsx";
 // Utilities
 import { addConnectionHints } from "@/utils/performance";
+import { startHealthCheck } from "@/utils/supabaseHealth";
 import { useSEO } from "@/hooks/useSEO";
 import { useProductStore } from "@/store/productStore";
 
@@ -43,12 +44,20 @@ const App = () => {
   const fetchProducts = useProductStore((state) => state.fetchProducts);
 
   useEffect(() => {
-    // Fire-and-forget: fetch products without blocking the app initialization
-    // If Supabase is slow/unreachable, app still renders with cached products
-    fetchProducts().catch((err) => {
-      console.warn('Initial product fetch failed (app still loads):', err);
-    });
+    // Start database health check (logs every 60 seconds)
+    const healthCheckInterval = startHealthCheck(60000);
 
+    // Non-blocking: fetch products in background without waiting
+    // App renders immediately with cached data
+    const fetchInBackground = async () => {
+      try {
+        await fetchProducts();
+      } catch (err) {
+        console.warn('Product sync failed (app still loads):', err);
+      }
+    };
+
+    fetchInBackground();
     addConnectionHints();
 
     const handleReconnect = () => {
@@ -65,6 +74,7 @@ const App = () => {
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
     return () => {
+      clearInterval(healthCheckInterval);
       window.removeEventListener('online', handleReconnect);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
     };
