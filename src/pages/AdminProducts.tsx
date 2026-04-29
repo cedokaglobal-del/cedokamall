@@ -33,7 +33,7 @@ const AdminProducts = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false);
 
-  const filteredProducts = useMemo(() => getFilteredProducts(), [products, filter, getFilteredProducts]);
+  const filteredProducts = useMemo(() => getFilteredProducts(), [getFilteredProducts]);
   const categories = useMemo(() => getCategoryOptions(products), [products]);
 
   const handleAddProduct = () => {

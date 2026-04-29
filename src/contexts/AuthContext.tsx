@@ -1,11 +1,6 @@
-import {
-  createContext,
-  useContext,
-  useEffect,
-  useState,
-  type ReactNode,
-} from 'react';
+import { createContext, useEffect, useState, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
+import { AuthContext } from '@/contexts/auth-context';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
 
 interface AuthContextType {
@@ -23,8 +18,6 @@ type AuthStateSnapshot = {
   isAdmin: boolean;
   adminEmail: string | null;
 };
-
-const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const adminEmailList = (import.meta.env.VITE_ADMIN_EMAILS ||
   import.meta.env.VITE_ADMIN_EMAIL ||
@@ -175,12 +168,3 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   );
 };
 
-export const useAuth = () => {
-  const context = useContext(AuthContext);
-
-  if (context === undefined) {
-    throw new Error('useAuth must be used within an AuthProvider');
-  }
-
-  return context;
-};
