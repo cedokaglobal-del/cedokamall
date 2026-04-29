@@ -43,7 +43,12 @@ const App = () => {
   const fetchProducts = useProductStore((state) => state.fetchProducts);
 
   useEffect(() => {
-    void fetchProducts();
+    // Fire-and-forget: fetch products without blocking the app initialization
+    // If Supabase is slow/unreachable, app still renders with cached products
+    fetchProducts().catch((err) => {
+      console.warn('Initial product fetch failed (app still loads):', err);
+    });
+
     addConnectionHints();
 
     const handleReconnect = () => {

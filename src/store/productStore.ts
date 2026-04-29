@@ -178,10 +178,16 @@ export const useProductStore = create<ProductState>((set, get) => ({
 
     pendingFetch = (async () => {
       try {
+        // Add 10-second timeout to prevent hanging
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 10000);
+
         const { data, error } = await supabase
           .from('products')
           .select('*')
           .order('created_at', { ascending: false });
+
+        clearTimeout(timeoutId);
 
         if (error) {
           throw error;
