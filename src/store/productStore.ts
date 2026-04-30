@@ -63,6 +63,7 @@ const mapSupabaseToProduct = (row: Record<string, unknown>): Product => {
   const mainImage = typeof row.image === 'string' && row.image.length > 0 ? row.image : fallbackImage;
   const images = parseImages(row.images, mainImage);
 
+  const specs = parseSpecs(row.specs);
   return {
     id: String(row.id),
     name: String(row.name ?? ''),
@@ -77,13 +78,25 @@ const mapSupabaseToProduct = (row: Record<string, unknown>): Product => {
     rating: Number(row.rating ?? 0),
     reviews: Number(row.reviews ?? 0),
     badge: typeof row.badge === 'string' ? row.badge : undefined,
-    specs: parseSpecs(row.specs),
-    features: Array.isArray(row.features) ? row.features.filter((f): f is string => typeof f === 'string') : [],
+    specs: specs,
+    features: Array.isArray(row.features) 
+      ? row.features.filter((f): f is string => typeof f === 'string') 
+      : Array.isArray(specs?.features)
+        ? (specs.features as any[]).filter((f): f is string => typeof f === 'string')
+        : [],
     warranty: typeof row.warranty === 'string' ? row.warranty : undefined,
     sku: typeof row.sku === 'string' ? row.sku : undefined,
     color: typeof row.color === 'string' ? row.color : undefined,
-    searchCount: typeof row.search_count === 'number' ? row.search_count : 0,
-    salesCount: typeof row.sales_count === 'number' ? row.sales_count : 0,
+    searchCount: typeof row.search_count === 'number' 
+      ? row.search_count 
+      : typeof specs?.search_count === 'number'
+        ? specs.search_count
+        : 0,
+    salesCount: typeof row.sales_count === 'number' 
+      ? row.sales_count 
+      : typeof specs?.sales_count === 'number'
+        ? specs.sales_count
+        : 0,
     createdAt: new Date(String(row.created_at)),
     updatedAt: new Date(String(row.updated_at ?? row.created_at)),
   };
@@ -154,11 +167,11 @@ const buildProductPayload = (productData: ProductFormData) => {
     sku: productData.sku || null,
     warranty: productData.warranty || null,
     color: productData.color || null,
-    specs: productData.specs || {},
-    features: productData.features || [],
+    specs: {
+      ...(productData.specs || {}),
+      features: productData.features || [],
+    },
     badge: productData.badge || null,
-    search_count: (productData as any).searchCount || 0,
-    sales_count: (productData as any).salesCount || 0,
   };
 };
 

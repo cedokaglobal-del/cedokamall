@@ -64,10 +64,14 @@
   * {
     @apply border-border;
   }
+
   body {
     @apply bg-background text-foreground font-sans antialiased;
   }
-  h1, h2, h3 {
+
+  h1,
+  h2,
+  h3 {
     font-family: 'Playfair Display', serif;
   }
 }
@@ -77,18 +81,23 @@
     @apply bg-clip-text text-transparent;
     background-image: linear-gradient(135deg, hsl(var(--gold)), hsl(var(--gold-light)), hsl(var(--gold)));
   }
+
   .bg-gradient-emerald {
     background: linear-gradient(135deg, hsl(var(--emerald-dark)), hsl(var(--emerald)), hsl(var(--emerald-light)));
   }
+
   .bg-gradient-hero {
     background: linear-gradient(160deg, hsl(var(--emerald-dark)) 0%, hsl(var(--emerald)) 50%, hsl(120 80% 25%) 100%);
   }
+
   .bg-warm {
     background-color: hsl(var(--warm-bg));
   }
+
   .shadow-gold {
     box-shadow: 0 4px 20px -4px hsl(var(--gold) / 0.3);
   }
+
   .shadow-emerald {
     box-shadow: 0 4px 20px -4px hsl(var(--emerald) / 0.3);
   }
@@ -99,6 +108,7 @@
     -webkit-appearance: none;
     margin: 0;
   }
+
   input[type="number"] {
     -moz-appearance: textfield;
   }
