@@ -3,6 +3,7 @@ import { useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
+  CheckCircle2,
   ChevronRight,
   Heart,
   Minus,
@@ -198,6 +199,20 @@ const ProductPage = () => {
             </div>
 
             <p className="text-muted-foreground">{product.description}</p>
+
+            {product.features && product.features.length > 0 && (
+              <div className="space-y-2 py-2">
+                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Key Features</h3>
+                <ul className="grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2">
+                  {product.features.map((feature, index) => (
+                    <li key={index} className="flex items-center gap-2 text-sm">
+                      <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
+                      <span>{feature}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
 
             <div className="flex items-center gap-2 text-sm">
               <span

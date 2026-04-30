@@ -11,8 +11,11 @@ export interface Product {
   seller: string;
   rating?: number;
   reviews?: number;
+  searchCount?: number;
+  salesCount?: number;
   badge?: string;
   specs?: Record<string, string>;
+  features?: string[];
   warranty?: string;
   sku?: string;
   color?: string;
@@ -31,6 +34,7 @@ export interface ProductFormData {
   image?: string;
   images?: string[];
   specs?: Record<string, string>;
+  features?: string[];
   warranty?: string;
   sku?: string;
   color?: string;

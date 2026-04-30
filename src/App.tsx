@@ -8,9 +8,12 @@ import { lazy, Suspense, useEffect } from "react";
 import { AuthProvider } from "@/contexts/AuthContext";
 // Components
 import ProtectedRoute from "@/components/ProtectedRoute.tsx";
+import { ErrorBoundary } from "@/components/ErrorBoundary";
 // Utilities
 import { addConnectionHints } from "@/utils/performance";
 import { startHealthCheck } from "@/utils/supabaseHealth";
+import { initWebVitals, logMetricsSummary } from "@/utils/webVitals";
+import { validateSupabaseConfig } from "@/utils/resilience";
 import { useSEO } from "@/hooks/useSEO";
 import { useProductStore } from "@/store/productStore";
 
@@ -44,6 +47,17 @@ const App = () => {
   const fetchProducts = useProductStore((state) => state.fetchProducts);
 
   useEffect(() => {
+    // Initialize performance monitoring
+    initWebVitals();
+
+    // Validate Supabase configuration
+    const config = validateSupabaseConfig();
+    if (!config.isValid) {
+      console.warn('⚠️ Supabase Configuration Issues:', config.errors);
+    } else {
+      console.log('✅ Supabase configuration is valid');
+    }
+
     // Start database health check (logs every 60 seconds)
     const healthCheckInterval = startHealthCheck(60000);
 
@@ -73,10 +87,17 @@ const App = () => {
     window.addEventListener('online', handleReconnect);
     document.addEventListener('visibilitychange', handleVisibilityChange);
 
+    // Log performance metrics before page unload
+    const handleBeforeUnload = () => {
+      logMetricsSummary();
+    };
+    window.addEventListener('beforeunload', handleBeforeUnload);
+
     return () => {
       clearInterval(healthCheckInterval);
       window.removeEventListener('online', handleReconnect);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, [fetchProducts]);
 
@@ -86,41 +107,43 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <BrowserRouter>
-            <SEOUpdater />
-            <Suspense fallback={<PageLoader />}>
-              <Routes>
-                {/* Public Routes */}
-                <Route path="/" element={<Index />} />
-                <Route path="/shop" element={<ShopPage />} />
-                <Route path="/product/:id" element={<ProductPage />} />
-                <Route path="/cart" element={<CartPage />} />
+          <ErrorBoundary>
+            <BrowserRouter>
+              <SEOUpdater />
+              <Suspense fallback={<PageLoader />}>
+                <Routes>
+                  {/* Public Routes */}
+                  <Route path="/" element={<Index />} />
+                  <Route path="/shop" element={<ShopPage />} />
+                  <Route path="/product/:id" element={<ProductPage />} />
+                  <Route path="/cart" element={<CartPage />} />
 
-                {/* Admin Routes - Login (no protection needed) */}
-                <Route path="/admin/login" element={<AdminLogin />} />
+                  {/* Admin Routes - Login (no protection needed) */}
+                  <Route path="/admin/login" element={<AdminLogin />} />
 
-                {/* Admin Routes - Protected */}
-                <Route
-                  path="/admin"
-                  element={
-                    <ProtectedRoute>
-                      <AdminDashboard />
-                    </ProtectedRoute>
-                  }
-                />
-                <Route
-                  path="/admin/products"
-                  element={
-                    <ProtectedRoute>
-                      <AdminProducts />
-                    </ProtectedRoute>
-                  }
-                />
-                {/* 404 */}
-                <Route path="*" element={<NotFound />} />
-              </Routes>
-            </Suspense>
-          </BrowserRouter>
+                  {/* Admin Routes - Protected */}
+                  <Route
+                    path="/admin"
+                    element={
+                      <ProtectedRoute>
+                        <AdminDashboard />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/products"
+                    element={
+                      <ProtectedRoute>
+                        <AdminProducts />
+                      </ProtectedRoute>
+                    }
+                  />
+                  {/* 404 */}
+                  <Route path="*" element={<NotFound />} />
+                </Routes>
+              </Suspense>
+            </BrowserRouter>
+          </ErrorBoundary>
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>

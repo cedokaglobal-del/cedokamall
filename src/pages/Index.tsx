@@ -87,7 +87,20 @@ const Index = () => {
     () => [...products].sort((left, right) => (right.rating || 0) - (left.rating || 0)).slice(0, 5),
     [products]
   );
-  const recommended = useMemo(() => [...products].slice(0, 10), [products]);
+  const recommended = useMemo(
+    () =>
+      [...products]
+        .sort((a, b) => {
+          const scoreA = (a.salesCount || 0) + (a.searchCount || 0);
+          const scoreB = (b.salesCount || 0) + (b.searchCount || 0);
+          if (scoreA === scoreB) {
+            return (b.reviews || 0) - (a.reviews || 0); // Tie-break with reviews
+          }
+          return scoreB - scoreA;
+        })
+        .slice(0, 6),
+    [products]
+  );
   const visitorCount = useMemo(() => 2847 + Math.floor(Math.random() * 200), []);
 
   return (
@@ -260,7 +273,7 @@ const Index = () => {
           <section className="bg-warm py-10">
             <div className="container">
               <h2 className="mb-6 font-display text-2xl font-bold">Recommended for You</h2>
-              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+              <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
                 {recommended.map((product) => (
                   <ProductCard key={product.id} product={product} />
                 ))}

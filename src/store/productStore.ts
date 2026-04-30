@@ -1,6 +1,7 @@
 import { create } from 'zustand';
 import { Product, ProductFormData, ProductFilter } from '@/types/product';
 import { supabase } from '@/lib/supabase';
+import { retryWithBackoff, supabaseCircuitBreaker } from '@/utils/resilience';
 
 interface ProductState {
   products: Product[];
@@ -77,9 +78,12 @@ const mapSupabaseToProduct = (row: Record<string, unknown>): Product => {
     reviews: Number(row.reviews ?? 0),
     badge: typeof row.badge === 'string' ? row.badge : undefined,
     specs: parseSpecs(row.specs),
+    features: Array.isArray(row.features) ? row.features.filter((f): f is string => typeof f === 'string') : [],
     warranty: typeof row.warranty === 'string' ? row.warranty : undefined,
     sku: typeof row.sku === 'string' ? row.sku : undefined,
     color: typeof row.color === 'string' ? row.color : undefined,
+    searchCount: typeof row.search_count === 'number' ? row.search_count : 0,
+    salesCount: typeof row.sales_count === 'number' ? row.sales_count : 0,
     createdAt: new Date(String(row.created_at)),
     updatedAt: new Date(String(row.updated_at ?? row.created_at)),
   };
@@ -151,6 +155,9 @@ const buildProductPayload = (productData: ProductFormData) => {
     warranty: productData.warranty || null,
     color: productData.color || null,
     specs: productData.specs || {},
+    features: productData.features || [],
+    search_count: (productData as any).searchCount || 0,
+    sales_count: (productData as any).salesCount || 0,
   };
 };
 
@@ -172,27 +179,34 @@ export const useProductStore = create<ProductState>((set, get) => ({
       // Silently try to sync in background after a delay
       setTimeout(async () => {
         try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 8000);
+          await supabaseCircuitBreaker.execute(async () => {
+            await retryWithBackoff(
+              async () => {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 8000);
 
-          const { data, error } = await supabase
-            .from('products')
-            .select('*')
-            .order('created_at', { ascending: false });
+                const { data, error } = await supabase
+                  .from('products')
+                  .select('*')
+                  .order('created_at', { ascending: false });
 
-          clearTimeout(timeoutId);
+                clearTimeout(timeoutId);
 
-          if (error) throw error;
+                if (error) throw error;
 
-          const products = (data || []).map(mapSupabaseToProduct);
-          if (JSON.stringify(products) !== JSON.stringify(state.products)) {
-            persistProducts(products);
-            set({
-              products,
-              lastSyncedAt: new Date().toISOString(),
-              error: null,
-            });
-          }
+                const products = (data || []).map(mapSupabaseToProduct);
+                if (JSON.stringify(products) !== JSON.stringify(state.products)) {
+                  persistProducts(products);
+                  set({
+                    products,
+                    lastSyncedAt: new Date().toISOString(),
+                    error: null,
+                  });
+                }
+              },
+              { maxRetries: 1, initialDelayMs: 500 }
+            );
+          });
         } catch (err) {
           // Silent failure in background sync
           console.debug('Background sync failed (non-blocking):', err);
@@ -209,27 +223,34 @@ export const useProductStore = create<ProductState>((set, get) => ({
 
     pendingFetch = (async () => {
       try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 10000);
+        await supabaseCircuitBreaker.execute(async () => {
+          await retryWithBackoff(
+            async () => {
+              const controller = new AbortController();
+              const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-        const { data, error } = await supabase
-          .from('products')
-          .select('*')
-          .order('created_at', { ascending: false });
+              const { data, error } = await supabase
+                .from('products')
+                .select('*')
+                .order('created_at', { ascending: false });
 
-        clearTimeout(timeoutId);
+              clearTimeout(timeoutId);
 
-        if (error) {
-          throw error;
-        }
+              if (error) {
+                throw error;
+              }
 
-        const products = (data || []).map(mapSupabaseToProduct);
-        persistProducts(products);
-        set({
-          products,
-          hasLoaded: true,
-          lastSyncedAt: new Date().toISOString(),
-          error: null,
+              const products = (data || []).map(mapSupabaseToProduct);
+              persistProducts(products);
+              set({
+                products,
+                hasLoaded: true,
+                lastSyncedAt: new Date().toISOString(),
+                error: null,
+              });
+            },
+            { maxRetries: 2, initialDelayMs: 800 }
+          );
         });
       } catch (error) {
         console.error('Error fetching products:', error);

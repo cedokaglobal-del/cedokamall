@@ -103,7 +103,14 @@ const ShopPage = () => {
       case 'rating':
         return next.sort((left, right) => (right.rating || 0) - (left.rating || 0));
       default:
-        return next.sort((left, right) => (right.reviews || 0) - (left.reviews || 0));
+        return next.sort((a, b) => {
+          const scoreA = (a.salesCount || 0) + (a.searchCount || 0);
+          const scoreB = (b.salesCount || 0) + (b.searchCount || 0);
+          if (scoreA === scoreB) {
+            return (b.reviews || 0) - (a.reviews || 0);
+          }
+          return scoreB - scoreA;
+        });
     }
   }, [dealsOnly, priceRange, products, searchTerm, selectedCategory, sortBy]);
 
