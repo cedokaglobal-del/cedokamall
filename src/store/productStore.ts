@@ -156,6 +156,7 @@ const buildProductPayload = (productData: ProductFormData) => {
     color: productData.color || null,
     specs: productData.specs || {},
     features: productData.features || [],
+    badge: productData.badge || null,
     search_count: (productData as any).searchCount || 0,
     sales_count: (productData as any).salesCount || 0,
   };

@@ -184,9 +184,10 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
     try {
       await onSubmit(formData);
       toast.success(product ? 'Product updated successfully' : 'Product created successfully');
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving product form:', error);
-      toast.error('We could not save this product. Please check your details and try again.');
+      const errorMessage = error?.message || 'Please check your details and try again.';
+      toast.error(`We could not save this product: ${errorMessage}`);
     }
   };
 
@@ -369,8 +370,9 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
                     <Input
                       id="price"
                       type="number"
-                      value={formData.price}
-                      onChange={(e) => handleChange('price', Number(e.target.value))}
+                      value={formData.price || ''}
+                      onChange={(e) => handleChange('price', e.target.value === '' ? 0 : Number(e.target.value))}
+                      onFocus={(e) => e.target.select()}
                       className={cn("pl-8 bg-muted/30 h-11 transition-all focus:bg-background", errors.price && "border-destructive")}
                       disabled={isLoading}
                     />
@@ -387,6 +389,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
                       type="number"
                       value={formData.originalPrice || ''}
                       onChange={(e) => handleChange('originalPrice', e.target.value ? Number(e.target.value) : undefined)}
+                      onFocus={(e) => e.target.select()}
                       className="pl-8 bg-muted/30 h-11 transition-all focus:bg-background"
                       disabled={isLoading}
                       placeholder="Optional"
@@ -402,8 +405,9 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
                   <Input
                     id="inStock"
                     type="number"
-                    value={formData.inStock}
-                    onChange={(e) => handleChange('inStock', Number(e.target.value))}
+                    value={formData.inStock || ''}
+                    onChange={(e) => handleChange('inStock', e.target.value === '' ? 0 : Number(e.target.value))}
+                    onFocus={(e) => e.target.select()}
                     className={cn("bg-muted/30 h-11 transition-all focus:bg-background", errors.inStock && "border-destructive")}
                     disabled={isLoading}
                   />
