@@ -86,8 +86,19 @@ const CartPage = () => {
 
   const handleOrderConfirmation = () => {
     if (!customerName.trim()) {
-      toast.error('Please enter your name');
+      toast.error('Please enter your full name');
       return;
+    }
+
+    if (deliveryMethod === 'delivery') {
+      if (!phone.trim()) {
+        toast.error('Please enter your phone number');
+        return;
+      }
+      if (!address.trim()) {
+        toast.error('Please enter your delivery address');
+        return;
+      }
     }
 
     if (deliveryMethod === 'delivery' && paymentMethod === 'online' && !receiptFile) {
@@ -612,7 +623,11 @@ We appreciate your business! 🙏
 
             <button 
               onClick={handleOrderConfirmation} 
-              disabled={!customerName.trim() || (deliveryMethod === 'delivery' && paymentMethod === 'online' && !receiptFile)}
+              disabled={
+                !customerName.trim() || 
+                (deliveryMethod === 'delivery' && (!phone.trim() || !address.trim())) ||
+                (deliveryMethod === 'delivery' && paymentMethod === 'online' && !receiptFile)
+              }
               className="w-full py-3 rounded-xl bg-accent text-accent-foreground font-bold hover:bg-cta-orange-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {orderSent ? (

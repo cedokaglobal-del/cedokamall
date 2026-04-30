@@ -4,6 +4,9 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
 
     <title>Cedokamall - Nigeria's #1 Electronics & Appliances Marketplace</title>
     <meta
@@ -213,6 +216,22 @@
         });
         observer.observe(root, { childList: true });
       })();
+
+      // Global handler for chunk loading errors
+      window.addEventListener('error', function(e) {
+        if (e.message && (e.message.indexOf('dynamically imported module') > -1 || e.message.indexOf('loading chunk') > -1)) {
+          console.warn('Chunk load failure detected. Reloading page...');
+          window.location.reload();
+        }
+      }, true);
+
+      // Handle unhandled rejections (often from failed dynamic imports)
+      window.addEventListener('unhandledrejection', function(e) {
+        if (e.reason && (e.reason.message && (e.reason.message.indexOf('dynamically imported module') > -1 || e.reason.message.indexOf('loading chunk') > -1))) {
+          console.warn('Unhandled chunk load rejection. Reloading page...');
+          window.location.reload();
+        }
+      });
     </script>
 
     <script type="module" src="/src/main.tsx"></script>

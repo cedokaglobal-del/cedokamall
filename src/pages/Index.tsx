@@ -230,22 +230,43 @@ const Index = () => {
               <ChevronRight className="h-4 w-4" />
             </Link>
           </div>
-          <div className="grid grid-cols-2 gap-3 sm:grid-cols-4 lg:grid-cols-8">
-            {categories.map((category) => (
-              <Link key={category.slug} to={`/shop?category=${category.slug}`}>
-                <motion.div
-                  whileHover={{ y: -4 }}
-                  className="rounded-xl border bg-card p-4 text-center transition-all hover:shadow-md"
-                >
-                  <category.icon className="mx-auto mb-2 h-8 w-8 text-primary" />
-                  <p className="text-xs font-medium">{category.name}</p>
-                  <p className="text-xs text-muted-foreground">{category.count}</p>
-                </motion.div>
-              </Link>
-            ))}
+          <div className="grid grid-cols-3 gap-3 sm:grid-cols-5 md:grid-cols-9">
+            {categories
+              .sort((a, b) => b.count - a.count)
+              .slice(0, 9)
+              .map((category) => (
+                <Link key={category.slug} to={`/shop?category=${category.slug}`}>
+                  <motion.div
+                    whileHover={{ y: -4 }}
+                    className="rounded-xl border bg-card p-4 text-center transition-all hover:shadow-md"
+                  >
+                    <category.icon className="mx-auto mb-2 h-8 w-8 text-primary" />
+                    <p className="text-[10px] font-bold uppercase tracking-tight line-clamp-1">{category.name}</p>
+                  </motion.div>
+                </Link>
+              ))}
           </div>
         </section>
       )}
+
+      {/* Product List Section */}
+      <section className="container py-10">
+        <div className="mb-6 flex items-center justify-between">
+          <div>
+            <h2 className="font-display text-2xl font-bold">Product List</h2>
+            <p className="text-sm text-muted-foreground mt-1">Our latest and most popular items</p>
+          </div>
+          <Link to="/shop" className="flex items-center gap-1 text-sm text-primary hover:underline">
+            See all products
+            <ChevronRight className="h-4 w-4" />
+          </Link>
+        </div>
+        <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+          {products.slice(0, 10).map((product) => (
+            <ProductCard key={product.id} product={product} />
+          ))}
+        </div>
+      </section>
 
       {flashDeals.length > 0 && (
         <section className="bg-destructive/5 py-10">
