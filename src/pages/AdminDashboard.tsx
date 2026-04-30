@@ -39,6 +39,7 @@ import type { Product, ProductFormData } from '@/types/product';
 import { useProductStore } from '@/store/productStore';
 import { transactionStore } from '@/store/transactionStore';
 import { useVisitorStore } from '@/store/visitorStore';
+import { cn } from '@/lib/utils';
 
 const currency = new Intl.NumberFormat('en-NG', {
   style: 'currency',
