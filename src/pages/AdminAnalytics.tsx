@@ -6,8 +6,9 @@ import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { transactionStore } from '@/store/transactionStore';
+import { useVisitorStore } from '@/store/visitorStore';
 import { AnalyticsData } from '@/types/transaction';
-import { Calendar, Download } from 'lucide-react';
+import { Calendar, Download, Users, Clock } from 'lucide-react';
 
 const AdminAnalytics = () => {
   const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
@@ -145,6 +146,30 @@ const AdminAnalytics = () => {
               }).format(analyticsData.summary.avgOrderValue)}
             </p>
             <p className="text-sm text-muted-foreground mt-2">Average per transaction</p>
+          </Card>
+
+          {/* Site Visitors */}
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-2">
+              <Users className="w-4 h-4 text-orange-600" />
+              <h3 className="font-semibold">Site Visitors</h3>
+            </div>
+            <p className="text-3xl font-bold text-orange-600">
+              {useVisitorStore.getState().stats.totalVisitors.toLocaleString()}
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">Total unique visitors</p>
+          </Card>
+
+          {/* Avg. Stay Duration */}
+          <Card className="p-6">
+            <div className="flex items-center gap-2 mb-2">
+              <Clock className="w-4 h-4 text-purple-600" />
+              <h3 className="font-semibold">Avg. Stay Duration</h3>
+            </div>
+            <p className="text-3xl font-bold text-purple-600">
+              {Math.floor(useVisitorStore.getState().getAverageStayDuration() / 60)}m {useVisitorStore.getState().getAverageStayDuration() % 60}s
+            </p>
+            <p className="text-sm text-muted-foreground mt-2">Average session time</p>
           </Card>
         </div>
       </div>

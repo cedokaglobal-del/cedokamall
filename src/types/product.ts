@@ -38,6 +38,7 @@ export interface ProductFormData {
   warranty?: string;
   sku?: string;
   color?: string;
+  badge?: string;
 }
 
 export interface ProductFilter {

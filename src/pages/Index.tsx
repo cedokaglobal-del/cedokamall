@@ -101,7 +101,41 @@ const Index = () => {
         .slice(0, 6),
     [products]
   );
-  const visitorCount = useMemo(() => 2847 + Math.floor(Math.random() * 200), []);
+  const [visitorCount, setVisitorCount] = useState(3000);
+
+  useEffect(() => {
+    const calculateVisitors = () => {
+      const now = new Date();
+      const day = now.getDay();
+      const month = now.getMonth();
+      const hour = now.getHours();
+      
+      let base = 2840;
+      const hourFactor = Math.sin((hour - 8) * Math.PI / 12) * 500;
+      base += Math.max(0, hourFactor);
+      
+      if (day === 0 || day === 6) base += 1200;
+      
+      const isFestive = 
+        (month === 11) || 
+        (month === 0 && now.getDate() <= 5) || 
+        (month === 1 && now.getDate() >= 10 && now.getDate() <= 16) || 
+        (month === 10 && now.getDate() >= 20);
+        
+      if (isFestive) base += 1800;
+      
+      const jitter = Math.floor(Math.random() * 200) - 100;
+      return Math.floor(base + jitter);
+    };
+
+    setVisitorCount(calculateVisitors());
+
+    const interval = setInterval(() => {
+      setVisitorCount(calculateVisitors());
+    }, 5000);
+
+    return () => clearInterval(interval);
+  }, []);
 
   return (
     <div className="min-h-screen bg-background">

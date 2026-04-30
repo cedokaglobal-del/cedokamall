@@ -16,6 +16,7 @@ import { initWebVitals, logMetricsSummary } from "@/utils/webVitals";
 import { validateSupabaseConfig } from "@/utils/resilience";
 import { useSEO } from "@/hooks/useSEO";
 import { useProductStore } from "@/store/productStore";
+import { useVisitorStore } from "@/store/visitorStore";
 
 // --- Route-level code splitting (each page loads on demand) ---
 const Index        = lazy(() => import("./pages/Index"));
@@ -27,6 +28,7 @@ const NotFound     = lazy(() => import("./pages/NotFound"));
 const AdminLogin      = lazy(() => import("./pages/AdminLogin"));
 const AdminDashboard  = lazy(() => import("./pages/AdminDashboard"));
 const AdminProducts   = lazy(() => import("./pages/AdminProducts"));
+const AdminAnalytics  = lazy(() => import("./pages/AdminAnalytics"));
 
 // Lightweight page spinner shown while a chunk is loading
 const PageLoader = () => (
@@ -74,6 +76,15 @@ const App = () => {
     fetchInBackground();
     addConnectionHints();
 
+    // Initialize visitor session
+    const visitorStore = useVisitorStore.getState();
+    visitorStore.startSession();
+
+    // Periodically update session duration (every 30 seconds)
+    const sessionInterval = setInterval(() => {
+      useVisitorStore.getState().updateSession();
+    }, 30000);
+
     const handleReconnect = () => {
       void fetchProducts(true);
     };
@@ -90,11 +101,13 @@ const App = () => {
     // Log performance metrics before page unload
     const handleBeforeUnload = () => {
       logMetricsSummary();
+      useVisitorStore.getState().updateSession();
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
       clearInterval(healthCheckInterval);
+      clearInterval(sessionInterval);
       window.removeEventListener('online', handleReconnect);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeunload', handleBeforeUnload);
@@ -135,6 +148,14 @@ const App = () => {
                     element={
                       <ProtectedRoute>
                         <AdminProducts />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/analytics"
+                    element={
+                      <ProtectedRoute>
+                        <AdminAnalytics />
                       </ProtectedRoute>
                     }
                   />

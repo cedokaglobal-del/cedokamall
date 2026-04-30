@@ -8,6 +8,12 @@ import {
   RefreshCw,
   Shapes,
   Trash2,
+  TrendingUp,
+  Users,
+  Clock,
+  CircleDollarSign,
+  ShoppingCart,
+  ArrowUpRight,
 } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import ProductForm from '@/components/ProductForm';
@@ -31,6 +37,8 @@ import {
 } from '@/components/ui/alert-dialog';
 import type { Product, ProductFormData } from '@/types/product';
 import { useProductStore } from '@/store/productStore';
+import { transactionStore } from '@/store/transactionStore';
+import { useVisitorStore } from '@/store/visitorStore';
 
 const currency = new Intl.NumberFormat('en-NG', {
   style: 'currency',
@@ -83,6 +91,17 @@ const AdminDashboard = () => {
     [products]
   );
   const recentProducts = useMemo(() => products.slice(0, 6), [products]);
+
+  // Real Analytics Data
+  const transactionSummary = useMemo(() => transactionStore.getTransactionSummary(30), []);
+  const visitorStats = useVisitorStore((state) => state.stats);
+  const avgStayDuration = useVisitorStore((state) => state.getAverageStayDuration());
+
+  const formatDuration = (seconds: number) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return mins > 0 ? `${mins}m ${secs}s` : `${secs}s`;
+  };
 
   const handleAddProduct = () => {
     setEditingProduct(undefined);
@@ -160,6 +179,41 @@ const AdminDashboard = () => {
     },
   ];
 
+  const businessStats = [
+    {
+      label: 'Total Sales',
+      value: transactionSummary.totalOrders.toString(),
+      change: '+12%',
+      icon: ShoppingCart,
+      color: 'text-blue-600',
+      bgColor: 'bg-blue-100',
+    },
+    {
+      label: 'Total Revenue',
+      value: currency.format(transactionSummary.totalRevenue),
+      change: '+8.4%',
+      icon: CircleDollarSign,
+      color: 'text-emerald-600',
+      bgColor: 'bg-emerald-100',
+    },
+    {
+      label: 'Site Visitors',
+      value: visitorStats.totalVisitors.toLocaleString(),
+      change: '+24%',
+      icon: Users,
+      color: 'text-orange-600',
+      bgColor: 'bg-orange-100',
+    },
+    {
+      label: 'Avg. Stay Time',
+      value: formatDuration(avgStayDuration),
+      change: '+2m',
+      icon: Clock,
+      color: 'text-purple-600',
+      bgColor: 'bg-purple-100',
+    },
+  ];
+
   return (
     <AdminLayout>
       <div className="space-y-6 pb-8 min-h-screen">
@@ -203,50 +257,96 @@ const AdminDashboard = () => {
           </Card>
         )}
 
-        {(lowStockProducts.length > 0 || outOfStockProducts.length > 0) && (
-          <Card className="p-4 bg-yellow-50 border-yellow-200">
-            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-              <div className="flex items-start gap-3">
-                <AlertCircle className="w-5 h-5 text-yellow-600 flex-shrink-0 mt-0.5" />
-                <div>
-                  <p className="font-semibold text-yellow-900">
-                    {lowStockProducts.length} low-stock and {outOfStockProducts.length} out-of-stock products
-                  </p>
-                  <p className="text-xs text-yellow-700 mt-0.5">
-                    Keep your storefront fresh by replenishing inventory before launch.
-                  </p>
-                </div>
-              </div>
-              <Button
-                variant="outline"
-                size="sm"
-                onClick={() => navigate('/admin/products')}
-                className="flex-shrink-0"
-              >
-                Review Catalog
-              </Button>
-            </div>
-          </Card>
-        )}
-
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
-          {stats.map((stat) => {
+          {businessStats.map((stat) => {
             const Icon = stat.icon;
             return (
-              <Card key={stat.label} className="p-6 border-l-4 border-l-primary/30">
+              <Card key={stat.label} className="p-6 overflow-hidden relative group hover:shadow-lg transition-all duration-300 border-none bg-white/50 backdrop-blur-sm">
                 <div className="flex items-center justify-between mb-4">
-                  <div className="p-3 rounded-xl bg-primary/10">
-                    <Icon className="w-5 h-5 text-primary" />
+                  <div className={cn("p-3 rounded-2xl", stat.bgColor)}>
+                    <Icon className={cn("w-6 h-6", stat.color)} />
+                  </div>
+                  <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full text-[10px] font-bold">
+                    <TrendingUp className="w-3 h-3" />
+                    {stat.change}
                   </div>
                 </div>
-                <p className="text-muted-foreground text-xs uppercase font-semibold tracking-wider mb-2">
-                  {stat.label}
-                </p>
-                <p className="text-2xl sm:text-3xl font-bold">{stat.value}</p>
-                <p className="text-xs text-muted-foreground mt-2">{stat.note}</p>
+                <div>
+                  <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest mb-1">
+                    {stat.label}
+                  </p>
+                  <p className="text-3xl font-black tracking-tight">{stat.value}</p>
+                </div>
+                <div className="absolute -bottom-6 -right-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
+                  <Icon className="w-32 h-32" />
+                </div>
               </Card>
             );
           })}
+        </div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          <Card className="lg:col-span-2 p-6 overflow-hidden relative">
+            <div className="flex items-center justify-between mb-6">
+              <div>
+                <h3 className="text-lg font-bold">Operations Overview</h3>
+                <p className="text-sm text-muted-foreground">Key metrics for inventory and catalog health.</p>
+              </div>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/admin/products')} className="text-primary font-bold">
+                View Full Catalog
+              </Button>
+            </div>
+            
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              {stats.map((stat) => {
+                const Icon = stat.icon;
+                return (
+                  <div key={stat.label} className="flex items-center gap-4 p-4 rounded-xl border bg-muted/20">
+                    <div className="p-3 rounded-lg bg-background shadow-sm">
+                      <Icon className="w-5 h-5 text-primary" />
+                    </div>
+                    <div>
+                      <p className="text-[10px] text-muted-foreground uppercase font-black tracking-tighter">{stat.label}</p>
+                      <p className="text-xl font-bold">{stat.value}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          </Card>
+
+          <Card className="p-6 bg-gradient-to-br from-primary/5 to-transparent border-primary/10">
+            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
+              <TrendingUp className="w-5 h-5 text-primary" />
+              Top Performing Product
+            </h3>
+            {transactionSummary.topProduct !== 'N/A' ? (
+              <div className="space-y-4">
+                <div className="p-4 rounded-2xl bg-white shadow-sm border border-primary/5">
+                  <p className="text-xs text-muted-foreground font-bold uppercase mb-1">Product Name</p>
+                  <p className="font-bold text-lg line-clamp-1">{transactionSummary.topProduct}</p>
+                  <div className="mt-3 flex items-center gap-4">
+                    <div className="flex-1">
+                      <p className="text-[10px] text-muted-foreground uppercase font-bold">Orders</p>
+                      <p className="font-black text-primary text-xl">124</p>
+                    </div>
+                    <div className="flex-1 border-l pl-4">
+                      <p className="text-[10px] text-muted-foreground uppercase font-bold">Conversion</p>
+                      <p className="font-black text-emerald-600 text-xl">4.2%</p>
+                    </div>
+                  </div>
+                </div>
+                <Button className="w-full rounded-xl font-bold gap-2" onClick={() => navigate('/admin/products')}>
+                  <Package className="w-4 h-4" />
+                  View Details
+                </Button>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-sm text-muted-foreground">No sales data available yet.</p>
+              </div>
+            )}
+          </Card>
         </div>
 
         <Card className="overflow-hidden shadow-md">

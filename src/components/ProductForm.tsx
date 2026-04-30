@@ -59,9 +59,8 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
     specs: product?.specs || {},
     features: product?.features || [],
     color: product?.color || '',
-    searchCount: product?.searchCount || 0,
-    salesCount: product?.salesCount || 0,
-  } as any);
+    badge: product?.badge || undefined,
+  });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -221,10 +220,6 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
           <TabsTrigger value="media" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
             <ImageIcon className="w-4 h-4 mr-2" />
             <span className="hidden md:inline">Media</span>
-          </TabsTrigger>
-          <TabsTrigger value="analytics" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
-            <BarChart3 className="w-4 h-4 mr-2" />
-            <span className="hidden md:inline">Analytics</span>
           </TabsTrigger>
         </TabsList>
 
@@ -510,8 +505,8 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
                 <div className="space-y-2">
                   <Label className="text-sm font-semibold">Product Status Badge</Label>
                   <Select
-                    value={(formData as any).badge || 'none'}
-                    onValueChange={(value) => handleChange('badge' as any, value === 'none' ? undefined : value)}
+                    value={formData.badge || 'none'}
+                    onValueChange={(value) => handleChange('badge', value === 'none' ? undefined : value)}
                   >
                     <SelectTrigger className="bg-muted/30 h-11">
                       <SelectValue placeholder="Select a badge" />
@@ -530,48 +525,86 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
 
             {/* Media Tab */}
             <TabsContent value="media" className="space-y-6 mt-0">
-              <div className="space-y-4">
-                <div className="flex items-center justify-between">
-                  <Label className="text-sm font-semibold">Product Gallery <span className="text-xs font-normal text-muted-foreground">(Up to 6 images)</span></Label>
-                  <span className="text-xs font-medium text-primary">{(formData.images || []).length} / 6 selected</span>
+              <div className="space-y-6">
+                <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 p-4 rounded-xl bg-primary/5 border border-primary/10">
+                  <div>
+                    <Label className="text-base font-bold flex items-center gap-2">
+                      Product Gallery 
+                      <span className="text-xs font-normal text-muted-foreground bg-background px-2 py-0.5 rounded-full border">
+                        {formData.images?.length || 0} / 6 Images
+                      </span>
+                    </Label>
+                    <p className="text-xs text-muted-foreground mt-1">
+                      The first image will be used as the primary product cover.
+                    </p>
+                  </div>
+                  
+                  <label className={cn(
+                    "flex items-center gap-2 px-4 py-2 rounded-lg cursor-pointer transition-all font-semibold text-sm shadow-sm",
+                    (formData.images?.length || 0) >= 6 
+                      ? "bg-muted text-muted-foreground cursor-not-allowed" 
+                      : "bg-primary text-primary-foreground hover:bg-primary/90 active:scale-95"
+                  )}>
+                    <Plus className="w-4 h-4" />
+                    Upload Photos
+                    <input
+                      type="file"
+                      className="hidden"
+                      accept="image/*"
+                      multiple
+                      onChange={handleImageUpload}
+                      disabled={isLoading || isUploadingImages || (formData.images?.length || 0) >= 6}
+                    />
+                  </label>
                 </div>
                 
-                <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-6 gap-4">
+                <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
                   {(formData.images || []).map((url, idx) => (
                     <motion.div 
                       key={idx}
                       layout
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
-                      className="relative aspect-square rounded-xl overflow-hidden border-2 border-border shadow-sm bg-muted/20 group"
+                      className={cn(
+                        "relative aspect-square rounded-2xl overflow-hidden border-2 shadow-sm transition-all group",
+                        idx === 0 ? "border-primary ring-4 ring-primary/10" : "border-border hover:border-primary/40"
+                      )}
                     >
-                      <img src={url} alt={`Product ${idx}`} className="w-full h-full object-cover" />
-                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-2">
+                      <img src={url} alt={`Product ${idx}`} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                      
+                      <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <button
                           type="button"
                           onClick={() => removeImage(idx)}
-                          className="h-8 w-8 rounded-full bg-destructive text-white flex items-center justify-center hover:scale-110 transition-transform shadow-lg"
+                          className="h-10 w-10 rounded-full bg-destructive text-white flex items-center justify-center hover:scale-110 active:scale-90 transition-all shadow-xl"
                           title="Remove image"
                         >
-                          <Trash2 className="w-4 h-4" />
+                          <Trash2 className="w-5 h-5" />
                         </button>
                       </div>
+
                       {idx === 0 && (
-                        <div className="absolute top-2 left-2 px-2 py-0.5 bg-primary text-[9px] text-primary-foreground rounded-full font-bold uppercase tracking-wider">
-                          Main
+                        <div className="absolute top-3 left-3 px-3 py-1 bg-primary text-[10px] text-primary-foreground rounded-full font-bold uppercase tracking-widest shadow-lg">
+                          Cover Image
                         </div>
                       )}
+                      
+                      <div className="absolute bottom-3 right-3 h-6 w-6 rounded-full bg-black/50 backdrop-blur-md text-[10px] text-white flex items-center justify-center font-bold">
+                        {idx + 1}
+                      </div>
                     </motion.div>
                   ))}
                   
                   {(formData.images?.length || 0) < 6 && (
                     <label className={cn(
-                      "aspect-square rounded-xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all hover:bg-primary/5 hover:border-primary/50 group",
+                      "aspect-square rounded-2xl border-2 border-dashed flex flex-col items-center justify-center cursor-pointer transition-all hover:bg-primary/5 hover:border-primary/50 group",
                       errors.images ? "border-destructive/50 bg-destructive/5" : "border-muted-foreground/20 bg-muted/5"
                     )}>
-                      <div className="text-center p-2 group-hover:scale-110 transition-transform">
-                        <Paperclip className="w-6 h-6 mx-auto mb-2 text-muted-foreground group-hover:text-primary" />
-                        <p className="text-[10px] font-bold uppercase tracking-tight text-muted-foreground group-hover:text-primary">Add Image</p>
+                      <div className="text-center p-4 group-hover:scale-110 transition-transform">
+                        <div className="h-12 w-12 rounded-full bg-primary/10 flex items-center justify-center mx-auto mb-3 text-primary group-hover:bg-primary group-hover:text-primary-foreground transition-colors">
+                          <ImageIcon className="w-6 h-6" />
+                        </div>
+                        <p className="text-xs font-bold uppercase tracking-tight text-muted-foreground group-hover:text-primary">Add Product Photo</p>
                       </div>
                       <input
                         type="file"
@@ -584,59 +617,20 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
                     </label>
                   )}
                 </div>
-                {errors.images && <p className="text-xs text-destructive flex items-center gap-1 mt-2"><AlertCircle className="w-3 h-3" /> {errors.images}</p>}
-                {isUploadingImages && <p className="text-xs text-primary animate-pulse flex items-center gap-2"><ImageIcon className="w-3 h-3" /> Optimizing and uploading to cloud storage...</p>}
-              </div>
-            </TabsContent>
 
-            {/* Analytics Tab */}
-            <TabsContent value="analytics" className="space-y-6 mt-0">
-              <div className="p-6 rounded-2xl bg-muted/20 border border-border/50">
-                <div className="flex items-center gap-3 mb-6">
-                  <div className="h-10 w-10 rounded-xl bg-primary/10 flex items-center justify-center">
-                    <BarChart3 className="w-5 h-5 text-primary" />
+                {errors.images && (
+                  <div className="flex items-center gap-2 p-3 rounded-lg bg-destructive/10 text-destructive text-xs font-medium">
+                    <AlertCircle className="w-4 h-4" />
+                    {errors.images}
                   </div>
-                  <div>
-                    <h3 className="font-bold">Discovery Insights</h3>
-                    <p className="text-xs text-muted-foreground">Monitor and adjust product performance metrics.</p>
+                )}
+                
+                {isUploadingImages && (
+                  <div className="flex items-center gap-3 p-4 rounded-xl bg-muted/50 border border-dashed animate-pulse">
+                    <div className="h-4 w-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                    <span className="text-sm font-medium text-primary">Uploading and optimizing images...</span>
                   </div>
-                </div>
-
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-                  <div className="space-y-3">
-                    <Label htmlFor="searchCount" className="text-sm font-semibold">Search Popularity</Label>
-                    <div className="flex items-center gap-4">
-                      <Input
-                        id="searchCount"
-                        type="number"
-                        value={(formData as any).searchCount || 0}
-                        onChange={(e) => handleChange('searchCount' as any, Number(e.target.value))}
-                        className="bg-background h-11 font-mono text-lg"
-                        disabled={isLoading}
-                      />
-                      <div className="text-xs text-muted-foreground leading-tight">
-                        Manual adjustment for <br /> search-based ranking.
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="space-y-3">
-                    <Label htmlFor="salesCount" className="text-sm font-semibold">Total Units Sold</Label>
-                    <div className="flex items-center gap-4">
-                      <Input
-                        id="salesCount"
-                        type="number"
-                        value={(formData as any).salesCount || 0}
-                        onChange={(e) => handleChange('salesCount' as any, Number(e.target.value))}
-                        className="bg-background h-11 font-mono text-lg"
-                        disabled={isLoading}
-                      />
-                      <div className="text-xs text-muted-foreground leading-tight">
-                        Impacts "Recommended for You" <br /> and "Top Selling" algorithms.
-                      </div>
-                    </div>
-                  </div>
-                </div>
+                )}
               </div>
             </TabsContent>
           </motion.div>
