@@ -32,6 +32,9 @@ export class ErrorBoundary extends Component<Props, State> {
 
   render() {
     if (this.state.hasError) {
+      const isChunkError = this.state.error?.message?.includes('dynamically imported module') || 
+                          this.state.error?.message?.includes('loading chunk');
+
       return (
         this.props.fallback || (
           <div className="flex h-screen flex-col items-center justify-center bg-background px-4">
@@ -40,19 +43,25 @@ export class ErrorBoundary extends Component<Props, State> {
                 <AlertCircle className="w-16 h-16 text-destructive" />
               </div>
               <div>
-                <h1 className="text-2xl font-bold mb-2">Something went wrong</h1>
+                <h1 className="text-2xl font-bold mb-2">
+                  {isChunkError ? 'New Update Available' : 'Something went wrong'}
+                </h1>
                 <p className="text-muted-foreground text-sm">
-                  {this.state.error?.message || 'An unexpected error occurred. Please try again.'}
+                  {isChunkError 
+                    ? 'A new version of the site is available. Please refresh to continue.' 
+                    : (this.state.error?.message || 'An unexpected error occurred. Please try again.')}
                 </p>
               </div>
               <div className="flex gap-3 justify-center">
-                <Button onClick={this.reset} className="gap-2">
+                <Button onClick={() => window.location.reload()} className="gap-2 shadow-lg shadow-primary/20">
                   <RefreshCw className="w-4 h-4" />
-                  Try again
+                  Refresh Page
                 </Button>
-                <Button variant="outline" onClick={() => window.location.href = '/'}>
-                  Go home
-                </Button>
+                {!isChunkError && (
+                  <Button variant="outline" onClick={() => window.location.href = '/'}>
+                    Go home
+                  </Button>
+                )}
               </div>
             </div>
           </div>

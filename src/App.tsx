@@ -17,18 +17,19 @@ import { validateSupabaseConfig } from "@/utils/resilience";
 import { useSEO } from "@/hooks/useSEO";
 import { useProductStore } from "@/store/productStore";
 import { useVisitorStore } from "@/store/visitorStore";
+import { safeLazy } from "@/utils/lazy";
 
 // --- Route-level code splitting (each page loads on demand) ---
-const Index        = lazy(() => import("./pages/Index"));
-const ShopPage     = lazy(() => import("./pages/ShopPage"));
-const ProductPage  = lazy(() => import("./pages/ProductPage"));
-const CartPage     = lazy(() => import("./pages/CartPage"));
-const NotFound     = lazy(() => import("./pages/NotFound"));
+const Index        = safeLazy(() => import("./pages/Index"));
+const ShopPage     = safeLazy(() => import("./pages/ShopPage"));
+const ProductPage  = safeLazy(() => import("./pages/ProductPage"));
+const CartPage     = safeLazy(() => import("./pages/CartPage"));
+const NotFound     = safeLazy(() => import("./pages/NotFound"));
 // Admin pages (heavy, only loaded when admin visits)
-const AdminLogin      = lazy(() => import("./pages/AdminLogin"));
-const AdminDashboard  = lazy(() => import("./pages/AdminDashboard"));
-const AdminProducts   = lazy(() => import("./pages/AdminProducts"));
-const AdminAnalytics  = lazy(() => import("./pages/AdminAnalytics"));
+const AdminLogin      = safeLazy(() => import("./pages/AdminLogin"));
+const AdminDashboard  = safeLazy(() => import("./pages/AdminDashboard"));
+const AdminProducts   = safeLazy(() => import("./pages/AdminProducts"));
+const AdminAnalytics  = safeLazy(() => import("./pages/AdminAnalytics"));
 
 // Lightweight page spinner shown while a chunk is loading
 const PageLoader = () => (
