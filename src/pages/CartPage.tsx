@@ -251,7 +251,11 @@ We appreciate your business! 🙏
                         <Minus className="w-3 h-3" />
                       </button>
                       <span className="font-medium">{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-8 h-8 rounded border flex items-center justify-center hover:bg-muted">
+                      <button 
+                        onClick={() => updateQuantity(item.id, item.quantity + 1)} 
+                        className="w-8 h-8 rounded border flex items-center justify-center hover:bg-muted disabled:opacity-50"
+                        disabled={item.quantity >= item.inStock}
+                      >
                         <Plus className="w-3 h-3" />
                       </button>
                       <button onClick={() => removeItem(item.id)} className="ml-auto text-destructive hover:text-destructive/80">

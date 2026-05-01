@@ -20,6 +20,7 @@ import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import { useProductStore } from '@/store/productStore';
 import { useCartStore } from '@/store/cartStore';
+import { toast } from 'sonner';
 
 const fallbackImage = '/image.png';
 const formatPrice = (amount: number) => `₦${amount.toLocaleString()}`;
@@ -79,12 +80,31 @@ const ProductPage = () => {
     : 0;
 
   const handleAddToCart = () => {
-    for (let index = 0; index < quantity; index += 1) {
+    // Determine how many items of this product are already in the cart
+    const cartItems = useCartStore.getState().items;
+    const existingItem = cartItems.find(i => i.id === product.id);
+    const quantityInCart = existingItem?.quantity || 0;
+    
+    // Check if we would exceed stock
+    const availableToAdd = product.inStock - quantityInCart;
+    const actualQuantityToAdd = Math.min(quantity, availableToAdd);
+    
+    if (actualQuantityToAdd <= 0) {
+      toast.error(`Cannot add more. Already have ${quantityInCart} in cart (Stock: ${product.inStock})`);
+      return;
+    }
+
+    if (actualQuantityToAdd < quantity) {
+      toast.warning(`Only added ${actualQuantityToAdd} items due to stock limits.`);
+    }
+
+    for (let index = 0; index < actualQuantityToAdd; index += 1) {
       addItem({
         id: product.id,
         name: product.name,
         price: product.price,
         image: product.image,
+        inStock: product.inStock,
       });
     }
   };
@@ -241,8 +261,9 @@ const ProductPage = () => {
                 </button>
                 <span className="w-10 text-center font-medium">{quantity}</span>
                 <button
-                  onClick={() => setQuantity(quantity + 1)}
-                  className="flex h-10 w-10 items-center justify-center hover:bg-muted"
+                  onClick={() => setQuantity(Math.min(quantity + 1, product.inStock))}
+                  className="flex h-10 w-10 items-center justify-center hover:bg-muted disabled:opacity-50"
+                  disabled={quantity >= product.inStock}
                 >
                   <Plus className="h-4 w-4" />
                 </button>

@@ -164,14 +164,25 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
     if (formData.inStock === undefined || formData.inStock < 0) newErrors.inStock = 'Stock cannot be negative';
     if (!formData.seller.trim()) newErrors.seller = 'Brand name is required';
     if (!formData.images || formData.images.length === 0) newErrors.images = 'At least 1 product image is required';
+    if (!formData.features || formData.features.length === 0) newErrors.features = 'At least 1 product feature is required';
+    if (!formData.sku?.trim()) newErrors.sku = 'SKU is required';
+    if (!formData.warranty?.trim()) newErrors.warranty = 'Warranty is required';
+    if (!formData.color?.trim()) newErrors.color = 'Color is required';
 
     setErrors(newErrors);
     
     if (Object.keys(newErrors).length > 0) {
-      if (newErrors.name || newErrors.category || newErrors.seller || newErrors.description) setActiveTab('general');
-      else if (newErrors.price || newErrors.inStock) setActiveTab('pricing');
+      const priorityFields = ['name', 'category', 'seller', 'description', 'price', 'inStock', 'images', 'features', 'sku', 'warranty', 'color'];
+      const missingPriority = Object.keys(newErrors).filter(key => priorityFields.includes(key));
+      
+      if (missingPriority.length > 0) {
+        toast.error('Priority Check Failed: Please fill all mandatory sections and text boxes.');
+      }
+      
+      if (newErrors.name || newErrors.category || newErrors.seller || newErrors.description || newErrors.sku) setActiveTab('general');
+      else if (newErrors.price || newErrors.inStock || newErrors.warranty) setActiveTab('pricing');
+      else if (newErrors.features || newErrors.color) setActiveTab('features');
       else if (newErrors.images) setActiveTab('media');
-      toast.error('Please fix the errors before submitting');
     }
 
     return Object.keys(newErrors).length === 0;
@@ -217,6 +228,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
           <TabsTrigger value="features" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
             <ListPlus className="w-4 h-4 mr-2" />
             <span className="hidden md:inline">Features</span>
+            <span className="text-destructive ml-1">*</span>
           </TabsTrigger>
           <TabsTrigger value="media" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
             <ImageIcon className="w-4 h-4 mr-2" />
@@ -329,15 +341,18 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="sku" className="text-sm font-semibold">SKU / Model Number</Label>
+                  <Label htmlFor="sku" className="text-sm font-semibold flex items-center gap-1.5">
+                    SKU / Model Number <span className="text-destructive">*</span>
+                  </Label>
                   <Input
                     id="sku"
                     value={formData.sku || ''}
                     onChange={(e) => handleChange('sku', e.target.value)}
                     placeholder="e.g. SN-TV-4K-001"
-                    className="bg-muted/30 h-11 transition-all focus:bg-background"
+                    className={cn("bg-muted/30 h-11 transition-all focus:bg-background", errors.sku && "border-destructive")}
                     disabled={isLoading}
                   />
+                  {errors.sku && <p className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.sku}</p>}
                 </div>
               </div>
 
@@ -415,15 +430,18 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="warranty" className="text-sm font-semibold">Warranty Period</Label>
+                  <Label htmlFor="warranty" className="text-sm font-semibold flex items-center gap-1.5">
+                    Warranty Period <span className="text-destructive">*</span>
+                  </Label>
                   <Input
                     id="warranty"
                     value={formData.warranty || ''}
                     onChange={(e) => handleChange('warranty', e.target.value)}
                     placeholder="e.g. 1 Year Official Warranty"
-                    className="bg-muted/30 h-11 transition-all focus:bg-background"
+                    className={cn("bg-muted/30 h-11 transition-all focus:bg-background", errors.warranty && "border-destructive")}
                     disabled={isLoading}
                   />
+                  {errors.warranty && <p className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.warranty}</p>}
                 </div>
               </div>
             </TabsContent>
@@ -434,7 +452,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
               <div className="space-y-4">
                 <div className="flex items-center justify-between">
                   <Label className="text-sm font-semibold flex items-center gap-2">
-                    Key Features <span className="text-xs font-normal text-muted-foreground">(Displayed as bullet points)</span>
+                    Key Features <span className="text-destructive">*</span> <span className="text-xs font-normal text-muted-foreground">(Displayed as bullet points)</span>
                   </Label>
                   <span className="text-xs font-medium text-primary">{(formData.features || []).length} items added</span>
                 </div>
@@ -495,15 +513,18 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                 <div className="space-y-2">
-                  <Label htmlFor="color" className="text-sm font-semibold">Color / Variant</Label>
+                  <Label htmlFor="color" className="text-sm font-semibold flex items-center gap-1.5">
+                    Color / Variant <span className="text-destructive">*</span>
+                  </Label>
                   <Input
                     id="color"
                     value={formData.color || ''}
                     onChange={(e) => handleChange('color', e.target.value)}
                     placeholder="e.g. Midnight Black"
-                    className="bg-muted/30 h-11 transition-all focus:bg-background"
+                    className={cn("bg-muted/30 h-11 transition-all focus:bg-background", errors.color && "border-destructive")}
                     disabled={isLoading}
                   />
+                  {errors.color && <p className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.color}</p>}
                 </div>
                 
                 <div className="space-y-2">

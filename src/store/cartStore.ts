@@ -6,6 +6,7 @@ export interface CartItem {
   price: number;
   image: string;
   quantity: number;
+  inStock: number;
   variant?: string;
 }
 
@@ -38,14 +39,26 @@ export const useCartStore = create<CartState>((set, get) => ({
   addItem: (item) => set((state) => {
     const existing = state.items.find((i) => i.id === item.id);
     if (existing) {
+      if (existing.quantity >= item.inStock) {
+        return { items: state.items };
+      }
       return { items: state.items.map((i) => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i) };
     }
     return { items: [...state.items, { ...item, quantity: 1 }] };
   }),
   removeItem: (id) => set((state) => ({ items: state.items.filter((i) => i.id !== id) })),
-  updateQuantity: (id, quantity) => set((state) => ({
-    items: quantity <= 0 ? state.items.filter((i) => i.id !== id) : state.items.map((i) => i.id === id ? { ...i, quantity } : i),
-  })),
+  updateQuantity: (id, quantity) => set((state) => {
+    const item = state.items.find(i => i.id === id);
+    if (!item) return { items: state.items };
+    
+    const validQuantity = Math.min(Math.max(0, quantity), item.inStock);
+    
+    return {
+      items: validQuantity <= 0 
+        ? state.items.filter((i) => i.id !== id) 
+        : state.items.map((i) => i.id === id ? { ...i, quantity: validQuantity } : i),
+    };
+  }),
   toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
   applyCoupon: (code) => {
     const upper = code.toUpperCase();

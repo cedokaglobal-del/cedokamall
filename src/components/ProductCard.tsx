@@ -73,7 +73,13 @@ const ProductCard = ({ product }: { product: Product }) => {
             )}
           </div>
           <button
-            onClick={() => addItem({ id: product.id, name: product.name, price: product.price, image: product.image })}
+            onClick={() => addItem({ 
+              id: product.id, 
+              name: product.name, 
+              price: product.price, 
+              image: product.image,
+              inStock: product.inStock 
+            })}
             className="w-9 h-9 sm:w-8 sm:h-8 rounded-lg bg-primary text-primary-foreground flex items-center justify-center hover:bg-emerald-light transition-colors flex-shrink-0 shadow-sm"
             aria-label="Add to cart"
           >
