@@ -78,12 +78,11 @@ async function resolveAdminStatus(session: Session | null): Promise<AuthStateSna
 
   try {
     const { data, error } = await supabase.rpc('is_admin');
-    if (!error) {
-      const isAdmin = Boolean(data);
+    if (!error && data === true) {
       return {
-        isAuthenticated: isAdmin,
-        isAdmin,
-        adminEmail: isAdmin ? email : null,
+        isAuthenticated: true,
+        isAdmin: true,
+        adminEmail: email,
       };
     }
   } catch (error) {
@@ -91,10 +90,11 @@ async function resolveAdminStatus(session: Session | null): Promise<AuthStateSna
   }
 
   // Fallback to listed admin check (includes our hardcoded list)
+  const isHardcodedAdmin = isListedAdmin(email);
   return {
-    isAuthenticated: true,
-    isAdmin: true,
-    adminEmail: email,
+    isAuthenticated: isHardcodedAdmin,
+    isAdmin: isHardcodedAdmin,
+    adminEmail: isHardcodedAdmin ? email : null,
   };
 }
 
@@ -143,28 +143,25 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const login = async (email: string, password: string): Promise<boolean> => {
+  const login = async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
     try {
       setIsLoading(true);
 
       if (!isSupabaseConfigured) {
-        console.error('Supabase is not configured.');
-        return false;
+        return { success: false, message: 'Supabase is not configured.' };
       }
 
       const normalizedEmail = email.trim().toLowerCase();
       
       // Verify if email is in the allowed list
       if (!isListedAdmin(normalizedEmail)) {
-        console.warn('Access denied: Email not in authorized list');
-        return false;
+        return { success: false, message: 'Access denied: Your email is not in the authorized admin list.' };
       }
 
       // Enforce specific password if defined in ENFORCED_PASSWORDS
       const enforcedPassword = ENFORCED_PASSWORDS[normalizedEmail];
       if (enforcedPassword && password !== enforcedPassword) {
-        console.warn('Enforced password mismatch for:', normalizedEmail);
-        return false;
+        return { success: false, message: 'Invalid password for this admin account.' };
       }
 
       let { data, error } = await supabase.auth.signInWithPassword({
@@ -173,8 +170,11 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       });
 
       // Special handling for the new admin if sign-in fails
-      // If it's the enforced user and they don't have an account, try to sign them up
       if (error && normalizedEmail === 'mperfectorg136@gmail.com' && password === '@Password100') {
+        if (error.message.includes('Email not confirmed')) {
+          return { success: false, message: 'Your email is not confirmed. Please check your inbox for a confirmation link.' };
+        }
+
         console.info('Special admin account not found. Attempting auto-provisioning...');
         
         const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
@@ -186,35 +186,27 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           data = signUpData;
           error = null;
         } else if (!signUpError) {
-          // Sign up successful but needs confirmation or doesn't return session
-          // Try to sign in again just in case
-          const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
-            email: normalizedEmail,
-            password,
-          });
-          data = retryData;
-          error = retryError;
+          return { success: true, message: 'Account created! Please check your email for a confirmation link to activate your access.' };
         }
       }
 
       if (error) {
-        console.error('Supabase login failed:', error.message);
-        return false;
+        return { success: false, message: error.message };
       }
 
       const nextState = await resolveAdminStatus(data.session);
       if (!nextState.isAdmin) {
         await supabase.auth.signOut();
-        return false;
+        return { success: false, message: 'Access denied. You do not have admin privileges.' };
       }
 
       setIsAuthenticated(nextState.isAuthenticated);
       setIsAdmin(nextState.isAdmin);
       setAdminEmail(nextState.adminEmail);
-      return true;
-    } catch (error) {
+      return { success: true };
+    } catch (error: any) {
       console.error('Unexpected login error:', error);
-      return false;
+      return { success: false, message: error?.message || 'An unexpected error occurred.' };
     } finally {
       setIsLoading(false);
     }

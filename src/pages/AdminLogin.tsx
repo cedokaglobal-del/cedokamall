@@ -41,10 +41,14 @@ const AdminLogin = () => {
         // Attempt password login
         const result = await login(email, password);
         
-        if (result) {
-          navigate('/admin');
+        if (result.success) {
+          if (result.message) {
+            setSuccess(result.message);
+          } else {
+            navigate('/admin');
+          }
         } else {
-          setError('Access denied. Please ensure your account is activated and you have admin privileges.');
+          setError(result.message || 'Access denied. Please ensure your account is activated and you have admin privileges.');
         }
       } else {
         // Attempt magic link login
