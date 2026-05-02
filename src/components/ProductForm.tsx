@@ -165,21 +165,20 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
     if (!formData.seller.trim()) newErrors.seller = 'Brand name is required';
     if (!formData.images || formData.images.length === 0) newErrors.images = 'At least 1 product image is required';
     if (!formData.features || formData.features.length === 0) newErrors.features = 'At least 1 product feature is required';
-    if (!formData.sku?.trim()) newErrors.sku = 'SKU is required';
     if (!formData.warranty?.trim()) newErrors.warranty = 'Warranty is required';
     if (!formData.color?.trim()) newErrors.color = 'Color is required';
 
     setErrors(newErrors);
     
     if (Object.keys(newErrors).length > 0) {
-      const priorityFields = ['name', 'category', 'seller', 'description', 'price', 'inStock', 'images', 'features', 'sku', 'warranty', 'color'];
+      const priorityFields = ['name', 'category', 'seller', 'description', 'price', 'inStock', 'images', 'features', 'warranty', 'color'];
       const missingPriority = Object.keys(newErrors).filter(key => priorityFields.includes(key));
       
       if (missingPriority.length > 0) {
         toast.error('Priority Check Failed: Please fill all mandatory sections and text boxes.');
       }
       
-      if (newErrors.name || newErrors.category || newErrors.seller || newErrors.description || newErrors.sku) setActiveTab('general');
+      if (newErrors.name || newErrors.category || newErrors.seller || newErrors.description) setActiveTab('general');
       else if (newErrors.price || newErrors.inStock || newErrors.warranty) setActiveTab('pricing');
       else if (newErrors.features || newErrors.color) setActiveTab('features');
       else if (newErrors.images) setActiveTab('media');
@@ -342,7 +341,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
 
                 <div className="space-y-2">
                   <Label htmlFor="sku" className="text-sm font-semibold flex items-center gap-1.5">
-                    SKU / Model Number <span className="text-destructive">*</span>
+                    SKU / Model Number
                   </Label>
                   <Input
                     id="sku"
