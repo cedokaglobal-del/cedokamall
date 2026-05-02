@@ -5,7 +5,7 @@ import TransactionHistory from '@/components/TransactionHistory';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { transactionStore } from '@/store/transactionStore';
+import { useTransactionStore } from '@/store/transactionStore';
 import { useVisitorStore } from '@/store/visitorStore';
 import { AnalyticsData } from '@/types/transaction';
 import { Calendar, Download, Users, Clock } from 'lucide-react';
@@ -15,17 +15,25 @@ const AdminAnalytics = () => {
   const [timeRange, setTimeRange] = useState('30');
   const [isLoading, setIsLoading] = useState(true);
 
+  const fetchTransactions = useTransactionStore((state) => state.fetchTransactions);
+  const getAnalyticsData = useTransactionStore((state) => state.getAnalyticsData);
+  const transactions = useTransactionStore((state) => state.transactions);
+
   useEffect(() => {
-    setIsLoading(true);
-    try {
-      const data = transactionStore.getAnalyticsData(Number(timeRange));
-      setAnalyticsData(data);
-    } catch (error) {
-      console.error('Error loading analytics:', error);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [timeRange]);
+    const loadData = async () => {
+      setIsLoading(true);
+      try {
+        await fetchTransactions();
+        const data = getAnalyticsData(Number(timeRange));
+        setAnalyticsData(data);
+      } catch (error) {
+        console.error('Error loading analytics:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    void loadData();
+  }, [timeRange, fetchTransactions, getAnalyticsData]);
 
   const handleExport = () => {
     if (!analyticsData) return;
@@ -108,7 +116,7 @@ const AdminAnalytics = () => {
         <div>
           <h2 className="text-2xl font-bold mb-4">Recent Transactions</h2>
           <TransactionHistory
-            transactions={transactionStore.transactions}
+            transactions={transactions}
             limit={15}
           />
         </div>

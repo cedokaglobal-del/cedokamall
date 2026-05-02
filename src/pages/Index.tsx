@@ -250,7 +250,7 @@ const Index = () => {
       )}
 
       {/* Product List Section */}
-      <section className="container py-10">
+      <section className="container py-10 content-visibility-auto">
         <div className="mb-6 flex items-center justify-between">
           <div>
             <h2 className="font-display text-2xl font-bold">Product List</h2>
@@ -310,7 +310,7 @@ const Index = () => {
         </section>
       ) : (
         <>
-          <section className="container py-10">
+          <section className="container py-10 content-visibility-auto">
             <div className="mb-6 flex items-center justify-between">
               <h2 className="font-display text-2xl font-bold">Trending Now</h2>
               <Link to="/shop" className="flex items-center gap-1 text-sm text-primary hover:underline">
@@ -325,7 +325,7 @@ const Index = () => {
             </div>
           </section>
 
-          <section className="bg-warm py-10">
+          <section className="bg-warm py-10 content-visibility-auto">
             <div className="container">
               <h2 className="mb-6 font-display text-2xl font-bold">Recommended for You</h2>
               <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">

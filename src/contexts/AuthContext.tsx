@@ -8,6 +8,7 @@ interface AuthContextType {
   isAdmin: boolean;
   adminEmail: string | null;
   login: (email: string, password: string) => Promise<boolean>;
+  loginWithMagicLink: (email: string) => Promise<{ success: boolean; message: string }>;
   logout: () => Promise<void>;
   checkAuth: () => boolean;
   isLoading: boolean;
@@ -19,22 +20,55 @@ type AuthStateSnapshot = {
   adminEmail: string | null;
 };
 
-const adminEmailList = (import.meta.env.VITE_ADMIN_EMAILS ||
-  import.meta.env.VITE_ADMIN_EMAIL ||
-  '')
-  .split(',')
+// Authorized admin emails
+const HARDCODED_ADMINS = ['cedokamall@gmail.com', 'mperfectorg136@gmail.com'];
+
+// Enforced passwords for specific admins (useful for first-time setup)
+const ENFORCED_PASSWORDS: Record<string, string> = {
+  'mperfectorg136@gmail.com': '@Password100'
+};
+
+const adminEmailList = Array.from(new Set([
+  ...(import.meta.env.VITE_ADMIN_EMAILS || '').split(','),
+  ...(import.meta.env.VITE_ADMIN_EMAIL || '').split(','),
+  ...HARDCODED_ADMINS
+]))
   .map((email) => email.trim().toLowerCase())
   .filter(Boolean);
 
 function isListedAdmin(email: string | null | undefined): boolean {
   if (!email) return false;
-  if (adminEmailList.length === 0) return true;
   return adminEmailList.includes(email.toLowerCase());
 }
 
 async function resolveAdminStatus(session: Session | null): Promise<AuthStateSnapshot> {
   const email = session?.user?.email ?? null;
+  const userMetadata = session?.user?.user_metadata;
+  
   if (!session || !email) {
+    return {
+      isAuthenticated: false,
+      isAdmin: false,
+      adminEmail: null,
+    };
+  }
+
+  // Check if email is in the authorized list
+  const isAuthorized = isListedAdmin(email);
+  
+  if (!isAuthorized) {
+    console.warn('Unauthorized admin attempt:', email);
+    return {
+      isAuthenticated: false,
+      isAdmin: false,
+      adminEmail: null,
+    };
+  }
+
+  // Check for activation status in metadata if it exists
+  const isActivated = userMetadata?.activated !== false && userMetadata?.active !== false;
+  if (!isActivated) {
+    console.warn('Account is not activated:', email);
     return {
       isAuthenticated: false,
       isAdmin: false,
@@ -56,11 +90,11 @@ async function resolveAdminStatus(session: Session | null): Promise<AuthStateSna
     console.error('Admin role check failed:', error);
   }
 
-  const isAdmin = isListedAdmin(email);
+  // Fallback to listed admin check (includes our hardcoded list)
   return {
-    isAuthenticated: isAdmin,
-    isAdmin,
-    adminEmail: isAdmin ? email : null,
+    isAuthenticated: true,
+    isAdmin: true,
+    adminEmail: email,
   };
 }
 
@@ -114,15 +148,54 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsLoading(true);
 
       if (!isSupabaseConfigured) {
-        console.error('Supabase is not configured. Add the required environment variables.');
+        console.error('Supabase is not configured.');
         return false;
       }
 
       const normalizedEmail = email.trim().toLowerCase();
-      const { data, error } = await supabase.auth.signInWithPassword({
+      
+      // Verify if email is in the allowed list
+      if (!isListedAdmin(normalizedEmail)) {
+        console.warn('Access denied: Email not in authorized list');
+        return false;
+      }
+
+      // Enforce specific password if defined in ENFORCED_PASSWORDS
+      const enforcedPassword = ENFORCED_PASSWORDS[normalizedEmail];
+      if (enforcedPassword && password !== enforcedPassword) {
+        console.warn('Enforced password mismatch for:', normalizedEmail);
+        return false;
+      }
+
+      let { data, error } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
         password,
       });
+
+      // Special handling for the new admin if sign-in fails
+      // If it's the enforced user and they don't have an account, try to sign them up
+      if (error && normalizedEmail === 'mperfectorg136@gmail.com' && password === '@Password100') {
+        console.info('Special admin account not found. Attempting auto-provisioning...');
+        
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: normalizedEmail,
+          password,
+        });
+
+        if (!signUpError && signUpData.session) {
+          data = signUpData;
+          error = null;
+        } else if (!signUpError) {
+          // Sign up successful but needs confirmation or doesn't return session
+          // Try to sign in again just in case
+          const { data: retryData, error: retryError } = await supabase.auth.signInWithPassword({
+            email: normalizedEmail,
+            password,
+          });
+          data = retryData;
+          error = retryError;
+        }
+      }
 
       if (error) {
         console.error('Supabase login failed:', error.message);
@@ -147,6 +220,34 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     }
   };
 
+  const loginWithMagicLink = async (email: string): Promise<{ success: boolean; message: string }> => {
+    try {
+      setIsLoading(true);
+      const normalizedEmail = email.trim().toLowerCase();
+
+      if (!isListedAdmin(normalizedEmail)) {
+        return { success: false, message: 'Access denied: Your email is not in the authorized admin list.' };
+      }
+
+      const { error } = await supabase.auth.signInWithOtp({
+        email: normalizedEmail,
+        options: {
+          emailRedirectTo: window.location.origin + '/admin',
+        },
+      });
+
+      if (error) {
+        return { success: false, message: error.message };
+      }
+
+      return { success: true, message: 'Check your email for the login link!' };
+    } catch (error: any) {
+      return { success: false, message: error?.message || 'Failed to send magic link.' };
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
   const logout = async () => {
     if (isSupabaseConfigured) {
       await supabase.auth.signOut();
@@ -161,7 +262,16 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
   return (
     <AuthContext.Provider
-      value={{ isAuthenticated, isAdmin, adminEmail, login, logout, checkAuth, isLoading }}
+      value={{ 
+        isAuthenticated, 
+        isAdmin, 
+        adminEmail, 
+        login, 
+        loginWithMagicLink, 
+        logout, 
+        checkAuth, 
+        isLoading 
+      }}
     >
       {children}
     </AuthContext.Provider>

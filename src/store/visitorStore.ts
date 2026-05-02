@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
+import { supabase } from '@/lib/supabase';
 
 interface VisitorSession {
   id: string;
@@ -18,9 +19,10 @@ interface VisitorStats {
 interface VisitorStore {
   stats: VisitorStats;
   currentSession: VisitorSession | null;
-  startSession: () => void;
-  updateSession: () => void;
+  startSession: () => Promise<void>;
+  updateSession: () => Promise<void>;
   getAverageStayDuration: () => number; // in seconds
+  syncWithSupabase: () => Promise<void>;
 }
 
 export const useVisitorStore = create<VisitorStore>()(
@@ -34,14 +36,44 @@ export const useVisitorStore = create<VisitorStore>()(
       },
       currentSession: null,
 
-      startSession: () => {
+      syncWithSupabase: async () => {
+        try {
+          // Attempt to get global stats from Supabase
+          const { data, error } = await supabase
+            .from('visitor_stats')
+            .select('*')
+            .single();
+
+          if (!error && data) {
+            set((state) => ({
+              stats: {
+                ...state.stats,
+                totalVisitors: Math.max(state.stats.totalVisitors, data.total_visitors || 0),
+                totalSessions: Math.max(state.stats.totalSessions, data.total_sessions || 0),
+                totalDuration: Math.max(state.stats.totalDuration, data.total_duration || 0),
+                lastUpdated: Date.now(),
+              }
+            }));
+          }
+        } catch (e) {
+          console.debug('Supabase visitor sync not available');
+        }
+      },
+
+      startSession: async () => {
         const { stats } = get();
         const sessionId = Math.random().toString(36).substring(7);
         const now = Date.now();
         
-        // If it's a new visitor (no previous stats), increment totalVisitors
         const isNewVisitor = stats.totalVisitors === 0;
         
+        const newStats = {
+          ...stats,
+          totalVisitors: isNewVisitor ? stats.totalVisitors + 1 : stats.totalVisitors,
+          totalSessions: stats.totalSessions + 1,
+          lastUpdated: now,
+        };
+
         set({
           currentSession: {
             id: sessionId,
@@ -49,24 +81,35 @@ export const useVisitorStore = create<VisitorStore>()(
             lastActive: now,
             duration: 0,
           },
-          stats: {
-            ...stats,
-            totalVisitors: isNewVisitor ? stats.totalVisitors + 1 : stats.totalVisitors,
-            totalSessions: stats.totalSessions + 1,
-            lastUpdated: now,
-          }
+          stats: newStats
         });
+
+        // Try to update global stats in Supabase
+        try {
+          await supabase.rpc('increment_visitor_stats', {
+            is_new_visitor: isNewVisitor,
+            is_new_session: true,
+            additional_duration: 0
+          });
+        } catch (e) {
+          // Ignore if RPC doesn't exist
+        }
       },
 
-      updateSession: () => {
+      updateSession: async () => {
         const { currentSession, stats } = get();
         if (!currentSession) return;
 
         const now = Date.now();
         const additionalDuration = Math.floor((now - currentSession.lastActive) / 1000);
         
-        // Only update if at least 1 second has passed
         if (additionalDuration < 1) return;
+
+        const newStats = {
+          ...stats,
+          totalDuration: stats.totalDuration + additionalDuration,
+          lastUpdated: now,
+        };
 
         set({
           currentSession: {
@@ -74,12 +117,19 @@ export const useVisitorStore = create<VisitorStore>()(
             lastActive: now,
             duration: currentSession.duration + additionalDuration,
           },
-          stats: {
-            ...stats,
-            totalDuration: stats.totalDuration + additionalDuration,
-            lastUpdated: now,
-          }
+          stats: newStats
         });
+
+        // Try to update global stats in Supabase
+        try {
+          await supabase.rpc('increment_visitor_stats', {
+            is_new_visitor: false,
+            is_new_session: false,
+            additional_duration: additionalDuration
+          });
+        } catch (e) {
+          // Ignore
+        }
       },
 
       getAverageStayDuration: () => {

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertCircle,
@@ -37,7 +37,7 @@ import {
 } from '@/components/ui/alert-dialog';
 import type { Product, ProductFormData } from '@/types/product';
 import { useProductStore } from '@/store/productStore';
-import { transactionStore } from '@/store/transactionStore';
+import { useTransactionStore } from '@/store/transactionStore';
 import { useVisitorStore } from '@/store/visitorStore';
 import { cn } from '@/lib/utils';
 
@@ -94,9 +94,24 @@ const AdminDashboard = () => {
   const recentProducts = useMemo(() => products.slice(0, 6), [products]);
 
   // Real Analytics Data
-  const transactionSummary = useMemo(() => transactionStore.getTransactionSummary(30), []);
+  const fetchTransactions = useTransactionStore((state) => state.fetchTransactions);
+  const getTransactionSummary = useTransactionStore((state) => state.getTransactionSummary);
+  const transactionSummary = useMemo(() => getTransactionSummary(30), [getTransactionSummary]);
   const visitorStats = useVisitorStore((state) => state.stats);
   const avgStayDuration = useVisitorStore((state) => state.getAverageStayDuration());
+
+  useEffect(() => {
+    void fetchTransactions();
+    void useVisitorStore.getState().syncWithSupabase();
+  }, [fetchTransactions]);
+
+  const handleRefresh = async () => {
+    await Promise.all([
+      fetchProducts(true),
+      fetchTransactions(),
+      useVisitorStore.getState().syncWithSupabase()
+    ]);
+  };
 
   const formatDuration = (seconds: number) => {
     const mins = Math.floor(seconds / 60);
@@ -235,7 +250,7 @@ const AdminDashboard = () => {
             <Button
               variant="outline"
               size="lg"
-              onClick={() => void fetchProducts()}
+              onClick={handleRefresh}
               className="gap-2"
             >
               <RefreshCw className="w-4 h-4" /> Refresh

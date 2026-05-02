@@ -5,6 +5,7 @@ export type AuthContextValue = {
   isAdmin: boolean;
   adminEmail: string | null;
   login: (email: string, password: string) => Promise<boolean>;
+  loginWithMagicLink: (email: string) => Promise<{ success: boolean; message: string }>;
   logout: () => Promise<void>;
   checkAuth: () => boolean;
   isLoading: boolean;

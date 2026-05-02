@@ -112,4 +112,9 @@
   input[type="number"] {
     -moz-appearance: textfield;
   }
+
+  .content-visibility-auto {
+    content-visibility: auto;
+    contain-intrinsic-size: 0 500px;
+  }
 }

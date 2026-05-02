@@ -4,6 +4,7 @@ import { Trash2, Minus, Plus, ArrowRight, Tag, ArrowLeft, Check, Smartphone, Map
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useCartStore } from '@/store/cartStore';
+import { transactionStore } from '@/store/transactionStore';
 import { toast } from 'sonner';
 
 const formatPrice = (n: number) => '₦' + n.toLocaleString();
@@ -194,6 +195,23 @@ We appreciate your business! 🙏
     `.trim();
 
     sendWhatsAppMessage(message);
+    
+    // Record transactions for analytics
+    items.forEach(item => {
+      void transactionStore.addTransaction({
+        orderId: orderNumber,
+        productId: item.id,
+        productName: item.name,
+        customerEmail: customerName,
+        amount: item.price * item.quantity,
+        quantity: item.quantity,
+        status: 'completed', // In this system, sending to WhatsApp is considered a completed intent
+        type: 'sale',
+        paymentMethod: paymentMethod === 'online' ? 'Transfer' : 'Cash',
+        category: item.category || 'General',
+      });
+    });
+
     setOrderSent(true);
     toast.success('WhatsApp message sent! Please confirm on WhatsApp');
   };

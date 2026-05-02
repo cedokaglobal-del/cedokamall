@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { Product, ProductFormData, ProductFilter } from '@/types/product';
 import { supabase } from '@/lib/supabase';
 import { retryWithBackoff, supabaseCircuitBreaker } from '@/utils/resilience';
+import { deduplicatedFetch } from '@/utils/performance';
 
 interface ProductState {
   products: Product[];
@@ -237,34 +238,39 @@ export const useProductStore = create<ProductState>((set, get) => ({
 
     pendingFetch = (async () => {
       try {
-        await supabaseCircuitBreaker.execute(async () => {
-          await retryWithBackoff(
-            async () => {
-              const controller = new AbortController();
-              const timeoutId = setTimeout(() => controller.abort(), 10000);
+        const fetchKey = `products_${force}`;
+        
+        // Use deduplicatedFetch to prevent overlapping requests
+        await deduplicatedFetch(fetchKey, async () => {
+          await supabaseCircuitBreaker.execute(async () => {
+            await retryWithBackoff(
+              async () => {
+                const controller = new AbortController();
+                const timeoutId = setTimeout(() => controller.abort(), 10000);
 
-              const { data, error } = await supabase
-                .from('products')
-                .select('*')
-                .order('created_at', { ascending: false });
+                const { data, error } = await supabase
+                  .from('products')
+                  .select('*')
+                  .order('created_at', { ascending: false });
 
-              clearTimeout(timeoutId);
+                clearTimeout(timeoutId);
 
-              if (error) {
-                throw error;
-              }
+                if (error) {
+                  throw error;
+                }
 
-              const products = (data || []).map(mapSupabaseToProduct);
-              persistProducts(products);
-              set({
-                products,
-                hasLoaded: true,
-                lastSyncedAt: new Date().toISOString(),
-                error: null,
-              });
-            },
-            { maxRetries: 2, initialDelayMs: 800 }
-          );
+                const products = (data || []).map(mapSupabaseToProduct);
+                persistProducts(products);
+                set({
+                  products,
+                  hasLoaded: true,
+                  lastSyncedAt: new Date().toISOString(),
+                  error: null,
+                });
+              },
+              { maxRetries: 2, initialDelayMs: 800 }
+            );
+          });
         });
       } catch (error) {
         console.error('Error fetching products:', error);
@@ -340,17 +346,17 @@ export const useProductStore = create<ProductState>((set, get) => ({
         .from('products')
         .update(nextPayload)
         .eq('id', id)
-        .select()
-        .single();
+        .select();
 
       if (error) {
         throw error;
       }
 
-      if (data) {
+      const row = data?.[0];
+      if (row) {
         set((state) => {
           const products = state.products.map((product) =>
-            product.id === id ? mapSupabaseToProduct(data) : product
+            product.id === id ? mapSupabaseToProduct(row) : product
           );
           persistProducts(products);
           return {
