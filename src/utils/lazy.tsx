@@ -11,15 +11,21 @@ export function safeLazy<T extends ComponentType<any>>(
   interval = 1000
 ): React.LazyExoticComponent<T> {
   return lazy(async () => {
-    try {
-      return await factory();
-    } catch (error) {
-      if (retriesLeft <= 0) {
-        throw error;
+    let currentRetries = retriesLeft;
+    let currentInterval = interval;
+    
+    while (true) {
+      try {
+        return await factory();
+      } catch (error) {
+        if (currentRetries <= 0) {
+          throw error;
+        }
+        console.warn(`Chunk load failed, retrying in ${currentInterval}ms... (${currentRetries} retries left)`);
+        await new Promise((resolve) => setTimeout(resolve, currentInterval));
+        currentRetries--;
+        currentInterval *= 2;
       }
-      
-      await new Promise((resolve) => setTimeout(resolve, interval));
-      return safeLazy(factory, retriesLeft - 1, interval * 2) as any;
     }
   });
 }
