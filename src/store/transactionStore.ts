@@ -8,6 +8,7 @@ interface TransactionState {
   isLoading: boolean;
   error: string | null;
   hasLoaded: boolean;
+  lastSyncedAt: string | null;
   
   fetchTransactions: () => Promise<void>;
   addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
@@ -37,9 +38,18 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
   transactions: loadCachedTransactions(),
   isLoading: false,
   error: null,
-  hasLoaded: false,
-
+  hasLoaded: loadCachedTransactions().length > 0,
+  lastSyncedAt: null,
+  
   fetchTransactions: async () => {
+    const state = get();
+    // If recently loaded (within 5 mins), don't fetch again unless forced or empty
+    const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+    if (state.hasLoaded && state.lastSyncedAt && new Date(state.lastSyncedAt).getTime() > fiveMinutesAgo) {
+      return;
+    }
+
+    if (state.isLoading) return;
     set({ isLoading: true });
     try {
       await retryWithBackoff(async () => {
@@ -69,7 +79,12 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
             updatedAt: new Date(row.updated_at || row.created_at),
           }));
           
-          set({ transactions, hasLoaded: true, error: null });
+          set({ 
+            transactions, 
+            hasLoaded: true, 
+            error: null,
+            lastSyncedAt: new Date().toISOString()
+          });
           if (typeof window !== 'undefined') {
             localStorage.setItem(TRANSACTION_CACHE_KEY, JSON.stringify(transactions));
           }

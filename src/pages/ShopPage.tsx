@@ -123,9 +123,6 @@ const ShopPage = () => {
             <h1 className="font-display text-2xl font-bold">
               {dealsOnly ? 'Flash Deals' : 'Shop All Products'}
             </h1>
-            <p className="text-sm text-muted-foreground">
-              {filteredProducts.length} products found
-            </p>
           </div>
           <div className="flex flex-wrap items-center gap-3">
             <select

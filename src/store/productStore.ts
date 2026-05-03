@@ -17,6 +17,7 @@ interface ProductState {
   updateProduct: (id: string, updates: Partial<ProductFormData>) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
   clearAllProducts: () => Promise<void>;
+  rateProduct: (id: string, rating: number) => Promise<void>;
   setFilter: (filter: ProductFilter) => void;
 
   getFilteredProducts: () => Product[];
@@ -409,6 +410,49 @@ export const useProductStore = create<ProductState>((set, get) => ({
       });
     } catch (error) {
       console.error('Error clearing products:', error);
+      throw error;
+    }
+  },
+
+  rateProduct: async (id, newRating) => {
+    try {
+      const current = get().products.find((p) => p.id === id);
+      if (!current) return;
+
+      const oldRating = current.rating || 0;
+      const oldReviews = current.reviews || 0;
+      
+      // Calculate new average rating
+      // Formula: ((oldRating * oldReviews) + newRating) / (oldReviews + 1)
+      const nextReviews = oldReviews + 1;
+      const nextRating = Number(((oldRating * oldReviews + newRating) / nextReviews).toFixed(1));
+
+      const { data, error } = await supabase
+        .from('products')
+        .update({
+          rating: nextRating,
+          reviews: nextReviews,
+        })
+        .eq('id', id)
+        .select();
+
+      if (error) throw error;
+
+      const row = data?.[0];
+      if (row) {
+        set((state) => {
+          const products = state.products.map((product) =>
+            product.id === id ? mapSupabaseToProduct(row) : product
+          );
+          persistProducts(products);
+          return {
+            products,
+            lastSyncedAt: new Date().toISOString(),
+          };
+        });
+      }
+    } catch (error) {
+      console.error('Error rating product:', error);
       throw error;
     }
   },

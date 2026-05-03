@@ -3,7 +3,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { lazy, Suspense, useEffect } from "react";
+import { lazy, Suspense, useEffect, useRef } from "react";
 // Context
 import { AuthProvider } from "@/contexts/AuthContext";
 // Components
@@ -48,6 +48,7 @@ const SEOUpdater = () => {
 
 const App = () => {
   const fetchProducts = useProductStore((state) => state.fetchProducts);
+  const lastFetchRef = useRef<number>(0);
 
   useEffect(() => {
     // Initialize performance monitoring
@@ -87,12 +88,20 @@ const App = () => {
     }, 30000);
 
     const handleReconnect = () => {
-      void fetchProducts(true);
+      const now = Date.now();
+      if (now - lastFetchRef.current > 30000) {
+        lastFetchRef.current = now;
+        void fetchProducts(true);
+      }
     };
-
+ 
     const handleVisibilityChange = () => {
       if (document.visibilityState === 'visible') {
-        void fetchProducts(true);
+        const now = Date.now();
+        if (now - lastFetchRef.current > 30000) {
+          lastFetchRef.current = now;
+          void fetchProducts(true);
+        }
       }
     };
 

@@ -27,12 +27,14 @@ const formatPrice = (amount: number) => `₦${amount.toLocaleString()}`;
 
 const ProductPage = () => {
   const { id } = useParams();
-  const { getProductById, products, isLoading, hasLoaded } = useProductStore();
+  const { getProductById, products, isLoading, hasLoaded, rateProduct } = useProductStore();
   const addItem = useCartStore((state) => state.addItem);
 
   const product = useMemo(() => getProductById(id || ''), [getProductById, id]);
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
+  const [hoverRating, setHoverRating] = useState(0);
+  const [isRating, setIsRating] = useState(false);
 
   const relatedProducts = useMemo(() => {
     if (!product) {
@@ -106,6 +108,19 @@ const ProductPage = () => {
         image: product.image,
         inStock: product.inStock,
       });
+    }
+  };
+
+  const handleRate = async (rating: number) => {
+    if (isRating) return;
+    setIsRating(true);
+    try {
+      await rateProduct(product.id, rating);
+      toast.success('Thank you for your rating!');
+    } catch (error) {
+      toast.error('Failed to submit rating. Please try again.');
+    } finally {
+      setIsRating(false);
     }
   };
 
@@ -189,16 +204,30 @@ const ProductPage = () => {
 
             <div className="flex items-center gap-3">
               <div className="flex items-center gap-1">
-                {[...Array(5)].map((_, index) => (
-                  <Star
-                    key={index}
-                    className={`h-4 w-4 ${
-                      index < Math.round(product.rating || 0)
-                        ? 'fill-gold text-gold'
-                        : 'text-border'
-                    }`}
-                  />
-                ))}
+                {[...Array(5)].map((_, index) => {
+                  const ratingValue = index + 1;
+                  const isActive = hoverRating ? ratingValue <= hoverRating : ratingValue <= Math.round(product.rating || 0);
+                  
+                  return (
+                    <button
+                      key={index}
+                      type="button"
+                      disabled={isRating}
+                      onClick={() => handleRate(ratingValue)}
+                      onMouseEnter={() => setHoverRating(ratingValue)}
+                      onMouseLeave={() => setHoverRating(0)}
+                      className={`transition-transform hover:scale-110 disabled:opacity-50 ${isRating ? 'cursor-not-allowed' : 'cursor-pointer'}`}
+                    >
+                      <Star
+                        className={`h-5 w-5 ${
+                          isActive
+                            ? 'fill-gold text-gold'
+                            : 'text-border'
+                        }`}
+                      />
+                    </button>
+                  );
+                })}
               </div>
               <span className="text-sm font-medium">{product.rating}</span>
               <span className="text-sm text-muted-foreground">({product.reviews} reviews)</span>
