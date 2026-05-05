@@ -47,7 +47,7 @@ const CountdownTimer = () => {
       {[time.h, time.m, time.s].map((value, index) => (
         <span
           key={index}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-navy text-gold text-lg font-bold shadow-md border border-gold/20"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-navy text-gold text-lg font-bold shadow-md border border-gold/20 will-change-contents"
         >
           {String(value).padStart(2, '0')}
         </span>
@@ -80,12 +80,23 @@ const WelcomeGreeting = () => {
   const [isReturning, setIsReturning] = useState(false);
 
   useEffect(() => {
-    const hasVisited = localStorage.getItem('cedoka_visited');
-    if (hasVisited) {
-      setIsReturning(true);
+    const lastGreeting = localStorage.getItem('cedoka_last_greeting');
+    const now = Date.now();
+    const sixHours = 6 * 60 * 60 * 1000;
+
+    // Only show greeting if no last greeting or if 6+ hours have passed
+    if (lastGreeting) {
+      const timeSinceLastGreeting = now - parseInt(lastGreeting);
+      if (timeSinceLastGreeting < sixHours) {
+        return; // Less than 6 hours, don't show
+      }
+      setIsReturning(true); // More than 6 hours, returning user
     } else {
+      // First time visiting
       localStorage.setItem('cedoka_visited', 'true');
     }
+
+    localStorage.setItem('cedoka_last_greeting', now.toString());
 
     const timer = setTimeout(() => setShow(true), 2000);
     const hideTimer = setTimeout(() => setShow(false), 8000);
@@ -99,13 +110,14 @@ const WelcomeGreeting = () => {
 
   return (
     <motion.div
-      initial={{ opacity: 0, x: 50 }}
-      animate={{ opacity: 1, x: 0 }}
-      exit={{ opacity: 0, x: 50 }}
-      className="fixed bottom-24 right-8 z-[100] max-w-sm rounded-md bg-white p-6 shadow-2xl border-l-4 border-gold animate-in slide-in-from-right duration-500"
+      initial={{ opacity: 0, x: 50, scale: 0.95 }}
+      animate={{ opacity: 1, x: 0, scale: 1 }}
+      exit={{ opacity: 0, x: 50, scale: 0.95 }}
+      transition={{ type: 'spring', stiffness: 300, damping: 30 }}
+      className="fixed bottom-24 right-8 z-[100] max-w-sm rounded-md bg-white p-6 shadow-2xl border-l-4 border-gold will-change-transform"
     >
       <div className="flex items-start gap-4">
-        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gold/10 flex-shrink-0">
+        <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gold/10 flex-shrink-0 animate-pulse">
           <Star className="h-6 w-6 text-gold fill-gold" />
         </div>
         <div>
@@ -119,7 +131,7 @@ const WelcomeGreeting = () => {
           </p>
           <button 
             onClick={() => setShow(false)}
-            className="mt-4 text-xs font-bold uppercase tracking-widest text-gold hover:text-gold-antique transition-colors"
+            className="mt-4 text-xs font-bold uppercase tracking-widest text-gold hover:text-gold-antique transition-colors active:scale-95"
           >
             Dismiss
           </button>
@@ -208,15 +220,15 @@ const Index = () => {
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
+            transition={{ duration: 0.6, ease: 'easeOut' }}
             className="max-w-4xl"
           >
             <div className="mb-8 flex items-center gap-3">
               <motion.span
-                initial={{ scale: 0.9 }}
-                animate={{ scale: 1 }}
-                transition={{ duration: 1.5, repeat: Infinity, repeatType: 'reverse' }}
-                className="rounded-md bg-gold px-5 py-2 text-xs font-bold uppercase tracking-[0.2em] text-navy shadow-lg"
+                initial={{ scale: 0.9, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ duration: 0.8, ease: 'easeOut' }}
+                className="rounded-md bg-gold px-5 py-2 text-xs font-bold uppercase tracking-[0.2em] text-navy shadow-lg will-change-transform"
               >
                 The Elite Marketplace
               </motion.span>
@@ -232,14 +244,14 @@ const Index = () => {
             <div className="flex flex-col gap-6 sm:flex-row">
               <Link
                 to="/shop"
-                className="inline-flex items-center justify-center gap-3 rounded-md bg-gold px-12 py-5 text-xl font-bold text-navy shadow-2xl transition-all hover:bg-gold-antique hover:text-white transform hover:-translate-y-1 active:scale-95"
+                className="inline-flex items-center justify-center gap-3 rounded-md bg-gold px-12 py-5 text-xl font-bold text-navy shadow-2xl transition-all duration-300 hover:bg-gold-antique hover:text-white transform hover:-translate-y-1 active:scale-95 will-change-transform"
               >
                 Explore Shop
-                <ArrowRight className="h-6 w-6" />
+                <ArrowRight className="h-6 w-6 transition-transform group-hover:translate-x-1" />
               </Link>
               <Link
                 to="/shop?deals=true"
-                className="inline-flex items-center justify-center gap-3 rounded-md border border-gold/30 bg-white/5 px-12 py-5 text-xl font-bold text-champagne backdrop-blur-md transition-all hover:bg-white/10 hover:border-gold"
+                className="inline-flex items-center justify-center gap-3 rounded-md border border-gold/30 bg-white/5 px-12 py-5 text-xl font-bold text-champagne backdrop-blur-md transition-all duration-300 hover:bg-white/10 hover:border-gold will-change-transform"
               >
                 Flash Deals
               </Link>
@@ -281,7 +293,7 @@ const Index = () => {
 
       {/* Categories */}
       {categories.length > 0 && (
-        <section className="container py-20">
+        <section className="container py-12">
           <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
             <div>
               <h2 className="font-serif text-4xl font-bold text-navy">Categories</h2>
@@ -292,15 +304,20 @@ const Index = () => {
               <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-9 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
             {categories
               .sort((a, b) => b.count - a.count)
-              .slice(0, 9)
-              .map((category) => (
-                <Link key={category.slug} to={`/shop?category=${category.slug}`}>
+              .slice(0, 8)
+              .map((category, index) => (
+                <Link 
+                  key={category.slug} 
+                  to={`/shop?category=${category.slug}`}
+                  className={index > 3 ? 'hidden md:block' : ''}
+                >
                   <motion.div
                     whileHover={{ y: -6, shadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)" }}
-                    className="rounded-md border border-gold-antique/10 bg-white p-6 text-center transition-all group hover:border-gold/30"
+                    whileTap={{ scale: 0.98 }}
+                    className="rounded-md border border-gold-antique/10 bg-white p-6 text-center transition-all group hover:border-gold/30 h-full will-change-transform"
                   >
                     <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-ivory mx-auto group-hover:bg-gold/10 transition-colors">
                       <category.icon className="h-6 w-6 text-navy group-hover:text-gold transition-colors" />
@@ -315,7 +332,7 @@ const Index = () => {
       )}
 
       {/* Main Product List */}
-      <section className="container py-24 content-visibility-auto">
+      <section className="container py-16 content-visibility-auto">
         <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <h2 className="font-serif text-4xl font-bold text-navy">Product List</h2>
@@ -350,17 +367,17 @@ const Index = () => {
           <div className="mt-16 text-center">
             <Link
               to="/shop"
-              className="inline-flex items-center gap-3 rounded-md bg-gold px-12 py-4 text-lg font-bold text-navy transition-all hover:bg-gold-antique hover:text-white shadow-xl"
+              className="inline-flex items-center gap-3 rounded-md bg-gold px-12 py-4 text-lg font-bold text-navy transition-all duration-300 hover:bg-gold-antique hover:text-white shadow-xl transform hover:-translate-y-1 active:scale-95 will-change-transform"
             >
               Browse Full Catalog
-              <ArrowRight className="h-5 w-5" />
+              <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
             </Link>
           </div>
         </div>
       </section>
 
       {/* Popular Search Section */}
-      <section className="container py-24 content-visibility-auto">
+      <section className="container py-12 content-visibility-auto">
         <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
           <h2 className="font-serif text-4xl font-bold text-navy">Popular Search</h2>
           <Link to="/shop" className="group flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-gold hover:text-gold-antique transition-colors">
@@ -401,7 +418,7 @@ const Index = () => {
       )}
 
       {/* Testimonials */}
-      <section className="bg-ivory py-24 relative overflow-hidden">
+      <section className="bg-ivory py-16 relative overflow-hidden">
         <div className="container relative z-10">
           <div className="mb-16 text-center">
             <h2 className="font-serif text-4xl font-bold text-navy mb-4">what our customer says</h2>
@@ -429,9 +446,9 @@ const Index = () => {
                 key={testimonial.name}
                 initial={{ opacity: 0, y: 30 }}
                 whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true }}
-                transition={{ delay: index * 0.15 }}
-                className="rounded-md bg-white p-10 shadow-premium border border-gold-antique/5 relative group"
+                viewport={{ once: true, margin: "50px" }}
+                transition={{ delay: index * 0.1, duration: 0.5 }}
+                className="rounded-md bg-white p-10 shadow-premium border border-gold-antique/5 relative group will-change-transform"
               >
                 <div className="absolute top-6 left-6 text-gold/10 text-6xl font-serif leading-none group-hover:text-gold/20 transition-colors">"</div>
                 <div className="mb-6 flex items-center gap-1">

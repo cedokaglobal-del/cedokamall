@@ -18,15 +18,16 @@ const ProductCard = ({ product }: { product: Product }) => {
     <motion.div
       initial={{ opacity: 0, y: 15 }}
       whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true }}
-      className="group bg-white rounded-md border border-gold-antique/10 overflow-hidden hover:shadow-premium transition-all duration-500"
+      viewport={{ once: true, margin: "50px" }}
+      transition={{ duration: 0.4, ease: 'easeOut' }}
+      className="group bg-white rounded-md border border-gold-antique/10 overflow-hidden hover:shadow-premium transition-shadow duration-300 will-change-transform"
     >
       <div className="relative overflow-hidden aspect-[4/5]">
         <Link to={`/product/${product.id}`} className="absolute inset-0 z-0">
           <img
             src={product.image}
             alt={product.name}
-            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700 ease-in-out"
+            className="w-full h-full object-cover group-hover:scale-110 transition-transform duration-500 ease-in-out will-change-transform"
             loading="lazy"
             onError={(event) => {
               (event.target as HTMLImageElement).src = '/image.png';
@@ -45,11 +46,11 @@ const ProductCard = ({ product }: { product: Product }) => {
         )}
         
         {/* Quick Actions Overlay */}
-        <div className="absolute inset-0 bg-navy/20 opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex items-center justify-center gap-2 z-10 pointer-events-none">
-          <button className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gold hover:text-navy transition-all duration-300 transform translate-y-4 group-hover:translate-y-0 pointer-events-auto">
+        <div className="absolute inset-0 bg-navy/20 opacity-0 group-hover:opacity-100 transition-opacity duration-250 flex items-center justify-center gap-2 z-10 pointer-events-none">
+          <button className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gold hover:text-navy transition-all duration-250 transform translate-y-4 group-hover:translate-y-0 pointer-events-auto will-change-transform">
             <Heart className="w-5 h-5" />
           </button>
-          <Link to={`/product/${product.id}`} className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gold hover:text-navy transition-all duration-300 transform translate-y-4 group-hover:translate-y-0 delay-75 pointer-events-auto">
+          <Link to={`/product/${product.id}`} className="w-10 h-10 bg-white rounded-full flex items-center justify-center shadow-lg hover:bg-gold hover:text-navy transition-all duration-250 transform translate-y-4 group-hover:translate-y-0 delay-75 pointer-events-auto will-change-transform">
             <Eye className="w-5 h-5" />
           </Link>
         </div>
@@ -94,7 +95,7 @@ const ProductCard = ({ product }: { product: Product }) => {
               });
               toast.success(`${product.name} added to cart`);
             }}
-            className="w-10 h-10 rounded-md bg-navy text-gold flex items-center justify-center hover:bg-gold hover:text-navy transition-all duration-300 shadow-md transform hover:scale-105 active:scale-95"
+            className="w-10 h-10 rounded-md bg-navy text-gold flex items-center justify-center hover:bg-gold hover:text-navy transition-all duration-250 shadow-md transform hover:scale-105 active:scale-95 will-change-transform"
             aria-label="Add to cart"
           >
             <ShoppingCart className="w-5 h-5 pointer-events-none" />
