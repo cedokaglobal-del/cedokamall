@@ -4,8 +4,8 @@
  */
 
 export const SEO_CONFIG = {
-  siteTitle: "Cedokamall - Nigeria's Premium Online Marketplace",
-  siteDescription: "Shop 50,000+ products with fast Nationwide delivery. Electronics, Home Appliances, Accessories & more. Trusted sellers, secure payments, swift delivery across Nigeria.",
+  siteTitle: "Cedokamall - Nigeria's #1 Electrical and Gadget Destination",
+  siteDescription: "Nigeria's cheapest electrical and gadget destination; experience original Hisense, Mewe, LG, Maxi product shopping with fast Nationwide delivery.",
   siteUrl: import.meta.env.VITE_SITE_URL || "https://cedokamall.com",
   siteName: "Cedokamall",
   locale: "en_NG",

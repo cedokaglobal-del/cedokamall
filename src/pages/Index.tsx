@@ -227,7 +227,7 @@ const Index = () => {
               <span className="text-gradient-gold drop-shadow-xl italic">Delivered Nationwide.</span>
             </h1>
             <p className="mb-12 max-w-2xl text-lg leading-relaxed text-champagne/80 md:text-2xl font-sans font-light">
-              Nigeria&apos;s premium digital destination. Experience the fusion of authority, trust, and luxury craftsmanship in every delivery.
+              Nigeria&apos;s cheapest electrical and gadget destination; experience original Hisense, Mewe, LG, Maxi product shopping.
             </p>
             <div className="flex flex-col gap-6 sm:flex-row">
               <Link

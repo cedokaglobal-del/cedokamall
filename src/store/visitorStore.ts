@@ -84,7 +84,8 @@ export const useVisitorStore = create<VisitorStore>()(
           stats: newStats
         });
 
-        // Try to update global stats in Supabase
+        // Try to update global stats in Supabase (disabled to prevent 404 errors)
+        /*
         try {
           await supabase.rpc('increment_visitor_stats', {
             is_new_visitor: isNewVisitor,
@@ -94,6 +95,7 @@ export const useVisitorStore = create<VisitorStore>()(
         } catch (e) {
           // Ignore if RPC doesn't exist
         }
+        */
       },
 
       updateSession: async () => {
@@ -120,7 +122,8 @@ export const useVisitorStore = create<VisitorStore>()(
           stats: newStats
         });
 
-        // Try to update global stats in Supabase
+        // Try to update global stats in Supabase (disabled to prevent 404 errors)
+        /*
         try {
           await supabase.rpc('increment_visitor_stats', {
             is_new_visitor: false,
@@ -130,6 +133,7 @@ export const useVisitorStore = create<VisitorStore>()(
         } catch (e) {
           // Ignore
         }
+        */
       },
 
       getAverageStayDuration: () => {

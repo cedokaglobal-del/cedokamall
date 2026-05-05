@@ -66,7 +66,7 @@ const Header = () => {
           {/* Logo */}
           <Link to="/" className="flex-shrink-0 flex items-center" aria-label="Cedokamall Home">
             <img
-              src="/logo.png"
+              src="/header_logo.png"
               alt="Cedokamall"
               className="object-contain brightness-110 contrast-125"
               style={{ height: '42px', width: 'auto', maxWidth: '160px' }}

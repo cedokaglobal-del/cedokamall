@@ -27,12 +27,10 @@ const Footer = () => (
     <div className="container py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
       <div className="space-y-6">
         <Link to="/" className="inline-block">
-          <h4 className="font-serif text-2xl font-bold tracking-tight">
-            <span>Cedoka</span><span className="text-gold">mall</span>
-          </h4>
+          <img src="/horizontal_logo.png" alt="Cedokamall" className="h-10 w-auto object-contain mb-2" />
         </Link>
         <p className="text-sm opacity-70 leading-relaxed max-w-xs font-sans">
-          Redefining Nigerian retail with global luxury standards. Experience authority, trust, and premium craftsmanship.
+          Redefining Nigerian electrical and gadget shopping; bringing originality to the Nigerian market.
         </p>
         <div className="space-y-3 text-sm font-sans opacity-70">
           <p className="flex items-start gap-3"><MapPin className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" /> <span>35 Ailegun Road, Ejigbo, Lagos</span></p>
