@@ -382,10 +382,8 @@ const Index = () => {
         <div className="rounded-md border border-gold-antique/10 bg-white p-8 shadow-sm">
           <h2 className="font-serif text-3xl font-bold text-navy">Shop Original Electricals by Category</h2>
           <p className="mt-4 max-w-4xl text-sm leading-7 text-navy/70">
-            Cedokamall brings together original electrical equipment, home appliances and gadgets with warranties
-            across every major shopping category. Browse televisions, refrigerators, air conditioners, smartphones,
-            laptops, sound systems, generators, kitchen accessories and more from trusted brands including LG,
-            Hisense, MeWe and Maxi with nationwide delivery across Nigeria.
+            Original Electricals : home appliances and gadgets with warranties. Browse televisions, refrigerators,
+            air conditioners, smartphones, laptops, sound systems, kitchen accessories and more
           </p>
           {categories.length > 0 && (
             <div className="mt-6 flex flex-wrap gap-3">
