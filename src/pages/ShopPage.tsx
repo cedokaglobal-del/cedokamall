@@ -1,16 +1,13 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import {
-  ArrowLeft,
-  ChevronLeft,
-  ChevronRight,
-  SlidersHorizontal,
-} from 'lucide-react';
+import { ArrowLeft, SlidersHorizontal } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import { buildCategories, slugifyCategory } from '@/data/products';
 import { useProductStore } from '@/store/productStore';
+
+const DEFAULT_PRICE_RANGE: [number, number] = [0, 0];
 
 const ShopPage = () => {
   const [searchParams] = useSearchParams();
@@ -23,10 +20,18 @@ const ShopPage = () => {
 
   const [selectedCategory, setSelectedCategory] = useState(categoryParam || 'all');
   const [sortBy, setSortBy] = useState('popular');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>(DEFAULT_PRICE_RANGE);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
+  const hasInitializedPriceRange = useRef(false);
+
+  const maxProductPrice = useMemo(
+    () => products.reduce((highest, product) => Math.max(highest, product.price), 0),
+    [products]
+  );
+  const sliderMax = maxProductPrice > 0 ? maxProductPrice : 100000;
+  const sliderStep = Math.max(1000, Math.ceil(sliderMax / 100));
 
   useEffect(() => {
     if (categoryParam) {
@@ -53,18 +58,24 @@ const ShopPage = () => {
     return () => window.removeEventListener('resize', checkScroll);
   }, [categories.length]);
 
-  const scroll = (direction: 'left' | 'right') => {
-    if (!scrollContainerRef.current) {
+  useEffect(() => {
+    if (sliderMax <= 0) {
       return;
     }
 
-    scrollContainerRef.current.scrollBy({
-      left: direction === 'left' ? -200 : 200,
-      behavior: 'smooth',
-    });
+    setPriceRange((current) => {
+      if (!hasInitializedPriceRange.current) {
+        hasInitializedPriceRange.current = true;
+        return [0, sliderMax];
+      }
 
-    window.setTimeout(checkScroll, 300);
-  };
+      if (current[1] > sliderMax) {
+        return [0, sliderMax];
+      }
+
+      return current;
+    });
+  }, [sliderMax]);
 
   const filteredProducts = useMemo(() => {
     let next = [...products];
@@ -118,12 +129,12 @@ const ShopPage = () => {
     <div className="min-h-screen bg-ivory">
       <Header />
       <div className="container py-12">
-        <div className="mb-10 flex flex-col md:flex-row items-center justify-between gap-6">
+        <div className="mb-10 flex flex-col items-center justify-between gap-6 md:flex-row">
           <div>
             <h1 className="font-serif text-4xl font-bold text-navy">
               {dealsOnly ? 'Elite Deals' : 'Premium Catalog'}
             </h1>
-            <div className="h-1 w-16 bg-gold mt-2" />
+            <div className="mt-2 h-1 w-16 bg-gold" />
           </div>
           <div className="flex items-center gap-4">
             <select
@@ -139,7 +150,7 @@ const ShopPage = () => {
             </select>
             <Link
               to="/"
-              className="flex items-center gap-2 rounded-md bg-navy text-gold px-5 py-2.5 text-sm font-bold shadow-md hover:bg-gold hover:text-navy transition-all"
+              className="flex items-center gap-2 rounded-md bg-navy px-5 py-2.5 text-sm font-bold text-gold shadow-md transition-all hover:bg-gold hover:text-navy"
             >
               <ArrowLeft className="h-4 w-4" />
               Home
@@ -147,7 +158,6 @@ const ShopPage = () => {
           </div>
         </div>
 
-        {/* Mobile categories scroll */}
         <div className="mb-10 lg:hidden">
           <div className="relative">
             <div
@@ -185,7 +195,7 @@ const ShopPage = () => {
         <div className="flex gap-10">
           <aside className="hidden w-64 flex-shrink-0 space-y-10 lg:block">
             <div>
-              <h3 className="mb-6 font-serif text-xl font-bold text-navy flex items-center gap-3">
+              <h3 className="mb-6 flex items-center gap-3 font-serif text-xl font-bold text-navy">
                 <SlidersHorizontal className="h-5 w-5 text-gold" />
                 Collections
               </h3>
@@ -195,7 +205,7 @@ const ShopPage = () => {
                   className={`block w-full rounded-md px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] transition-all ${
                     selectedCategory === 'all'
                       ? 'bg-navy text-gold shadow-md translate-x-2'
-                      : 'text-navy/60 hover:text-navy hover:bg-white'
+                      : 'text-navy/60 hover:bg-white hover:text-navy'
                   }`}
                 >
                   All Masterpieces
@@ -207,32 +217,38 @@ const ShopPage = () => {
                     className={`block w-full rounded-md px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] transition-all ${
                       selectedCategory === category.slug
                         ? 'bg-navy text-gold shadow-md translate-x-2'
-                        : 'text-navy/60 hover:text-navy hover:bg-white'
+                        : 'text-navy/60 hover:bg-white hover:text-navy'
                     }`}
                   >
                     <span className="inline-flex items-center gap-3">
-                      <category.icon className={`h-4 w-4 ${selectedCategory === category.slug ? 'text-gold' : 'text-navy/40'}`} />
+                      <category.icon
+                        className={`h-4 w-4 ${
+                          selectedCategory === category.slug ? 'text-gold' : 'text-navy/40'
+                        }`}
+                      />
                       {category.name}
                     </span>
                   </button>
                 ))}
               </div>
             </div>
-            
-            <div className="bg-white p-6 rounded-md border border-gold-antique/10">
+
+            <div className="rounded-md border border-gold-antique/10 bg-white p-6">
               <h3 className="mb-4 font-serif text-lg font-bold text-navy">Price range</h3>
               <input
                 type="range"
                 min={0}
-                max={10000000}
-                step={50000}
+                max={sliderMax}
+                step={sliderStep}
                 value={priceRange[1]}
                 onChange={(event) => setPriceRange([0, Number(event.target.value)])}
-                className="w-full accent-gold h-1.5 bg-ivory rounded-full appearance-none cursor-pointer"
+                className="w-full cursor-pointer appearance-none rounded-full bg-ivory accent-gold"
               />
-              <div className="flex justify-between mt-4">
-                <span className="text-[10px] font-bold text-navy/40 uppercase tracking-tighter">Budget</span>
-                <span className="text-sm font-bold text-navy">₦{priceRange[1].toLocaleString()}</span>
+              <div className="mt-4 flex justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-tighter text-navy/40">
+                  Budget
+                </span>
+                <span className="text-sm font-bold text-navy">{`₦${priceRange[1].toLocaleString()}`}</span>
               </div>
             </div>
           </aside>
@@ -245,7 +261,7 @@ const ShopPage = () => {
             ) : error ? (
               <div className="rounded-md border border-gold-antique/20 bg-white p-12 text-center shadow-premium">
                 <p className="text-xl font-serif font-bold text-navy">Experience Interrupted</p>
-                <p className="mt-2 text-sm text-navy/60 font-sans">
+                <p className="mt-2 text-sm font-sans text-navy/60">
                   We are unable to present our catalog at this moment. Please return shortly.
                 </p>
               </div>
@@ -257,15 +273,17 @@ const ShopPage = () => {
                   ))}
                 </div>
                 {filteredProducts.length === 0 && hasLoaded && (
-                  <div className="py-32 text-center bg-white rounded-md border border-gold-antique/10">
+                  <div className="rounded-md border border-gold-antique/10 bg-white py-32 text-center">
                     <p className="font-serif text-2xl font-bold text-navy">No Matches Found</p>
-                    <p className="text-sm text-navy/40 mt-2">Refine your selection or explore other collections</p>
-                    <button 
+                    <p className="mt-2 text-sm text-navy/40">
+                      Refine your selection or explore other collections
+                    </p>
+                    <button
                       onClick={() => {
                         setSelectedCategory('all');
-                        setPriceRange([0, 2000000]);
+                        setPriceRange([0, sliderMax]);
                       }}
-                      className="mt-6 px-8 py-3 bg-navy text-gold rounded-md text-xs font-bold uppercase tracking-widest hover:bg-gold hover:text-navy transition-all"
+                      className="mt-6 rounded-md bg-navy px-8 py-3 text-xs font-bold uppercase tracking-widest text-gold transition-all hover:bg-gold hover:text-navy"
                     >
                       Reset Filters
                     </button>
