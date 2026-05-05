@@ -18,6 +18,8 @@ import {
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
+import { getBreadcrumbSchema, getProductSchema, SEO_CONFIG } from '@/config/seo';
+import { useSEO, useStructuredData } from '@/hooks/useSEO';
 import { useProductStore } from '@/store/productStore';
 import { useCartStore } from '@/store/cartStore';
 import { toast } from 'sonner';
@@ -46,6 +48,57 @@ const ProductPage = () => {
       .filter((entry) => entry.category === product.category && entry.id !== product.id)
       .slice(0, 5);
   }, [product, products]);
+
+  const productMeta = product
+    ? {
+        title: `${product.name} - Buy Original ${product.category} in Nigeria | Cedokamall`,
+        description: `${product.description.slice(0, 140)}${product.description.length > 140 ? '...' : ''}`,
+        keywords: [
+          product.name,
+          product.category,
+          `${product.category} Nigeria`,
+          `${product.seller} Nigeria`,
+          'original electrical equipment',
+          'gadgets with warranty',
+        ],
+        image: product.image,
+        url: `${SEO_CONFIG.siteUrl}/product/${product.id}`,
+        type: 'product' as const,
+      }
+    : {
+        title: 'Product Not Found - Cedokamall',
+        description:
+          'The requested product could not be found. Browse more electricals and gadgets on Cedokamall.',
+        keywords: ['product not found', 'Cedokamall', 'electrical equipment Nigeria'],
+        url: `${SEO_CONFIG.siteUrl}/shop`,
+        type: 'website' as const,
+        robots: 'noindex, follow',
+      };
+
+  useSEO(productMeta);
+
+  useStructuredData(
+    product
+      ? [
+          getBreadcrumbSchema([
+            { name: 'Home', url: SEO_CONFIG.siteUrl },
+            { name: 'Shop', url: `${SEO_CONFIG.siteUrl}/shop` },
+            {
+              name: product.category,
+              url: `${SEO_CONFIG.siteUrl}/shop?category=${product.category
+                .toLowerCase()
+                .replace(/[^a-z0-9]+/g, '-')
+                .replace(/^-+|-+$/g, '')}`,
+            },
+            { name: product.name, url: `${SEO_CONFIG.siteUrl}/product/${product.id}` },
+          ]),
+          getProductSchema(product),
+        ]
+      : getBreadcrumbSchema([
+          { name: 'Home', url: SEO_CONFIG.siteUrl },
+          { name: 'Shop', url: `${SEO_CONFIG.siteUrl}/shop` },
+        ])
+  );
 
   if (isLoading || (!hasLoaded && !product)) {
     return (

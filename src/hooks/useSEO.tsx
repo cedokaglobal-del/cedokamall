@@ -5,10 +5,10 @@ import {
   getOpenGraphTags,
   getTwitterCardTags,
   PAGE_METAS,
-  SEO_CONFIG,
   getCanonicalUrl,
   MetaTag,
   PageMeta,
+  StructuredDataNode,
 } from '@/config/seo';
 
 /**
@@ -17,83 +17,75 @@ import {
  */
 export const useSEO = (meta?: PageMeta) => {
   const location = useLocation();
-  const pageMeta = meta || PAGE_METAS[location.pathname.split('/')[1]] || PAGE_METAS.home;
+  const routeKey = location.pathname.split('/')[1] || 'home';
+  const pageMeta = meta || PAGE_METAS[routeKey] || PAGE_METAS.home;
 
   useEffect(() => {
-    // Update page title
     document.title = pageMeta.title;
 
-    // Remove existing meta tags (except those we want to keep)
-    const existingMetas = document.querySelectorAll('meta[data-managed="true"]');
-    existingMetas.forEach(tag => tag.remove());
-
-    // Helper function to set meta tag
     const setMetaTag = (tag: MetaTag) => {
       let element = document.querySelector(
         tag.name ? `meta[name="${tag.name}"]` : `meta[property="${tag.property}"]`
       );
-      
+
       if (!element) {
         element = document.createElement('meta');
         if (tag.name) element.setAttribute('name', tag.name);
         if (tag.property) element.setAttribute('property', tag.property);
         element.setAttribute('data-managed', 'true');
         document.head.appendChild(element);
+      } else {
+        element.setAttribute('data-managed', 'true');
       }
-      
+
       element.setAttribute('content', tag.content);
     };
 
-    // Set description
+    DEFAULT_META_TAGS.forEach(setMetaTag);
+
     setMetaTag({
       name: 'description',
-      content: pageMeta.description
+      content: pageMeta.description,
     });
 
-    // Set keywords
-    if (pageMeta.keywords && pageMeta.keywords.length > 0) {
+    if (pageMeta.keywords.length > 0) {
       setMetaTag({
         name: 'keywords',
-        content: pageMeta.keywords.join(', ')
+        content: pageMeta.keywords.join(', '),
       });
     }
 
-    // Set Open Graph tags
-    getOpenGraphTags(pageMeta).forEach(setMetaTag);
+    setMetaTag({
+      name: 'robots',
+      content:
+        pageMeta.robots ||
+        'index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1',
+    });
 
-    // Set Twitter Card tags
+    setMetaTag({
+      name: 'googlebot',
+      content: pageMeta.robots?.includes('noindex')
+        ? 'noindex, nofollow'
+        : 'index, follow, max-image-preview:large',
+    });
+
+    getOpenGraphTags({
+      ...pageMeta,
+      url: pageMeta.url || getCanonicalUrl(location.pathname),
+    }).forEach(setMetaTag);
+
     getTwitterCardTags(pageMeta).forEach(setMetaTag);
 
-    // Set canonical URL
     let canonical = document.querySelector('link[rel="canonical"]');
     if (!canonical) {
       canonical = document.createElement('link');
       canonical.setAttribute('rel', 'canonical');
       document.head.appendChild(canonical);
     }
-    canonical.setAttribute('href', getCanonicalUrl(location.pathname));
-
-    // Update JSON-LD script for structured data
-    updateStructuredData(pageMeta);
-
+    canonical.setAttribute('href', pageMeta.url || getCanonicalUrl(location.pathname));
   }, [pageMeta, location.pathname]);
 };
 
-/**
- * Update JSON-LD structured data
- */
-function updateStructuredData(meta: PageMeta) {
-  // Remove existing structured data
-  const existingScripts = document.querySelectorAll('script[type="application/ld+json"][data-managed="true"]');
-  existingScripts.forEach(script => script.remove());
-
-  // Note: Structured data is typically added per-page as needed
-  // This is a placeholder for more complex implementations
-}
-
-/**
- * Hook to manage page title only
- */
 export const usePageTitle = (title: string) => {
   useEffect(() => {
     document.title = title;
@@ -101,25 +93,29 @@ export const usePageTitle = (title: string) => {
 };
 
 /**
- * Hook to add JSON-LD structured data
+ * Hook to add one or more JSON-LD structured data blocks
  */
-export const useStructuredData = (schema: object) => {
+export const useStructuredData = (schema: StructuredDataNode | StructuredDataNode[]) => {
   useEffect(() => {
-    // Remove existing structured data for this component
-    const existingScripts = document.querySelectorAll('script[type="application/ld+json"][data-managed="true"]');
-    existingScripts.forEach(script => script.remove());
+    const schemas = Array.isArray(schema) ? schema : [schema];
+    const scripts: HTMLScriptElement[] = [];
 
-    // Add new structured data
-    const script = document.createElement('script');
-    script.type = 'application/ld+json';
-    script.textContent = JSON.stringify(schema);
-    script.setAttribute('data-managed', 'true');
-    document.head.appendChild(script);
+    schemas.forEach((entry, index) => {
+      const script = document.createElement('script');
+      script.type = 'application/ld+json';
+      script.textContent = JSON.stringify(entry);
+      script.setAttribute('data-managed-structured-data', 'true');
+      script.setAttribute('data-schema-index', String(index));
+      document.head.appendChild(script);
+      scripts.push(script);
+    });
 
     return () => {
-      if (document.head.contains(script)) {
-        document.head.removeChild(script);
-      }
+      scripts.forEach((script) => {
+        if (document.head.contains(script)) {
+          document.head.removeChild(script);
+        }
+      });
     };
   }, [schema]);
 };

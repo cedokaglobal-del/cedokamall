@@ -5,6 +5,13 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import { buildCategories, slugifyCategory } from '@/data/products';
+import {
+  getBreadcrumbSchema,
+  getCollectionPageSchema,
+  getItemListSchema,
+  SEO_CONFIG,
+} from '@/config/seo';
+import { useSEO, useStructuredData } from '@/hooks/useSEO';
 import { useProductStore } from '@/store/productStore';
 
 const DEFAULT_PRICE_RANGE: [number, number] = [0, 0];
@@ -32,6 +39,10 @@ const ShopPage = () => {
   );
   const sliderMax = maxProductPrice > 0 ? maxProductPrice : 100000;
   const sliderStep = Math.max(1000, Math.ceil(sliderMax / 100));
+  const activeCategory = useMemo(
+    () => categories.find((category) => category.slug === (categoryParam || selectedCategory)),
+    [categories, categoryParam, selectedCategory]
+  );
 
   useEffect(() => {
     if (categoryParam) {
@@ -125,6 +136,74 @@ const ShopPage = () => {
     }
   }, [dealsOnly, priceRange, products, searchTerm, selectedCategory, sortBy]);
 
+  const pageTitle = activeCategory
+    ? `${activeCategory.name} in Nigeria - Cedokamall`
+    : dealsOnly
+      ? 'Flash Deals on Electricals and Gadgets - Cedokamall'
+      : 'Shop Electrical Equipment, Gadgets and Appliances - Cedokamall';
+
+  const pageDescription = activeCategory
+    ? `Shop original ${activeCategory.name.toLowerCase()} in Nigeria with warranty support, trusted brands and nationwide delivery from Cedokamall.`
+    : dealsOnly
+      ? 'Explore flash deals on original electrical equipment, home appliances and gadgets with warranties and nationwide delivery.'
+      : 'Browse original electrical equipment, appliances and gadgets by category, brand and price range on Cedokamall.';
+
+  const pageKeywords = [
+    'electrical equipment Nigeria',
+    'gadgets with warranty',
+    'home appliances Nigeria',
+    ...(activeCategory ? [activeCategory.name, `${activeCategory.name} Nigeria`] : []),
+    ...(searchTerm ? [searchTerm, `${searchTerm} Nigeria`] : []),
+  ];
+
+  const pageUrl = activeCategory
+    ? `${SEO_CONFIG.siteUrl}/shop?category=${activeCategory.slug}`
+    : dealsOnly
+      ? `${SEO_CONFIG.siteUrl}/shop?deals=true`
+      : `${SEO_CONFIG.siteUrl}/shop`;
+
+  useSEO({
+    title: pageTitle,
+    description: pageDescription,
+    keywords: pageKeywords,
+    url: searchTerm ? `${SEO_CONFIG.siteUrl}/shop` : pageUrl,
+    type: 'website',
+    robots: searchTerm ? 'noindex, follow' : 'index, follow',
+  });
+
+  useStructuredData([
+    getBreadcrumbSchema([
+      { name: 'Home', url: SEO_CONFIG.siteUrl },
+      { name: 'Shop', url: `${SEO_CONFIG.siteUrl}/shop` },
+      ...(activeCategory
+        ? [
+            {
+              name: activeCategory.name,
+              url: `${SEO_CONFIG.siteUrl}/shop?category=${activeCategory.slug}`,
+            },
+          ]
+        : []),
+    ]),
+    getCollectionPageSchema({
+      name: activeCategory
+        ? `${activeCategory.name} Collection`
+        : dealsOnly
+          ? 'Flash Deals'
+          : 'Shop All Products',
+      description: pageDescription,
+      url: searchTerm ? `${SEO_CONFIG.siteUrl}/shop` : pageUrl,
+      itemCount: filteredProducts.length,
+    }),
+    getItemListSchema(
+      filteredProducts.slice(0, 24).map((product, index) => ({
+        position: index + 1,
+        name: product.name,
+        url: `${SEO_CONFIG.siteUrl}/product/${product.id}`,
+        image: product.image,
+      }))
+    ),
+  ]);
+
   return (
     <div className="min-h-screen bg-ivory">
       <Header />
@@ -132,9 +211,10 @@ const ShopPage = () => {
         <div className="mb-10 flex flex-col items-center justify-between gap-6 md:flex-row">
           <div>
             <h1 className="font-serif text-4xl font-bold text-navy">
-              {dealsOnly ? 'Elite Deals' : 'Premium Catalog'}
+              {activeCategory?.name || (dealsOnly ? 'Elite Deals' : 'Premium Catalog')}
             </h1>
             <div className="mt-2 h-1 w-16 bg-gold" />
+            <p className="mt-4 max-w-2xl text-sm leading-6 text-navy/60">{pageDescription}</p>
           </div>
           <div className="flex items-center gap-4">
             <select
@@ -293,6 +373,31 @@ const ShopPage = () => {
             )}
           </div>
         </div>
+
+        {categories.length > 0 && (
+          <section className="mt-16 rounded-md border border-gold-antique/10 bg-white p-8 shadow-sm">
+            <h2 className="font-serif text-2xl font-bold text-navy">
+              Browse Every Product Category on Cedokamall
+            </h2>
+            <p className="mt-4 max-w-4xl text-sm leading-7 text-navy/70">
+              Explore original electrical equipment and gadgets across our full catalog, including TVs,
+              refrigerators, air conditioners, smartphones, laptops, sound systems, generators, fans and
+              more. Every category is curated to help shoppers in Nigeria compare reliable products,
+              warranties and price ranges quickly.
+            </p>
+            <div className="mt-6 flex flex-wrap gap-3">
+              {categories.map((category) => (
+                <Link
+                  key={category.slug}
+                  to={`/shop?category=${category.slug}`}
+                  className="rounded-full border border-gold-antique/20 bg-ivory px-4 py-2 text-xs font-bold uppercase tracking-widest text-navy transition-colors hover:border-gold hover:text-gold"
+                >
+                  {category.name}
+                </Link>
+              ))}
+            </div>
+          </section>
+        )}
       </div>
       <Footer />
     </div>

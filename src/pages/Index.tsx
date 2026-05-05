@@ -14,6 +14,15 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import { buildCategories } from '@/data/products';
+import {
+  getBreadcrumbSchema,
+  getItemListSchema,
+  getOrganizationSchema,
+  getStoreSchema,
+  getWebsiteSchema,
+  SEO_CONFIG,
+} from '@/config/seo';
+import { useSEO, useStructuredData } from '@/hooks/useSEO';
 import { useProductStore } from '@/store/productStore';
 
 const CountdownTimer = () => {
@@ -169,6 +178,44 @@ const Index = () => {
   );
   const [visitorCount, setVisitorCount] = useState(3000);
 
+  useSEO({
+    title: SEO_CONFIG.siteTitle,
+    description: SEO_CONFIG.siteDescription,
+    keywords: [
+      'electrical equipment Nigeria',
+      'original gadgets with warranty',
+      'LG products Nigeria',
+      'Hisense appliances Nigeria',
+      'MeWe electronics',
+      'Maxi appliances',
+      ...categories.slice(0, 8).map((category) => `${category.name} Nigeria`),
+    ],
+    url: SEO_CONFIG.siteUrl,
+    type: 'website',
+  });
+
+  useStructuredData([
+    getOrganizationSchema(),
+    getStoreSchema(),
+    getWebsiteSchema(),
+    getBreadcrumbSchema([{ name: 'Home', url: SEO_CONFIG.siteUrl }]),
+    getItemListSchema(
+      categories.slice(0, 8).map((category, index) => ({
+        position: index + 1,
+        name: category.name,
+        url: `${SEO_CONFIG.siteUrl}/shop?category=${category.slug}`,
+      }))
+    ),
+    getItemListSchema(
+      products.slice(0, 10).map((product, index) => ({
+        position: index + 1,
+        name: product.name,
+        url: `${SEO_CONFIG.siteUrl}/product/${product.id}`,
+        image: product.image,
+      }))
+    ),
+  ]);
+
   useEffect(() => {
     const calculateVisitors = () => {
       const now = new Date();
@@ -239,7 +286,7 @@ const Index = () => {
               <span className="text-gradient-gold drop-shadow-xl italic">Delivered Nationwide.</span>
             </h1>
             <p className="mb-12 max-w-2xl text-lg leading-relaxed text-champagne/80 md:text-2xl font-sans font-light">
-              Nigeria&apos;s cheapest electrical and gadget destination; experience original Hisense, Mewe, LG, Maxi product shopping.
+              The most Affordable, Reliable &amp; Original Electrical Equipment and Gadgets with Warranties - LG, Hisense, MeWe, Maxi etc
             </p>
             <div className="flex flex-col gap-6 sm:flex-row">
               <Link
@@ -330,6 +377,31 @@ const Index = () => {
           </div>
         </section>
       )}
+
+      <section className="container pb-6">
+        <div className="rounded-md border border-gold-antique/10 bg-white p-8 shadow-sm">
+          <h2 className="font-serif text-3xl font-bold text-navy">Shop Original Electricals by Category</h2>
+          <p className="mt-4 max-w-4xl text-sm leading-7 text-navy/70">
+            Cedokamall brings together original electrical equipment, home appliances and gadgets with warranties
+            across every major shopping category. Browse televisions, refrigerators, air conditioners, smartphones,
+            laptops, sound systems, generators, kitchen accessories and more from trusted brands including LG,
+            Hisense, MeWe and Maxi with nationwide delivery across Nigeria.
+          </p>
+          {categories.length > 0 && (
+            <div className="mt-6 flex flex-wrap gap-3">
+              {categories.slice(0, 12).map((category) => (
+                <Link
+                  key={category.slug}
+                  to={`/shop?category=${category.slug}`}
+                  className="rounded-full border border-gold-antique/20 bg-ivory px-4 py-2 text-xs font-bold uppercase tracking-widest text-navy transition-colors hover:border-gold hover:text-gold"
+                >
+                  {category.name}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
+      </section>
 
       {/* Main Product List */}
       <section className="container py-16 content-visibility-auto">

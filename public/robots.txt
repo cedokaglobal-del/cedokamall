@@ -1,38 +1,24 @@
-# Cedokamall Robots.txt - Search Engine Crawler Configuration
-# Allow all crawlers to access the site
+# Cedokamall robots.txt
 User-agent: *
 Allow: /
 Allow: /shop
 Allow: /product/
-Allow: /cart
-Allow: /shop?category=
 
-# Disallow admin areas and sensitive pages
+Disallow: /admin
 Disallow: /admin/
-Disallow: /admin/*
+Disallow: /cart
 Disallow: /api/
 Disallow: /private/
 
-# Sitemaps for better indexing
 Sitemap: https://cedokamall.com/sitemap.xml
 
-# Specific rules for Googlebot
 User-agent: Googlebot
 Allow: /
 Disallow: /admin/
+Disallow: /cart
 
-# Specific rules for Bingbot
 User-agent: Bingbot
 Allow: /
 Disallow: /admin/
+Disallow: /cart
 Crawl-delay: 1
-
-# Block aggressive/undesirable bots
-User-agent: MJ12bot
-Disallow: /
-
-User-agent: AhrefsBot
-Disallow: /
-
-User-agent: SemrushBot
-Disallow: /
