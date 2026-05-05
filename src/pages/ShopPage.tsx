@@ -23,7 +23,7 @@ const ShopPage = () => {
 
   const [selectedCategory, setSelectedCategory] = useState(categoryParam || 'all');
   const [sortBy, setSortBy] = useState('popular');
-  const [priceRange, setPriceRange] = useState<[number, number]>([0, 2000000]);
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 10000000]);
   const [canScrollLeft, setCanScrollLeft] = useState(false);
   const [canScrollRight, setCanScrollRight] = useState(true);
   const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -115,30 +115,31 @@ const ShopPage = () => {
   }, [dealsOnly, priceRange, products, searchTerm, selectedCategory, sortBy]);
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-ivory">
       <Header />
-      <div className="container py-6">
-        <div className="mb-6 flex flex-wrap items-center justify-between gap-3">
+      <div className="container py-12">
+        <div className="mb-10 flex flex-col md:flex-row items-center justify-between gap-6">
           <div>
-            <h1 className="font-display text-2xl font-bold">
-              {dealsOnly ? 'Flash Deals' : 'Shop All Products'}
+            <h1 className="font-serif text-4xl font-bold text-navy">
+              {dealsOnly ? 'Elite Deals' : 'Premium Catalog'}
             </h1>
+            <div className="h-1 w-16 bg-gold mt-2" />
           </div>
-          <div className="flex flex-wrap items-center gap-3">
+          <div className="flex items-center gap-4">
             <select
               value={sortBy}
               onChange={(event) => setSortBy(event.target.value)}
-              className="rounded-lg border bg-background px-3 py-2 text-sm"
+              className="rounded-md border border-gold-antique/20 bg-white px-4 py-2.5 text-sm font-medium text-navy focus:outline-none focus:ring-1 focus:ring-gold"
             >
               <option value="popular">Most Popular</option>
               <option value="price-low">Price: Low to High</option>
               <option value="price-high">Price: High to Low</option>
-              <option value="newest">Newest</option>
+              <option value="newest">Newest Collections</option>
               <option value="rating">Top Rated</option>
             </select>
             <Link
               to="/"
-              className="flex items-center gap-1.5 whitespace-nowrap rounded-lg border px-4 py-2 text-sm transition-colors hover:bg-muted"
+              className="flex items-center gap-2 rounded-md bg-navy text-gold px-5 py-2.5 text-sm font-bold shadow-md hover:bg-gold hover:text-navy transition-all"
             >
               <ArrowLeft className="h-4 w-4" />
               Home
@@ -146,138 +147,128 @@ const ShopPage = () => {
           </div>
         </div>
 
-        <div className="mb-6 lg:hidden">
-          <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold">
-            <SlidersHorizontal className="h-4 w-4" />
-            Categories
-          </h3>
+        {/* Mobile categories scroll */}
+        <div className="mb-10 lg:hidden">
           <div className="relative">
-            {canScrollLeft && (
-              <button
-                onClick={() => scroll('left')}
-                className="absolute left-0 top-1/2 z-10 -translate-y-1/2 rounded-full border bg-background p-1.5 transition-colors hover:bg-muted"
-              >
-                <ChevronLeft className="h-4 w-4" />
-              </button>
-            )}
             <div
               ref={scrollContainerRef}
               onScroll={checkScroll}
-              className="flex gap-2 overflow-x-auto px-8 pb-2 scroll-smooth"
-              style={{ scrollBehavior: 'smooth' }}
+              className="flex gap-3 overflow-x-auto pb-4 no-scrollbar"
             >
               <button
                 onClick={() => setSelectedCategory('all')}
-                className={`flex-shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm transition-colors ${
+                className={`flex-shrink-0 whitespace-nowrap rounded-md px-6 py-2 text-xs font-bold uppercase tracking-widest transition-all ${
                   selectedCategory === 'all'
-                    ? 'bg-primary text-primary-foreground'
-                    : 'bg-muted hover:bg-muted/80'
+                    ? 'bg-gold text-navy shadow-lg'
+                    : 'bg-white text-navy/60 hover:text-navy'
                 }`}
               >
-                All
+                All Collections
               </button>
               {categories.map((category) => (
                 <button
                   key={category.slug}
                   onClick={() => setSelectedCategory(category.slug)}
-                  className={`flex-shrink-0 whitespace-nowrap rounded-full px-4 py-2 text-sm transition-colors ${
+                  className={`flex-shrink-0 whitespace-nowrap rounded-md px-6 py-2 text-xs font-bold uppercase tracking-widest transition-all ${
                     selectedCategory === category.slug
-                      ? 'bg-primary text-primary-foreground'
-                      : 'bg-muted hover:bg-muted/80'
+                      ? 'bg-gold text-navy shadow-lg'
+                      : 'bg-white text-navy/60 hover:text-navy'
                   }`}
                 >
-                  <category.icon className="mr-2 inline h-4 w-4" />
                   {category.name}
                 </button>
               ))}
             </div>
-            {canScrollRight && (
-              <button
-                onClick={() => scroll('right')}
-                className="absolute right-0 top-1/2 z-10 -translate-y-1/2 rounded-full border bg-background p-1.5 transition-colors hover:bg-muted"
-              >
-                <ChevronRight className="h-4 w-4" />
-              </button>
-            )}
           </div>
         </div>
 
-        <div className="flex gap-6">
-          <aside className="hidden w-56 flex-shrink-0 space-y-6 lg:block">
+        <div className="flex gap-10">
+          <aside className="hidden w-64 flex-shrink-0 space-y-10 lg:block">
             <div>
-              <h3 className="mb-3 flex items-center gap-2 text-sm font-semibold">
-                <SlidersHorizontal className="h-4 w-4" />
-                Categories
+              <h3 className="mb-6 font-serif text-xl font-bold text-navy flex items-center gap-3">
+                <SlidersHorizontal className="h-5 w-5 text-gold" />
+                Collections
               </h3>
-              <div className="space-y-1">
+              <div className="space-y-2">
                 <button
                   onClick={() => setSelectedCategory('all')}
-                  className={`block w-full rounded-md px-3 py-1.5 text-left text-sm transition-colors ${
+                  className={`block w-full rounded-md px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] transition-all ${
                     selectedCategory === 'all'
-                      ? 'bg-primary text-primary-foreground'
-                      : 'hover:bg-muted'
+                      ? 'bg-navy text-gold shadow-md translate-x-2'
+                      : 'text-navy/60 hover:text-navy hover:bg-white'
                   }`}
                 >
-                  All Categories
+                  All Masterpieces
                 </button>
                 {categories.map((category) => (
                   <button
                     key={category.slug}
                     onClick={() => setSelectedCategory(category.slug)}
-                    className={`block w-full rounded-md px-3 py-1.5 text-left text-sm transition-colors ${
+                    className={`block w-full rounded-md px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] transition-all ${
                       selectedCategory === category.slug
-                        ? 'bg-primary text-primary-foreground'
-                        : 'hover:bg-muted'
+                        ? 'bg-navy text-gold shadow-md translate-x-2'
+                        : 'text-navy/60 hover:text-navy hover:bg-white'
                     }`}
                   >
-                    <span className="inline-flex items-center gap-2">
-                      <category.icon className="h-4 w-4" />
+                    <span className="inline-flex items-center gap-3">
+                      <category.icon className={`h-4 w-4 ${selectedCategory === category.slug ? 'text-gold' : 'text-navy/40'}`} />
                       {category.name}
                     </span>
                   </button>
                 ))}
               </div>
             </div>
-            <div>
-              <h3 className="mb-3 text-sm font-semibold">Price Range</h3>
+            
+            <div className="bg-white p-6 rounded-md border border-gold-antique/10">
+              <h3 className="mb-4 font-serif text-lg font-bold text-navy">Price range</h3>
               <input
                 type="range"
                 min={0}
-                max={2000000}
-                step={10000}
+                max={10000000}
+                step={50000}
                 value={priceRange[1]}
                 onChange={(event) => setPriceRange([0, Number(event.target.value)])}
-                className="w-full accent-primary"
+                className="w-full accent-gold h-1.5 bg-ivory rounded-full appearance-none cursor-pointer"
               />
-              <p className="text-xs text-muted-foreground">
-                Up to ₦{priceRange[1].toLocaleString()}
-              </p>
+              <div className="flex justify-between mt-4">
+                <span className="text-[10px] font-bold text-navy/40 uppercase tracking-tighter">Budget</span>
+                <span className="text-sm font-bold text-navy">₦{priceRange[1].toLocaleString()}</span>
+              </div>
             </div>
           </aside>
 
-          <div className="w-full flex-1 lg:w-auto">
+          <div className="w-full flex-1">
             {isLoading && products.length === 0 ? (
-              <div className="flex min-h-[320px] items-center justify-center">
-                <div className="h-10 w-10 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
+              <div className="flex min-h-[400px] items-center justify-center">
+                <div className="h-12 w-12 animate-spin rounded-full border-4 border-gold/10 border-t-gold" />
               </div>
             ) : error ? (
-              <div className="rounded-xl border border-destructive/20 bg-destructive/5 p-6 text-center">
-                <p className="text-lg font-semibold text-destructive">Unable to load products</p>
-                <p className="mt-2 text-sm text-muted-foreground">
-                  We could not reach the catalog right now. Please refresh the page shortly.
+              <div className="rounded-md border border-gold-antique/20 bg-white p-12 text-center shadow-premium">
+                <p className="text-xl font-serif font-bold text-navy">Experience Interrupted</p>
+                <p className="mt-2 text-sm text-navy/60 font-sans">
+                  We are unable to present our catalog at this moment. Please return shortly.
                 </p>
               </div>
             ) : (
               <>
-                <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4 lg:grid-cols-4">
+                <div className="grid grid-cols-2 gap-6 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
                   {filteredProducts.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))}
                 </div>
                 {filteredProducts.length === 0 && hasLoaded && (
-                  <div className="py-20 text-center text-muted-foreground">
-                    <p className="text-lg">No products found</p>
-                    <p className="text-sm">Try adjusting your filters</p>
+                  <div className="py-32 text-center bg-white rounded-md border border-gold-antique/10">
+                    <p className="font-serif text-2xl font-bold text-navy">No Matches Found</p>
+                    <p className="text-sm text-navy/40 mt-2">Refine your selection or explore other collections</p>
+                    <button 
+                      onClick={() => {
+                        setSelectedCategory('all');
+                        setPriceRange([0, 2000000]);
+                      }}
+                      className="mt-6 px-8 py-3 bg-navy text-gold rounded-md text-xs font-bold uppercase tracking-widest hover:bg-gold hover:text-navy transition-all"
+                    >
+                      Reset Filters
+                    </button>
                   </div>
                 )}
               </>

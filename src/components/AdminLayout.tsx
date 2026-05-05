@@ -30,56 +30,58 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   };
 
   return (
-    <div className="flex h-screen bg-background">
+    <div className="flex h-screen bg-ivory font-sans">
       {/* Sidebar */}
       <aside
-        className={`fixed inset-y-0 left-0 z-50 w-64 bg-card border-r transform transition-transform duration-200 lg:relative lg:translate-x-0 ${
+        className={`fixed inset-y-0 left-0 z-50 w-64 bg-navy transform transition-transform duration-300 lg:relative lg:translate-x-0 ${
           sidebarOpen ? 'translate-x-0' : '-translate-x-full'
-        }`}
+        } shadow-2xl`}
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-4 border-b">
+          <div className="p-6 border-b border-gold/10">
             <Link to="/admin" className="flex items-center gap-3" onClick={() => setSidebarOpen(false)}>
               <img
                 src="/logo.png"
                 alt="Cedoka Admin"
-                className="object-contain"
-                style={{ height: '40px', width: 'auto', maxWidth: '130px' }}
+                className="brightness-0 invert opacity-90"
+                style={{ height: '35px', width: 'auto' }}
               />
             </Link>
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto p-4 space-y-2">
+          <nav className="flex-1 overflow-y-auto p-6 space-y-3">
             {menuItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
               return (
                 <Link key={item.href} to={item.href}>
-                  <Button
-                    variant={active ? 'default' : 'ghost'}
-                    className={`w-full justify-start gap-3 ${active ? 'bg-primary text-primary-foreground' : ''}`}
+                  <button
+                    className={`flex w-full items-center gap-4 rounded-md px-4 py-3 text-sm font-bold uppercase tracking-widest transition-all ${
+                      active 
+                        ? 'bg-gold text-navy shadow-lg shadow-gold/20' 
+                        : 'text-champagne/60 hover:text-gold hover:bg-white/5'
+                    }`}
                     onClick={() => setSidebarOpen(false)}
                   >
                     <Icon className="w-5 h-5" />
                     {item.label}
-                  </Button>
+                  </button>
                 </Link>
               );
             })}
           </nav>
 
           {/* Logout */}
-          <div className="p-4 border-t">
-            <Button
-              variant="destructive"
-              className="w-full justify-start gap-3"
+          <div className="p-6 border-t border-gold/10">
+            <button
+              className="flex w-full items-center gap-4 rounded-md px-4 py-3 text-sm font-bold uppercase tracking-widest text-red-400 hover:bg-red-500/10 transition-colors"
               onClick={handleLogout}
             >
               <LogOut className="w-5 h-5" />
-              Logout
-            </Button>
+              Sign Out
+            </button>
           </div>
         </div>
       </aside>
@@ -87,35 +89,31 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <header className="bg-card border-b px-4 py-3 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <header className="bg-white border-b border-gold-antique/10 px-6 py-4 flex items-center justify-between shadow-sm relative z-10">
+          <div className="flex items-center gap-6">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
-              className="lg:hidden p-2 hover:bg-muted rounded-lg"
+              className="lg:hidden p-2 text-navy hover:bg-ivory rounded-md transition-colors"
             >
-              {sidebarOpen ? (
-                <X className="w-5 h-5" />
-              ) : (
-                <Menu className="w-5 h-5" />
-              )}
+              {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
-            <h1 className="text-base sm:text-xl font-bold">Cedoka Admin</h1>
+            <h1 className="font-serif text-xl font-bold text-navy">Administrative Excellence</h1>
           </div>
 
           {/* User Menu */}
-          <div className="flex items-center gap-4">
+          <div className="flex items-center gap-6">
             <div className="text-right hidden sm:block">
-              <p className="text-sm font-medium">{adminEmail || 'Admin'}</p>
-              <p className="text-xs text-muted-foreground">Administrator</p>
+              <p className="text-xs font-bold uppercase tracking-widest text-navy">{adminEmail || 'Authority'}</p>
+              <p className="text-[10px] font-medium text-navy/40 uppercase tracking-tighter">Authorized Personnel</p>
             </div>
-            <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold">
+            <div className="w-10 h-10 rounded-md bg-navy text-gold flex items-center justify-center font-serif text-lg font-bold shadow-md border border-gold/20">
               {adminEmail?.charAt(0).toUpperCase() || 'A'}
             </div>
           </div>
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-auto p-4 md:p-6">
+        <main className="flex-1 overflow-auto p-8 lg:p-12">
           {children}
         </main>
       </div>
@@ -123,7 +121,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       {/* Overlay for mobile */}
       {sidebarOpen && (
         <div
-          className="fixed inset-0 bg-black/50 z-40 lg:hidden"
+          className="fixed inset-0 bg-navy/60 backdrop-blur-sm z-40 lg:hidden"
           onClick={() => setSidebarOpen(false)}
         />
       )}

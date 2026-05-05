@@ -1,5 +1,5 @@
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { BrowserRouter, Route, Routes, useLocation } from "react-router-dom";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { Toaster } from "@/components/ui/toaster";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -33,8 +33,8 @@ const AdminAnalytics  = safeLazy(() => import("./pages/AdminAnalytics"));
 
 // Lightweight page spinner shown while a chunk is loading
 const PageLoader = () => (
-  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "#0f1117" }}>
-    <div style={{ width: 40, height: 40, border: "3px solid #ff6b35", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "#0D1B2A" }}>
+    <div style={{ width: 40, height: 40, border: "3px solid #C9A84C", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
     <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
   </div>
 );
@@ -43,6 +43,14 @@ const queryClient = new QueryClient();
 
 const SEOUpdater = () => {
   useSEO();
+  return null;
+};
+
+const ScrollToTop = () => {
+  const location = useLocation();
+  useEffect(() => {
+    window.scrollTo(0, 0);
+  }, [location.pathname]);
   return null;
 };
 
@@ -133,6 +141,7 @@ const App = () => {
           <ErrorBoundary>
             <BrowserRouter>
               <SEOUpdater />
+              <ScrollToTop />
               <Suspense fallback={<PageLoader />}>
                 <Routes>
                   {/* Public Routes */}

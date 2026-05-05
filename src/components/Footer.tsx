@@ -2,78 +2,83 @@ import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Shield, RotateCcw, CreditCard } from 'lucide-react';
 
 const Footer = () => (
-  <footer className="bg-foreground text-primary-foreground">
+  <footer className="bg-navy text-champagne border-t border-gold-antique/20">
     {/* Trust bar */}
-    <div className="border-b border-primary-foreground/10">
-      <div className="container py-6 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+    <div className="border-b border-gold-antique/10">
+      <div className="container py-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
         {[
           { icon: Shield, label: 'Secure Payment', sub: 'Paystack & Flutterwave' },
           { icon: RotateCcw, label: 'Easy Returns', sub: '7-day money back' },
           { icon: CreditCard, label: 'Multiple Payment', sub: 'Cards, Transfer, COD' },
-          // Removed: { icon: Truck, label: 'Free Delivery', sub: 'Orders over ₦50,000' },
         ].map(({ icon: Icon, label, sub }) => (
-          <div key={label} className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary-foreground/10 flex items-center justify-center flex-shrink-0">
-              <Icon className="w-5 h-5 text-gold" />
+          <div key={label} className="flex items-center gap-4 group">
+            <div className="w-12 h-12 rounded-md bg-navy-deep border border-gold-antique/20 flex items-center justify-center flex-shrink-0 group-hover:border-gold/50 transition-all duration-300">
+              <Icon className="w-6 h-6 text-gold" />
             </div>
             <div className="min-w-0">
-              <p className="text-sm font-semibold">{label}</p>
-              <p className="text-xs text-primary-foreground/60">{sub}</p>
+              <p className="text-sm font-bold tracking-tight">{label}</p>
+              <p className="text-xs opacity-60">{sub}</p>
             </div>
           </div>
         ))}
       </div>
     </div>
 
-    <div className="container py-10 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-8">
-      <div>
-        <h4 className="font-display text-lg font-bold mb-4">
-          <span>Cedoka</span><span className="text-gold">mall</span>
-        </h4>
-        <p className="text-sm text-primary-foreground/60 mb-4">Everything you need. Delivered Nationwide, built for Nigeria.</p>
-        <div className="space-y-2 text-sm text-primary-foreground/60">
-          <p className="flex items-start gap-2"><MapPin className="w-4 h-4 flex-shrink-0 mt-0.5" /> <span className="flex-1 break-words">35 Ailegun Road, Ejigbo, Lagos</span></p>
-          <p className="flex items-start gap-2"><Phone className="w-4 h-4 flex-shrink-0 mt-0.5" /> <Link to="tel:09128817136" className="flex-1 break-words hover:text-gold transition-colors">09128817136 (Primary)</Link></p>
-          <div className="pl-6 space-y-1">
-            <p className="text-[10px] uppercase tracking-wider font-bold text-primary-foreground/40 mb-1">Other Lines:</p>
-            <p className="text-sm text-primary-foreground/60"><Link to="tel:+2349074190070" className="hover:text-gold transition-colors">+234 907 419 0070</Link></p>
-            <p className="text-sm text-primary-foreground/60"><Link to="tel:+2348063719884" className="hover:text-gold transition-colors">+234 806 371 9884</Link></p>
-            <p className="text-sm text-primary-foreground/60"><Link to="tel:+2347045851131" className="hover:text-gold transition-colors">+234 704 585 1131</Link></p>
-          </div>
-          <p className="flex items-start gap-2 pt-1"><Mail className="w-4 h-4 flex-shrink-0 mt-0.5" /> <Link to="mailto:hello@cedokamall.com" className="flex-1 break-words hover:text-gold transition-colors">hello@cedokamall.com</Link></p>
+    <div className="container py-12 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-10">
+      <div className="space-y-6">
+        <Link to="/" className="inline-block">
+          <h4 className="font-serif text-2xl font-bold tracking-tight">
+            <span>Cedoka</span><span className="text-gold">mall</span>
+          </h4>
+        </Link>
+        <p className="text-sm opacity-70 leading-relaxed max-w-xs font-sans">
+          Redefining Nigerian retail with global luxury standards. Experience authority, trust, and premium craftsmanship.
+        </p>
+        <div className="space-y-3 text-sm font-sans opacity-70">
+          <p className="flex items-start gap-3"><MapPin className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" /> <span>35 Ailegun Road, Ejigbo, Lagos</span></p>
+          <p className="flex items-start gap-3"><Phone className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" /> <Link to="tel:09128817136" className="hover:text-gold transition-colors">09128817136</Link></p>
+          <p className="flex items-start gap-3"><Mail className="w-4 h-4 text-gold flex-shrink-0 mt-0.5" /> <Link to="mailto:hello@cedokamall.com" className="hover:text-gold transition-colors">hello@cedokamall.com</Link></p>
         </div>
       </div>
+
       <div>
-        <h5 className="font-semibold mb-4">Quick Links</h5>
-        <ul className="space-y-2 text-sm text-primary-foreground/60">
-          {['Shop All', 'Flash Deals', 'New Arrivals', 'Best Sellers', 'Our Story'].map(l => (
-            <li key={l}><Link to="/shop" className="hover:text-gold transition-colors truncate">{l}</Link></li>
+        <h5 className="font-serif text-lg font-bold mb-6 text-gold">Shop Collection</h5>
+        <ul className="space-y-3 text-sm opacity-70 font-sans">
+          {['Shop All Products', 'Luxury Deals', 'New Arrivals', 'Premium Picks', 'Our Legacy'].map(l => (
+            <li key={l}><Link to="/shop" className="hover:text-gold hover:translate-x-1 transition-all inline-block">{l}</Link></li>
           ))}
         </ul>
       </div>
+
       <div>
-        <h5 className="font-semibold mb-4">Customer Service</h5>
-        <ul className="space-y-2 text-sm text-primary-foreground/60">
-          {['Track Order', 'Shipping Info', 'Returns Policy', 'FAQs', 'Contact Us'].map(l => (
-            <li key={l}><Link to="/" className="hover:text-gold transition-colors truncate">{l}</Link></li>
+        <h5 className="font-serif text-lg font-bold mb-6 text-gold">Concierge</h5>
+        <ul className="space-y-3 text-sm opacity-70 font-sans">
+          {['Track My Order', 'Shipping Concierge', 'Returns Policy', 'Private FAQ', 'Contact Luxury Support'].map(l => (
+            <li key={l}><Link to="/" className="hover:text-gold hover:translate-x-1 transition-all inline-block">{l}</Link></li>
           ))}
         </ul>
       </div>
-      <div>
-        <h5 className="font-semibold mb-4">Newsletter</h5>
-        <p className="text-sm text-primary-foreground/60 mb-3">Get ₦1,000 off your first order!</p>
-        <div className="flex flex-col sm:flex-row">
-          <input type="email" placeholder="Your email" className="flex-1 px-3 py-2 rounded-t-lg sm:rounded-l-lg sm:rounded-t-none text-sm bg-primary-foreground/10 border border-primary-foreground/20 focus:outline-none text-primary-foreground placeholder:text-primary-foreground/40 min-w-0" />
-          <button className="px-4 py-2 rounded-b-lg sm:rounded-r-lg sm:rounded-b-none bg-accent text-accent-foreground text-sm font-bold hover:bg-cta-orange-light transition-colors whitespace-nowrap">Join</button>
+
+      <div className="bg-navy-deep p-6 rounded-md border border-gold-antique/10">
+        <h5 className="font-serif text-lg font-bold mb-3">Newsletter</h5>
+        <p className="text-sm opacity-70 mb-5 font-sans">Join our elite circle for exclusive access to premium drops.</p>
+        <div className="flex flex-col gap-2">
+          <input 
+            type="email" 
+            placeholder="Your Email" 
+            className="w-full px-4 py-3 rounded-md text-sm bg-navy border border-gold-antique/20 focus:outline-none focus:border-gold transition-all text-champagne placeholder:text-champagne/30" 
+          />
+          <button className="w-full px-4 py-3 rounded-md bg-gold text-navy text-sm font-bold hover:bg-gold-antique hover:text-white transition-all shadow-md">
+            Subscribe Now
+          </button>
         </div>
-        <p className="text-xs text-primary-foreground/40 mt-4">RC 1234567 • CAC Registered</p>
       </div>
     </div>
 
-    <div className="border-t border-primary-foreground/10 py-4">
-      <div className="container flex flex-col sm:flex-row justify-between items-center text-xs text-primary-foreground/40">
-        <p>© 2026 Cedokamall.com. All rights reserved.</p>
-        <p>Secured by Paystack & Flutterwave 🔒</p>
+    <div className="border-t border-gold-antique/10 py-6">
+      <div className="container flex flex-col sm:flex-row justify-between items-center text-[10px] sm:text-xs opacity-40 font-sans uppercase tracking-widest gap-4">
+        <p>© 2026 Cedokamall. All rights reserved.</p>
+        <p className="flex items-center gap-2">Built with Integrity <span className="text-gold">|</span> Secured by Paystack</p>
       </div>
     </div>
   </footer>

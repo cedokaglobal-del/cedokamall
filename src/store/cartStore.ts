@@ -23,6 +23,7 @@ interface CartState {
   getTotal: () => number;
   getSubtotal: () => number;
   getItemCount: () => number;
+  clearCart: () => void;
 }
 
 const COUPONS: Record<string, number> = {
@@ -39,14 +40,13 @@ export const useCartStore = create<CartState>((set, get) => ({
   addItem: (item) => set((state) => {
     const existing = state.items.find((i) => i.id === item.id);
     if (existing) {
-      if (existing.quantity >= item.inStock) {
-        return { items: state.items };
-      }
-      return { items: state.items.map((i) => i.id === item.id ? { ...i, quantity: i.quantity + 1 } : i) };
+      // If item exists, we don't increment. Just return current state.
+      return { items: state.items };
     }
     return { items: [...state.items, { ...item, quantity: 1 }] };
   }),
   removeItem: (id) => set((state) => ({ items: state.items.filter((i) => i.id !== id) })),
+  clearCart: () => set({ items: [] }),
   updateQuantity: (id, quantity) => set((state) => {
     const item = state.items.find(i => i.id === id);
     if (!item) return { items: state.items };

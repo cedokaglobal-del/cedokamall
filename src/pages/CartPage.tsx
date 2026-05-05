@@ -139,7 +139,7 @@ Amount: ₦${totalAmount.toLocaleString()}
 
 📎 Payment Receipt: ${receiptFileName}
 
-⏰ Please ensure payment is completed before pickup`;
+⚠️ Payments must be confirmed at least 48hrs prior to pickup`;
     } else {
       paymentSection = `
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━
@@ -265,17 +265,7 @@ We appreciate your business! 🙏
                     <h3 className="font-medium">{item.name}</h3>
                     <p className="text-lg font-bold text-primary mt-1">{formatPrice(item.price)}</p>
                     <div className="flex items-center gap-2 mt-2">
-                      <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-8 h-8 rounded border flex items-center justify-center hover:bg-muted">
-                        <Minus className="w-3 h-3" />
-                      </button>
-                      <span className="font-medium">{item.quantity}</span>
-                      <button 
-                        onClick={() => updateQuantity(item.id, item.quantity + 1)} 
-                        className="w-8 h-8 rounded border flex items-center justify-center hover:bg-muted disabled:opacity-50"
-                        disabled={item.quantity >= item.inStock}
-                      >
-                        <Plus className="w-3 h-3" />
-                      </button>
+                      <span className="text-sm text-muted-foreground">Quantity: 1</span>
                       <button onClick={() => removeItem(item.id)} className="ml-auto text-destructive hover:text-destructive/80">
                         <Trash2 className="w-4 h-4" />
                       </button>
@@ -342,6 +332,10 @@ We appreciate your business! 🙏
                       <li>✓ Available 9 AM - 6 PM</li>
                       <li>✓ Pay upon pickup</li>
                     </ul>
+                    <div className="mt-4 p-2 bg-amber-50 border border-amber-200 rounded text-[10px] font-bold text-amber-800 uppercase tracking-wider flex items-center gap-2">
+                      <span className="text-base">⚠️</span>
+                      Note: Payments must be confirmed at least 48hrs prior to pickup
+                    </div>
                   </div>
                 </div>
               </button>
@@ -383,6 +377,10 @@ We appreciate your business! 🙏
               <p className="text-sm font-medium mb-2">📍 Pickup Location</p>
               <p className="text-sm">35 Ailegun Road, Ejigbo, Lagos</p>
               <p className="text-sm text-muted-foreground mt-1">Available 9 AM - 6 PM daily</p>
+              <div className="mt-4 p-2 bg-amber-50 border border-amber-200 rounded text-[10px] font-bold text-amber-800 uppercase tracking-wider flex items-center gap-2">
+                <span className="text-base">⚠️</span>
+                Note: Payments must be confirmed at least 48hrs prior to pickup
+              </div>
             </div>
 
             <div className="bg-blue-50 rounded-lg p-4 border border-blue-200">

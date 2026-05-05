@@ -14,8 +14,9 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['"Plus Jakarta Sans"', 'system-ui', 'sans-serif'],
-        display: ['Outfit', 'sans-serif'],
+        sans: ['"Inter"', 'system-ui', 'sans-serif'],
+        serif: ['"Cormorant Garamond"', 'serif'],
+        display: ['"Cormorant Garamond"', 'serif'],
       },
       colors: {
         border: "hsl(var(--border))",
@@ -51,20 +52,17 @@ export default {
           DEFAULT: "hsl(var(--card))",
           foreground: "hsl(var(--card-foreground))",
         },
-        emerald: {
-          DEFAULT: "hsl(var(--emerald))",
-          light: "hsl(var(--emerald-light))",
-          dark: "hsl(var(--emerald-dark))",
+        navy: {
+          DEFAULT: "hsl(var(--navy))",
+          deep: "hsl(var(--navy-deep))",
         },
         gold: {
-          DEFAULT: "hsl(var(--gold))",
-          light: "hsl(var(--gold-light))",
-          dark: "hsl(var(--gold-dark))",
+          DEFAULT: "hsl(var(--gold-aged))",
+          antique: "hsl(var(--gold-antique))",
         },
-        "cta-orange": {
-          DEFAULT: "hsl(var(--cta-orange))",
-          light: "hsl(var(--cta-orange-light))",
-        },
+        champagne: "hsl(var(--champagne))",
+        ivory: "hsl(var(--ivory))",
+        charcoal: "hsl(var(--charcoal))",
         sidebar: {
           DEFAULT: "hsl(var(--sidebar-background))",
           foreground: "hsl(var(--sidebar-foreground))",

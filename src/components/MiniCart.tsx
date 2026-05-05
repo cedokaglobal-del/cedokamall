@@ -5,12 +5,14 @@ import { Link } from 'react-router-dom';
 const formatPrice = (n: number) => '₦' + n.toLocaleString();
 
 const MiniCart = () => {
-  const { items, toggleCart, removeItem, updateQuantity, getSubtotal } = useCartStore();
+  const { items, isOpen, toggleCart, removeItem, updateQuantity, getSubtotal, clearCart } = useCartStore();
+
+  if (!isOpen) return null;
 
   return (
     <div className="fixed inset-0 z-[60]">
       <div className="absolute inset-0 bg-foreground/40" onClick={toggleCart} />
-      <div className="absolute right-0 top-0 h-full w-full max-w-md bg-background shadow-2xl flex flex-col animate-in slide-in-from-right">
+      <div className="absolute right-0 top-0 h-full w-full max-w-md bg-background text-foreground shadow-2xl flex flex-col animate-in slide-in-from-right">
         <div className="flex items-center justify-between p-4 border-b">
           <h3 className="font-display text-lg font-bold">Your Cart ({items.length})</h3>
           <button onClick={toggleCart}><X className="w-5 h-5" /></button>
@@ -40,9 +42,7 @@ const MiniCart = () => {
                     <p className="text-sm font-medium truncate">{item.name}</p>
                     <p className="text-sm font-bold text-primary">{formatPrice(item.price)}</p>
                     <div className="flex items-center gap-2 mt-1">
-                      <button onClick={() => updateQuantity(item.id, item.quantity - 1)} className="w-6 h-6 rounded border flex items-center justify-center hover:bg-muted"><Minus className="w-3 h-3" /></button>
-                      <span className="text-sm font-medium">{item.quantity}</span>
-                      <button onClick={() => updateQuantity(item.id, item.quantity + 1)} className="w-6 h-6 rounded border flex items-center justify-center hover:bg-muted"><Plus className="w-3 h-3" /></button>
+                      <span className="text-sm text-muted-foreground">Quantity: 1</span>
                       <button onClick={() => removeItem(item.id)} className="ml-auto text-destructive"><Trash2 className="w-4 h-4" /></button>
                     </div>
                   </div>
@@ -62,9 +62,14 @@ const MiniCart = () => {
               >
                 Checkout — {formatPrice(getSubtotal())}
               </Link>
-              <button onClick={toggleCart} className="block w-full text-center py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
-                Continue Shopping
-              </button>
+              <div className="flex gap-2">
+                <button onClick={toggleCart} className="flex-1 text-center py-2 text-sm text-muted-foreground hover:text-foreground transition-colors">
+                  Continue Shopping
+                </button>
+                <button onClick={clearCart} className="flex-1 text-center py-2 text-sm text-destructive hover:text-destructive/80 transition-colors">
+                  Clear Cart
+                </button>
+              </div>
             </div>
           </>
         )}

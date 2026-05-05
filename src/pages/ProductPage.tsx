@@ -1,5 +1,5 @@
-import { Link, useParams } from 'react-router-dom';
-import { useMemo, useState } from 'react';
+import { Link, useParams, useNavigate } from 'react-router-dom';
+import { useMemo, useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
 import {
   ArrowLeft,
@@ -27,6 +27,7 @@ const formatPrice = (amount: number) => `₦${amount.toLocaleString()}`;
 
 const ProductPage = () => {
   const { id } = useParams();
+  const navigate = useNavigate();
   const { getProductById, products, isLoading, hasLoaded, rateProduct } = useProductStore();
   const addItem = useCartStore((state) => state.addItem);
 
@@ -82,33 +83,14 @@ const ProductPage = () => {
     : 0;
 
   const handleAddToCart = () => {
-    // Determine how many items of this product are already in the cart
-    const cartItems = useCartStore.getState().items;
-    const existingItem = cartItems.find(i => i.id === product.id);
-    const quantityInCart = existingItem?.quantity || 0;
-    
-    // Check if we would exceed stock
-    const availableToAdd = product.inStock - quantityInCart;
-    const actualQuantityToAdd = Math.min(quantity, availableToAdd);
-    
-    if (actualQuantityToAdd <= 0) {
-      toast.error(`Cannot add more. Already have ${quantityInCart} in cart (Stock: ${product.inStock})`);
-      return;
-    }
-
-    if (actualQuantityToAdd < quantity) {
-      toast.warning(`Only added ${actualQuantityToAdd} items due to stock limits.`);
-    }
-
-    for (let index = 0; index < actualQuantityToAdd; index += 1) {
-      addItem({
-        id: product.id,
-        name: product.name,
-        price: product.price,
-        image: product.image,
-        inStock: product.inStock,
-      });
-    }
+    addItem({
+      id: product.id,
+      name: product.name,
+      price: product.price,
+      image: product.image,
+      inStock: product.inStock,
+    });
+    toast.success(`${product.name} added to cart`);
   };
 
   const handleRate = async (rating: number) => {
@@ -125,64 +107,58 @@ const ProductPage = () => {
   };
 
   return (
-    <div className="min-h-screen bg-background">
+    <div className="min-h-screen bg-ivory">
       <Header />
 
-      <div className="container py-3">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="flex items-center gap-1 text-sm text-muted-foreground">
-            <Link to="/" className="hover:text-primary">
-              Home
-            </Link>
+      <div className="container py-6">
+        <div className="flex flex-wrap items-center justify-between gap-4">
+          <nav className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-navy/40">
+            <Link to="/" className="hover:text-gold transition-colors">Home</Link>
             <ChevronRight className="h-3 w-3" />
-            <Link to="/shop" className="hover:text-primary">
-              Shop
-            </Link>
+            <Link to="/shop" className="hover:text-gold transition-colors">Collections</Link>
             <ChevronRight className="h-3 w-3" />
-            <span className="max-w-xs truncate text-foreground">{product.name}</span>
-          </div>
+            <span className="text-navy truncate max-w-[200px]">{product.name}</span>
+          </nav>
           <Link
             to="/shop"
-            className="flex items-center gap-1.5 rounded-lg border px-4 py-2 text-sm transition-colors hover:bg-muted"
+            className="flex items-center gap-2 rounded-md bg-white border border-gold-antique/20 px-5 py-2 text-xs font-bold uppercase tracking-widest text-navy hover:bg-navy hover:text-gold transition-all shadow-sm"
           >
             <ArrowLeft className="h-4 w-4" />
-            Back
+            Back to Catalog
           </Link>
         </div>
       </div>
 
-      <div className="container py-6">
-        <div className="grid gap-8 md:grid-cols-2">
-          <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }}>
-            <div className="aspect-square overflow-hidden rounded-xl border bg-muted">
+      <div className="container py-8">
+        <div className="grid gap-12 lg:grid-cols-2">
+          {/* Left: Images */}
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="space-y-6">
+            <div className="aspect-square overflow-hidden rounded-md border border-gold-antique/10 bg-white shadow-premium group">
               <img
                 src={currentImage}
                 alt={product.name}
-                className="h-full w-full object-cover"
+                className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                 onError={(event) => {
                   event.currentTarget.src = fallbackImage;
                 }}
               />
             </div>
             {gallery.length > 1 && (
-              <div className="mt-4 flex gap-2 overflow-x-auto pb-2">
+              <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar">
                 {gallery.map((image, index) => (
                   <button
                     key={`${product.id}-${index}`}
                     onClick={() => setActiveImage(index)}
-                    className={`h-20 w-20 flex-shrink-0 overflow-hidden rounded-lg border transition-all ${
+                    className={`h-24 w-24 flex-shrink-0 overflow-hidden rounded-md border-2 transition-all shadow-sm ${
                       activeImage === index
-                        ? 'scale-105 border-2 border-primary shadow-sm'
-                        : 'opacity-70'
+                        ? 'border-gold scale-105'
+                        : 'border-transparent opacity-60 hover:opacity-100'
                     }`}
                   >
                     <img
                       src={image}
                       alt={`${product.name} preview ${index + 1}`}
                       className="h-full w-full object-cover"
-                      onError={(event) => {
-                        event.currentTarget.src = fallbackImage;
-                      }}
                     />
                   </button>
                 ))}
@@ -190,158 +166,130 @@ const ProductPage = () => {
             )}
           </motion.div>
 
+          {/* Right: Details */}
           <motion.div
-            initial={{ opacity: 0, x: 20 }}
-            animate={{ opacity: 1, x: 0 }}
-            className="space-y-4"
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.1 }}
+            className="flex flex-col"
           >
-            {product.badge && (
-              <span className="inline-block rounded-full bg-accent px-3 py-1 text-xs font-bold text-accent-foreground">
-                {product.badge}
-              </span>
-            )}
-            <h1 className="font-display text-2xl font-bold md:text-3xl">{product.name}</h1>
-
-            <div className="flex items-center gap-3">
-              <div className="flex items-center gap-1">
-                {[...Array(5)].map((_, index) => {
-                  const ratingValue = index + 1;
-                  const isActive = hoverRating ? ratingValue <= hoverRating : ratingValue <= Math.round(product.rating || 0);
-                  
-                  return (
-                    <button
-                      key={index}
-                      type="button"
-                      disabled={isRating}
-                      onClick={() => handleRate(ratingValue)}
-                      onMouseEnter={() => setHoverRating(ratingValue)}
-                      onMouseLeave={() => setHoverRating(0)}
-                      className={`transition-transform hover:scale-110 disabled:opacity-50 ${isRating ? 'cursor-not-allowed' : 'cursor-pointer'}`}
-                    >
-                      <Star
-                        className={`h-5 w-5 ${
-                          isActive
-                            ? 'fill-gold text-gold'
-                            : 'text-border'
-                        }`}
+            <div className="space-y-6">
+              <div className="space-y-2">
+                {product.badge && (
+                  <span className="inline-block rounded-sm bg-navy px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-gold shadow-md">
+                    {product.badge}
+                  </span>
+                )}
+                <h1 className="font-serif text-3xl font-bold leading-tight md:text-5xl text-navy">{product.name}</h1>
+                <div className="flex items-center gap-4">
+                  <div className="flex items-center gap-1">
+                    {[...Array(5)].map((_, index) => (
+                      <Star 
+                        key={index} 
+                        className={`h-4 w-4 ${index < Math.round(product.rating || 0) ? 'fill-gold text-gold' : 'fill-gray-200 text-gray-200'}`} 
                       />
-                    </button>
-                  );
-                })}
-              </div>
-              <span className="text-sm font-medium">{product.rating}</span>
-              <span className="text-sm text-muted-foreground">({product.reviews} reviews)</span>
-            </div>
-
-            <div className="flex items-baseline gap-3">
-              <span className="text-3xl font-bold text-primary">{formatPrice(product.price)}</span>
-              {product.originalPrice && (
-                <>
-                  <span className="text-lg text-muted-foreground line-through">
-                    {formatPrice(product.originalPrice)}
-                  </span>
-                  <span className="rounded bg-destructive/10 px-2 py-0.5 text-sm font-bold text-destructive">
-                    -{discount}%
-                  </span>
-                </>
-              )}
-            </div>
-
-            <p className="text-muted-foreground">{product.description}</p>
-
-            {product.features && product.features.length > 0 && (
-              <div className="space-y-2 py-2">
-                <h3 className="text-sm font-bold uppercase tracking-wider text-muted-foreground">Key Features</h3>
-                <ul className="grid grid-cols-1 gap-x-6 gap-y-1 sm:grid-cols-2">
-                  {product.features.map((feature, index) => (
-                    <li key={index} className="flex items-center gap-2 text-sm">
-                      <CheckCircle2 className="h-4 w-4 text-primary shrink-0" />
-                      <span>{feature}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
-
-            <div className="flex items-center gap-2 text-sm">
-              <span
-                className={`h-2 w-2 rounded-full ${
-                  product.inStock > 10 ? 'bg-primary' : 'bg-accent'
-                }`}
-              />
-              <span>
-                {product.inStock > 10
-                  ? `In Stock (${product.inStock} left)`
-                  : `Only ${product.inStock} left - hurry!`}
-              </span>
-            </div>
-
-            <p className="text-sm text-muted-foreground">
-              Brand: <strong>{product.seller || 'Generic'}</strong>
-            </p>
-
-            <div className="flex items-center gap-4">
-              <div className="flex items-center rounded-lg border">
-                <button
-                  onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="flex h-10 w-10 items-center justify-center hover:bg-muted"
-                >
-                  <Minus className="h-4 w-4" />
-                </button>
-                <span className="w-10 text-center font-medium">{quantity}</span>
-                <button
-                  onClick={() => setQuantity(Math.min(quantity + 1, product.inStock))}
-                  className="flex h-10 w-10 items-center justify-center hover:bg-muted disabled:opacity-50"
-                  disabled={quantity >= product.inStock}
-                >
-                  <Plus className="h-4 w-4" />
-                </button>
-              </div>
-            </div>
-
-            <div className="flex gap-3">
-              <button
-                onClick={handleAddToCart}
-                className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-primary py-3 font-bold text-primary-foreground transition-colors hover:bg-emerald-light"
-              >
-                <ShoppingCart className="h-5 w-5" />
-                Add to Cart
-              </button>
-              <button className="flex flex-1 items-center justify-center gap-2 rounded-xl bg-accent py-3 font-bold text-accent-foreground transition-colors hover:bg-cta-orange-light">
-                Buy Now
-              </button>
-            </div>
-
-            <div className="flex gap-3">
-              <button className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary">
-                <Heart className="h-4 w-4" />
-                Wishlist
-              </button>
-              <button className="flex items-center gap-1 text-sm text-muted-foreground hover:text-primary">
-                <Share2 className="h-4 w-4" />
-                Share & Earn 500pts
-              </button>
-            </div>
-
-            <div className="grid grid-cols-3 gap-3 border-t pt-4">
-              {[
-                { icon: Truck, label: 'Free Nationwide delivery' },
-                { icon: Shield, label: 'Genuine products' },
-                { icon: RotateCcw, label: '7-day returns' },
-              ].map(({ icon: Icon, label }) => (
-                <div key={label} className="text-center">
-                  <Icon className="mx-auto mb-1 h-5 w-5 text-primary" />
-                  <p className="text-xs text-muted-foreground">{label}</p>
+                    ))}
+                  </div>
+                  <span className="text-sm font-bold text-navy">{product.rating}</span>
+                  <span className="text-sm text-navy/40 font-sans uppercase tracking-tighter">({product.reviews} Verification Reviews)</span>
                 </div>
-              ))}
+              </div>
+
+              <div className="flex items-baseline gap-4 py-4 border-y border-gold-antique/10">
+                <span className="text-4xl font-bold text-gold tracking-tight">{formatPrice(product.price)}</span>
+                {product.originalPrice && (
+                  <div className="flex items-center gap-2">
+                    <span className="text-xl text-navy/30 line-through font-light">
+                      {formatPrice(product.originalPrice)}
+                    </span>
+                    <span className="rounded-sm bg-gold/10 px-2 py-1 text-xs font-bold text-gold uppercase tracking-widest">
+                      SAVE {discount}%
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              <p className="text-lg text-navy/70 leading-relaxed font-sans">{product.description}</p>
+
+              {product.features && product.features.length > 0 && (
+                <div className="space-y-4 py-4">
+                  <h3 className="text-xs font-bold uppercase tracking-[0.3em] text-navy">Signature Features</h3>
+                  <ul className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+                    {product.features.map((feature, index) => (
+                      <li key={index} className="flex items-start gap-3 text-sm text-navy/80 group">
+                        <CheckCircle2 className="h-5 w-5 text-gold shrink-0 group-hover:scale-110 transition-transform" />
+                        <span className="leading-snug">{feature}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
+              )}
+
+              <div className="flex items-center gap-6 py-4">
+
+                <div className="flex items-center gap-3">
+                  <div className={`h-3 w-3 rounded-full shadow-inner ${product.inStock > 10 ? 'bg-gold' : 'bg-red-500 animate-pulse'}`} />
+                  <span className="text-xs font-bold uppercase tracking-widest text-navy/60">
+                    {product.inStock > 10 ? 'Available for Immediate Delivery' : `Strictly Limited: ${product.inStock} Remaining`}
+                  </span>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <button
+                  onClick={handleAddToCart}
+                  className="flex items-center justify-center gap-3 rounded-md bg-navy py-4 text-sm font-bold uppercase tracking-widest text-gold shadow-xl hover:bg-gold hover:text-navy transition-all duration-300 transform hover:-translate-y-1"
+                >
+                  <ShoppingCart className="h-5 w-5" />
+                  Add to cart
+                </button>
+                <button 
+                  onClick={() => {
+                    handleAddToCart();
+                    navigate('/cart');
+                  }}
+                  className="flex items-center justify-center gap-3 rounded-md bg-gold py-4 text-sm font-bold uppercase tracking-widest text-navy shadow-xl hover:bg-gold-antique hover:text-white transition-all duration-300 transform hover:-translate-y-1"
+                >
+                  Buy now
+                </button>
+              </div>
+
+              <div className="flex items-center gap-8 pt-4">
+                <button className="group flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-navy/40 hover:text-gold transition-colors">
+                  <Heart className="h-4 w-4 group-hover:fill-gold transition-all" />
+                  Add to Wishlist
+                </button>
+                <button className="group flex items-center gap-2 text-[10px] font-bold uppercase tracking-widest text-navy/40 hover:text-gold transition-colors">
+                  <Share2 className="h-4 w-4 group-hover:scale-110 transition-transform" />
+                  Share Collection
+                </button>
+              </div>
+
+              <div className="grid grid-cols-3 gap-6 border-t border-gold-antique/10 pt-8">
+                {[
+                  { icon: Truck, label: 'Express Delivery' },
+                  { icon: Shield, label: 'Authenticity Guaranteed' },
+                  { icon: RotateCcw, label: '7-Day Return Service' },
+                ].map(({ icon: Icon, label }) => (
+                  <div key={label} className="text-center group">
+                    <div className="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-white border border-gold-antique/10 shadow-sm group-hover:border-gold transition-colors">
+                      <Icon className="h-5 w-5 text-gold" />
+                    </div>
+                    <p className="text-[9px] font-bold uppercase tracking-[0.15em] text-navy/50 leading-tight">{label}</p>
+                  </div>
+                ))}
+              </div>
             </div>
           </motion.div>
         </div>
 
         {relatedProducts.length > 0 && (
-          <section className="mt-12">
-            <h2 className="mb-4 font-display text-xl font-bold">You May Also Like</h2>
-            <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+          <section className="mt-24">
+            <div className="mb-12 flex items-center justify-between border-b border-gold-antique/10 pb-6">
+              <h2 className="font-serif text-3xl font-bold text-navy">You may also like</h2>
+              <Link to="/shop" className="text-xs font-bold uppercase tracking-widest text-gold hover:text-gold-antique">Discover More</Link>
+            </div>
+            <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-5">
               {relatedProducts.map((entry) => (
                 <ProductCard key={entry.id} product={entry} />
               ))}
