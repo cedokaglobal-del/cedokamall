@@ -1,5 +1,5 @@
 // Product Management Form Component
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -36,6 +36,52 @@ interface ProductFormProps {
   isLoading?: boolean;
 }
 
+const normalizeStringArray = (value: unknown, fallback?: string): string[] => {
+  if (Array.isArray(value)) {
+    const entries = value.filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0);
+    return entries.length > 0 ? entries : fallback ? [fallback] : [];
+  }
+
+  if (typeof value === 'string') {
+    const trimmed = value.trim();
+    if (!trimmed) {
+      return fallback ? [fallback] : [];
+    }
+
+    try {
+      const parsed = JSON.parse(trimmed);
+      if (Array.isArray(parsed)) {
+        const entries = parsed.filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0);
+        return entries.length > 0 ? entries : fallback ? [fallback] : [];
+      }
+    } catch {
+      return [trimmed];
+    }
+
+    return [trimmed];
+  }
+
+  return fallback ? [fallback] : [];
+};
+
+const buildInitialFormData = (product?: Product): ProductFormData => ({
+  name: product?.name || '',
+  price: product?.price ?? 0,
+  originalPrice: product?.originalPrice,
+  category: product?.category || '',
+  description: product?.description || '',
+  inStock: product?.inStock ?? 0,
+  seller: product?.seller || '',
+  image: product?.image || '',
+  images: normalizeStringArray(product?.images, product?.image),
+  sku: product?.sku || '',
+  warranty: product?.warranty || '',
+  specs: product?.specs || {},
+  features: normalizeStringArray(product?.features),
+  color: product?.color || '',
+  badge: product?.badge || undefined,
+});
+
 const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: ProductFormProps) => {
   const { categories, addCategory, removeCategory } = useCategoryStore();
   const [isAddingCategory, setIsAddingCategory] = useState(false);
@@ -43,26 +89,40 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
   const [featureInput, setFeatureInput] = useState('');
-
-  const [formData, setFormData] = useState<ProductFormData>({
-    name: product?.name || '',
-    price: product?.price ?? 0,
-    originalPrice: product?.originalPrice,
-    category: product?.category || '',
-    description: product?.description || '',
-    inStock: product?.inStock ?? 0,
-    seller: product?.seller || '',
-    image: product?.image || '',
-    images: product?.images?.length ? product.images : product?.image ? [product.image] : [],
-    sku: product?.sku || '',
-    warranty: product?.warranty || '',
-    specs: product?.specs || {},
-    features: product?.features || [],
-    color: product?.color || '',
-    badge: product?.badge || undefined,
-  });
+  const [formData, setFormData] = useState<ProductFormData>(() => buildInitialFormData(product));
+  const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  useEffect(() => {
+    setFormData(buildInitialFormData(product));
+    setErrors({});
+    setFeatureInput('');
+    setActiveTab('general');
+    setLoadedImages({});
+  }, [product]);
+
+  useEffect(() => {
+    const imageUrls = (formData.images || []).filter(Boolean);
+    if (imageUrls.length === 0) {
+      return;
+    }
+
+    imageUrls.forEach((url) => {
+      if (loadedImages[url]) {
+        return;
+      }
+
+      const image = new window.Image();
+      image.onload = () => {
+        setLoadedImages((prev) => ({ ...prev, [url]: true }));
+      };
+      image.onerror = () => {
+        setLoadedImages((prev) => ({ ...prev, [url]: true }));
+      };
+      image.src = url;
+    });
+  }, [formData.images, loadedImages]);
 
   const handleAddCategory = () => {
     const trimmed = newCategory.trim();
@@ -590,11 +650,41 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       className={cn(
-                        "relative aspect-square rounded-2xl overflow-hidden border-2 shadow-sm transition-all group",
+                        "relative aspect-square rounded-2xl overflow-hidden border-2 shadow-sm transition-all group bg-[radial-gradient(circle_at_top,_hsl(var(--primary)/0.14),_transparent_55%),linear-gradient(135deg,_hsl(var(--muted)),_hsl(var(--background)))]",
                         idx === 0 ? "border-primary ring-4 ring-primary/10" : "border-border hover:border-primary/40"
                       )}
                     >
-                      <img src={url} alt={`Product ${idx}`} className="w-full h-full object-cover transition-transform group-hover:scale-105" />
+                      {!loadedImages[url] && (
+                        <div className="absolute inset-0 z-10 flex flex-col items-center justify-center gap-3 bg-background/85 backdrop-blur-sm">
+                          <div className="h-8 w-8 rounded-full border-2 border-primary/30 border-t-primary animate-spin" />
+                          <div className="space-y-2 w-3/5">
+                            <div className="h-2.5 rounded-full bg-muted animate-pulse" />
+                            <div className="h-2.5 rounded-full bg-muted/70 animate-pulse" />
+                          </div>
+                        </div>
+                      )}
+                      <img
+                        src={url}
+                        alt={`Product ${idx}`}
+                        className={cn(
+                          "w-full h-full object-cover transition-all duration-500 group-hover:scale-105",
+                          loadedImages[url] ? "opacity-100" : "opacity-0"
+                        )}
+                        onLoad={() => {
+                          setLoadedImages((prev) => ({ ...prev, [url]: true }));
+                        }}
+                        onError={(event) => {
+                          const target = event.currentTarget as HTMLImageElement;
+                          if (target.dataset.fallbackApplied === 'true') {
+                            setLoadedImages((prev) => ({ ...prev, [url]: true, '/image.png': true }));
+                            return;
+                          }
+
+                          target.dataset.fallbackApplied = 'true';
+                          target.src = '/image.png';
+                          setLoadedImages((prev) => ({ ...prev, [url]: true, '/image.png': true }));
+                        }}
+                      />
                       
                       <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center">
                         <button

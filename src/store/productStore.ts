@@ -3,6 +3,7 @@ import { Product, ProductFormData, ProductFilter } from '@/types/product';
 import { supabase } from '@/lib/supabase';
 import { retryWithBackoff, supabaseCircuitBreaker } from '@/utils/resilience';
 import { deduplicatedFetch } from '@/utils/performance';
+import type { RealtimeChannel } from '@supabase/supabase-js';
 
 interface ProductState {
   products: Product[];
@@ -33,6 +34,9 @@ const fallbackImage = '/image.png';
 const PRODUCT_CACHE_KEY = 'cedokamall.products.cache.v1';
 
 let pendingFetch: Promise<void> | null = null;
+let productRealtimeChannel: RealtimeChannel | null = null;
+let backgroundSyncTimeout: ReturnType<typeof setTimeout> | null = null;
+let realtimeRefreshTimeout: ReturnType<typeof setTimeout> | null = null;
 
 const parseImages = (value: unknown, fallback: string) => {
   if (Array.isArray(value)) {
@@ -51,6 +55,25 @@ const parseImages = (value: unknown, fallback: string) => {
   }
 
   return fallback ? [fallback] : [];
+};
+
+const parseStringArray = (value: unknown) => {
+  if (Array.isArray(value)) {
+    return value.filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0);
+  }
+
+  if (typeof value === 'string' && value.trim().length > 0) {
+    try {
+      const parsed = JSON.parse(value);
+      if (Array.isArray(parsed)) {
+        return parsed.filter((entry): entry is string => typeof entry === 'string' && entry.trim().length > 0);
+      }
+    } catch {
+      return [value];
+    }
+  }
+
+  return [];
 };
 
 const parseSpecs = (value: unknown) => {
@@ -114,6 +137,9 @@ const serializeProducts = (products: Product[]): CachedProduct[] =>
 const deserializeProducts = (products: CachedProduct[]): Product[] =>
   products.map((product) => ({
     ...product,
+    image: typeof product.image === 'string' && product.image.length > 0 ? product.image : fallbackImage,
+    images: parseImages(product.images, typeof product.image === 'string' ? product.image : fallbackImage),
+    features: parseStringArray(product.features),
     createdAt: new Date(product.createdAt),
     updatedAt: new Date(product.updatedAt),
   }));
@@ -179,6 +205,49 @@ const buildProductPayload = (productData: ProductFormData) => {
 
 const cachedProducts = loadCachedProducts();
 
+const scheduleBackgroundSync = (cachedSnapshot: Product[]) => {
+  if (backgroundSyncTimeout) {
+    clearTimeout(backgroundSyncTimeout);
+  }
+
+  backgroundSyncTimeout = setTimeout(async () => {
+    try {
+      await supabaseCircuitBreaker.execute(async () => {
+        await retryWithBackoff(
+          async () => {
+            const controller = new AbortController();
+            const timeoutId = setTimeout(() => controller.abort(), 8000);
+
+            const { data, error } = await supabase
+              .from('products')
+              .select('*')
+              .order('created_at', { ascending: false });
+
+            clearTimeout(timeoutId);
+
+            if (error) throw error;
+
+            const products = (data || []).map(mapSupabaseToProduct);
+            if (JSON.stringify(products) !== JSON.stringify(cachedSnapshot)) {
+              persistProducts(products);
+              useProductStore.setState({
+                products,
+                lastSyncedAt: new Date().toISOString(),
+                error: null,
+              });
+            }
+          },
+          { maxRetries: 1, initialDelayMs: 500 }
+        );
+      });
+    } catch (err) {
+      console.debug('Background sync failed (non-blocking):', err);
+    } finally {
+      backgroundSyncTimeout = null;
+    }
+  }, 2000);
+};
+
 export const useProductStore = create<ProductState>((set, get) => ({
   products: cachedProducts,
   filter: {},
@@ -192,42 +261,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
     
     // If we have cached products and not forcing, return immediately
     if (!force && state.products.length > 0) {
-      // Silently try to sync in background after a delay
-      setTimeout(async () => {
-        try {
-          await supabaseCircuitBreaker.execute(async () => {
-            await retryWithBackoff(
-              async () => {
-                const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 8000);
-
-                const { data, error } = await supabase
-                  .from('products')
-                  .select('*')
-                  .order('created_at', { ascending: false });
-
-                clearTimeout(timeoutId);
-
-                if (error) throw error;
-
-                const products = (data || []).map(mapSupabaseToProduct);
-                if (JSON.stringify(products) !== JSON.stringify(state.products)) {
-                  persistProducts(products);
-                  set({
-                    products,
-                    lastSyncedAt: new Date().toISOString(),
-                    error: null,
-                  });
-                }
-              },
-              { maxRetries: 1, initialDelayMs: 500 }
-            );
-          });
-        } catch (err) {
-          // Silent failure in background sync
-          console.debug('Background sync failed (non-blocking):', err);
-        }
-      }, 2000);
+      scheduleBackgroundSync(state.products);
       return;
     }
 
@@ -488,3 +522,43 @@ export const useProductStore = create<ProductState>((set, get) => ({
 
   getProductById: (id) => get().products.find((product) => product.id === id),
 }));
+
+export const subscribeToProductChanges = () => {
+  if (productRealtimeChannel) {
+    return () => {
+      if (!productRealtimeChannel) {
+        return;
+      }
+
+      supabase.removeChannel(productRealtimeChannel);
+      productRealtimeChannel = null;
+    };
+  }
+
+  productRealtimeChannel = supabase
+    .channel('products-realtime')
+    .on(
+      'postgres_changes',
+      { event: '*', schema: 'public', table: 'products' },
+      () => {
+        if (realtimeRefreshTimeout) {
+          clearTimeout(realtimeRefreshTimeout);
+        }
+
+        realtimeRefreshTimeout = setTimeout(() => {
+          realtimeRefreshTimeout = null;
+          void useProductStore.getState().fetchProducts(true);
+        }, 250);
+      }
+    )
+    .subscribe();
+
+  return () => {
+    if (!productRealtimeChannel) {
+      return;
+    }
+
+    supabase.removeChannel(productRealtimeChannel);
+    productRealtimeChannel = null;
+  };
+};

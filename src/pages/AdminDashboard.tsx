@@ -58,6 +58,7 @@ const AdminDashboard = () => {
     deleteProduct,
     clearAllProducts,
     fetchProducts,
+    lastSyncedAt,
   } = useProductStore();
 
   const [isFormOpen, setIsFormOpen] = useState(false);
@@ -65,6 +66,7 @@ const AdminDashboard = () => {
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [isClearAllOpen, setIsClearAllOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
 
   const lowStockProducts = useMemo(
     () => products.filter((product) => product.inStock > 0 && product.inStock < 10),
@@ -106,11 +108,16 @@ const AdminDashboard = () => {
   }, [fetchTransactions]);
 
   const handleRefresh = async () => {
-    await Promise.all([
-      fetchProducts(true),
-      fetchTransactions(),
-      useVisitorStore.getState().syncWithSupabase()
-    ]);
+    try {
+      setIsRefreshing(true);
+      await Promise.all([
+        fetchProducts(true),
+        fetchTransactions(),
+        useVisitorStore.getState().syncWithSupabase()
+      ]);
+    } finally {
+      setIsRefreshing(false);
+    }
   };
 
   const formatDuration = (seconds: number) => {
@@ -241,6 +248,15 @@ const AdminDashboard = () => {
             <p className="text-muted-foreground text-sm mt-2">
               This dashboard now reflects your live product catalog instead of demo analytics.
             </p>
+            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
+              <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 font-medium text-emerald-700">
+                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
+                Live sync active
+              </span>
+              <span className="text-muted-foreground">
+                Last synced {lastSyncedAt ? new Date(lastSyncedAt).toLocaleTimeString() : 'just now'}
+              </span>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-2 sm:gap-3">
@@ -252,8 +268,9 @@ const AdminDashboard = () => {
               size="lg"
               onClick={handleRefresh}
               className="gap-2"
+              disabled={isRefreshing}
             >
-              <RefreshCw className="w-4 h-4" /> Refresh
+              <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} /> Refresh
             </Button>
             <Button
               variant="outline"

@@ -52,6 +52,10 @@ export const checkSupabaseHealth = async (): Promise<SupabaseHealthCheck> => {
  * Useful for monitoring in production
  */
 export const startHealthCheck = (intervalMs = 60000) => {
+  if (typeof window === 'undefined' || !import.meta.env.DEV) {
+    return null;
+  }
+
   const performCheck = async () => {
     const health = await checkSupabaseHealth();
     console.log(

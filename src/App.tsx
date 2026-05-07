@@ -10,12 +10,11 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import ProtectedRoute from "@/components/ProtectedRoute.tsx";
 import { ErrorBoundary } from "@/components/ErrorBoundary";
 // Utilities
-import { addConnectionHints } from "@/utils/performance";
 import { startHealthCheck } from "@/utils/supabaseHealth";
 import { initWebVitals, logMetricsSummary } from "@/utils/webVitals";
 import { validateSupabaseConfig } from "@/utils/resilience";
 import { useSEO } from "@/hooks/useSEO";
-import { useProductStore } from "@/store/productStore";
+import { subscribeToProductChanges, useProductStore } from "@/store/productStore";
 import { useVisitorStore } from "@/store/visitorStore";
 import { safeLazy } from "@/utils/lazy";
 
@@ -60,17 +59,17 @@ const App = () => {
 
   useEffect(() => {
     // Initialize performance monitoring
-    initWebVitals();
+    const stopWebVitals = initWebVitals();
 
     // Validate Supabase configuration
     const config = validateSupabaseConfig();
-    if (!config.isValid) {
+    if (import.meta.env.DEV && !config.isValid) {
       console.warn('⚠️ Supabase Configuration Issues:', config.errors);
-    } else {
+    } else if (import.meta.env.DEV) {
       console.log('✅ Supabase configuration is valid');
     }
 
-    // Start database health check (logs every 60 seconds)
+    // Start database health checks only during development
     const healthCheckInterval = startHealthCheck(60000);
 
     // Non-blocking: fetch products in background without waiting
@@ -84,7 +83,7 @@ const App = () => {
     };
 
     fetchInBackground();
-    addConnectionHints();
+    const unsubscribeProductRealtime = subscribeToProductChanges();
 
     // Initialize visitor session
     const visitorStore = useVisitorStore.getState();
@@ -124,7 +123,11 @@ const App = () => {
     window.addEventListener('beforeunload', handleBeforeUnload);
 
     return () => {
-      clearInterval(healthCheckInterval);
+      unsubscribeProductRealtime();
+      stopWebVitals();
+      if (healthCheckInterval) {
+        clearInterval(healthCheckInterval);
+      }
       clearInterval(sessionInterval);
       window.removeEventListener('online', handleReconnect);
       document.removeEventListener('visibilitychange', handleVisibilityChange);
