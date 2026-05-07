@@ -1,4 +1,4 @@
-import { useMemo, useState, useEffect } from 'react';
+import { Suspense, useMemo, useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import {
   AlertCircle,
@@ -16,7 +16,6 @@ import {
   ArrowUpRight,
 } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
-import ProductForm from '@/components/ProductForm';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import {
@@ -40,6 +39,10 @@ import { useProductStore } from '@/store/productStore';
 import { useTransactionStore } from '@/store/transactionStore';
 import { useVisitorStore } from '@/store/visitorStore';
 import { cn } from '@/lib/utils';
+import { safeLazy } from '@/utils/lazy';
+import { toast } from 'sonner';
+
+const ProductForm = safeLazy(() => import('@/components/ProductForm'));
 
 const currency = new Intl.NumberFormat('en-NG', {
   style: 'currency',
@@ -103,8 +106,14 @@ const AdminDashboard = () => {
   const avgStayDuration = useVisitorStore((state) => state.getAverageStayDuration());
 
   useEffect(() => {
-    void fetchTransactions();
-    void useVisitorStore.getState().syncWithSupabase();
+    const timer = window.setTimeout(() => {
+      void fetchTransactions();
+      void useVisitorStore.getState().syncWithSupabase();
+    }, 120);
+
+    return () => {
+      window.clearTimeout(timer);
+    };
   }, [fetchTransactions]);
 
   const handleRefresh = async () => {
@@ -112,9 +121,13 @@ const AdminDashboard = () => {
       setIsRefreshing(true);
       await Promise.all([
         fetchProducts(true),
-        fetchTransactions(),
-        useVisitorStore.getState().syncWithSupabase()
+        fetchTransactions(true),
+        useVisitorStore.getState().syncWithSupabase(true)
       ]);
+      toast.success('Dashboard refreshed');
+    } catch (error) {
+      console.error('Dashboard refresh failed:', error);
+      toast.error('Refresh failed. Please try again.');
     } finally {
       setIsRefreshing(false);
     }
@@ -497,12 +510,20 @@ const AdminDashboard = () => {
             </DialogDescription>
           </DialogHeader>
           <div className="max-h-[70vh] overflow-y-auto">
-            <ProductForm
-              product={editingProduct}
-              onSubmit={handleFormSubmit}
-              onCancel={() => setIsFormOpen(false)}
-              isLoading={isSubmitting}
-            />
+            <Suspense
+              fallback={
+                <div className="flex min-h-[320px] items-center justify-center text-sm text-muted-foreground">
+                  Loading product form...
+                </div>
+              }
+            >
+              <ProductForm
+                product={editingProduct}
+                onSubmit={handleFormSubmit}
+                onCancel={() => setIsFormOpen(false)}
+                isLoading={isSubmitting}
+              />
+            </Suspense>
           </div>
         </DialogContent>
       </Dialog>

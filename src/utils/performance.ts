@@ -12,56 +12,100 @@ export const IMAGE_OPTIMIZATION = {
     thumbnail: 150,
     small: 300,
     medium: 600,
-    large: 1200
+    large: 1200,
+    xlarge: 1800
   },
   quality: {
-    webp: 80,
-    jpg: 85
+    webp: 85,
+    jpg: 88
+  },
+  // Responsive breakpoints for images
+  breakpoints: {
+    mobile: { width: 375, dpr: 2 },
+    tablet: { width: 768, dpr: 2 },
+    desktop: { width: 1024, dpr: 1 }
   }
 };
 
 /**
- * Lazy loading configuration
+ * Lazy loading configuration with intersection observer
  */
 export const LAZY_LOAD_CONFIG = {
   root: null,
-  rootMargin: '50px',
-  threshold: 0.1
+  rootMargin: '100px',
+  threshold: [0, 0.1, 0.25]
 };
 
+const fallbackImage = '/image.png';
+
 /**
- * Format image URL for optimization
- * Returns optimized URL with proper sizing and format
+ * Format image URL for optimization with responsive sizing
  */
 export function getOptimizedImageUrl(
   url: string,
   width: number,
   height?: number,
-  quality: number = 80
+  quality: number = 85
 ): string {
+  if (!url) return fallbackImage;
+  
   // If URL is from Unsplash, use their API for optimization
   if (url.includes('unsplash.com')) {
     const params = new URLSearchParams();
     params.set('w', width.toString());
     params.set('q', quality.toString());
-    params.set('fit', 'max');
+    params.set('fit', 'crop');
+    params.set('auto', 'format');
+    
+    if (height) {
+      params.set('h', height.toString());
+    }
     
     return `${url}?${params.toString()}`;
   }
 
-  // For other sources, return the original URL
-  // In production, implement proper image optimization via CDN
+  // Handle Supabase Storage URLs
+  if (url.includes('.supabase.co/storage/v1/object/public/')) {
+    const params = new URLSearchParams();
+    params.set('width', width.toString());
+    params.set('quality', quality.toString());
+    if (height) params.set('height', height.toString());
+    params.set('resize', 'contain');
+    
+    return url.replace('/storage/v1/object/public/', '/storage/v1/render/image/public/') + `?${params.toString()}`;
+  }
+
   return url;
 }
 
 /**
  * Generate srcset for responsive images
  */
-export function generateSrcSet(url: string, sizes: number[] = [300, 600, 1200]): string {
+export function generateSrcSet(
+  url: string,
+  sizes: number[] = [300, 600, 1200],
+  quality: number = 85
+): string {
   if (url.includes('unsplash.com')) {
-    return sizes.map(size => `${getOptimizedImageUrl(url, size)} ${size}w`).join(', ');
+    return sizes
+      .map(size => `${getOptimizedImageUrl(url, size, undefined, quality)} ${size}w`)
+      .join(', ');
   }
   return url;
+}
+
+/**
+ * Generate sizes attribute for responsive images
+ */
+export function generateSizes(context: 'hero' | 'product' | 'thumbnail' | 'banner'): string {
+  const sizeMap = {
+    hero: '(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 80vw',
+    product: '(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw',
+    thumbnail: '(max-width: 640px) 100px, (max-width: 1024px) 120px, 150px',
+    banner: '(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 100vw'
+  };
+  
+  return sizeMap[context];
 }
 
 /**
@@ -95,48 +139,7 @@ export function measurePerformance<T>(
     timestamp: new Date()
   });
 
-  if (import.meta.env.MODE === 'development') {
-    console.log(`⏱️ ${label}: ${duration.toFixed(2)}ms`);
-  }
-
   return result;
-}
-
-/**
- * Get collected performance metrics
- */
-export function getPerformanceMetrics(): PerformanceMetric[] {
-  return [...metrics];
-}
-
-/**
- * Clear performance metrics
- */
-export function clearPerformanceMetrics(): void {
-  metrics.length = 0;
-}
-
-/**
- * Report Web Vitals to analytics
- */
-interface WebVitalsMetric {
-  name: string;
-  value: number;
-  rating?: string;
-  delta?: number;
-  id?: string;
-  [key: string]: unknown;
-}
-
-export function reportWebVitals(metric: WebVitalsMetric): void {
-  if (import.meta.env.MODE === 'production') {
-    // Send to analytics service
-    const body = JSON.stringify(metric);
-    // Use sendBeacon if available for reliability
-    if (navigator.sendBeacon) {
-      navigator.sendBeacon('/api/analytics/vitals', body);
-    }
-  }
 }
 
 /**
@@ -149,9 +152,9 @@ interface CacheEntry<T = unknown> {
 
 class CacheManager {
   private cache: Map<string, CacheEntry> = new Map();
-  private readonly maxAge: number = 5 * 60 * 1000; // 5 minutes default
+  private readonly maxAge: number = 5 * 60 * 1000;
 
-  set(key: string, value: unknown, maxAge?: number): void {
+  set(key: string, value: unknown): void {
     this.cache.set(key, {
       data: value,
       timestamp: Date.now()
@@ -175,10 +178,6 @@ class CacheManager {
 
   clear(): void {
     this.cache.clear();
-  }
-
-  has(key: string): boolean {
-    return this.cache.has(key);
   }
 }
 
@@ -208,7 +207,8 @@ export async function deduplicatedFetch(
 /**
  * Prefetch resources
  */
-export function prefetchResource(url: string, as: 'image' | 'script' | 'style' = 'image'): void {
+export function prefetchAsset(url: string, as: 'image' | 'script' | 'style' = 'image'): void {
+  if (typeof document === 'undefined') return;
   const link = document.createElement('link');
   link.rel = 'prefetch';
   link.as = as;
@@ -219,7 +219,8 @@ export function prefetchResource(url: string, as: 'image' | 'script' | 'style' =
 /**
  * Preload critical resources
  */
-export function preloadResource(url: string, as: 'image' | 'script' | 'style' = 'image'): void {
+export function preloadAsset(url: string, as: 'image' | 'script' | 'style' = 'image'): void {
+  if (typeof document === 'undefined') return;
   const link = document.createElement('link');
   link.rel = 'preload';
   link.as = as;
@@ -234,20 +235,15 @@ export function preloadResource(url: string, as: 'image' | 'script' | 'style' = 
  * Connection optimization hints
  */
 export function addConnectionHints(): void {
+  if (typeof document === 'undefined') return;
   const hints = [
     { rel: 'dns-prefetch', href: 'https://images.unsplash.com' },
     { rel: 'dns-prefetch', href: 'https://fonts.googleapis.com' },
     { rel: 'dns-prefetch', href: 'https://rxpyehmubnzdshncpqbw.supabase.co' },
     { rel: 'preconnect', href: 'https://fonts.gstatic.com', crossOrigin: 'anonymous' },
-    { rel: 'preconnect', href: 'https://rxpyehmubnzdshncpqbw.supabase.co', crossOrigin: 'anonymous' },
   ];
 
   hints.forEach(hint => {
-    const selector = `link[rel="${hint.rel}"][href="${hint.href}"]`;
-    if (document.head.querySelector(selector)) {
-      return;
-    }
-
     const link = document.createElement('link');
     link.rel = hint.rel;
     link.href = hint.href;
@@ -256,4 +252,11 @@ export function addConnectionHints(): void {
     }
     document.head.appendChild(link);
   });
+
+  if ('requestIdleCallback' in window) {
+    window.requestIdleCallback(() => {
+      const routes = ['/shop', '/cart'];
+      routes.forEach(route => prefetchAsset(route));
+    });
+  }
 }

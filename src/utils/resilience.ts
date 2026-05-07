@@ -85,7 +85,7 @@ export const validateSupabaseConfig = (): {
 } => {
   const errors: string[] = [];
   const url = import.meta.env.VITE_SUPABASE_URL;
-  const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
+  const key = import.meta.env.VITE_SUPABASE_ANON_KEY || import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 
   if (!url) {
     errors.push('VITE_SUPABASE_URL is not configured');
@@ -94,9 +94,9 @@ export const validateSupabaseConfig = (): {
   }
 
   if (!key) {
-    errors.push('VITE_SUPABASE_PUBLISHABLE_KEY is not configured');
+    errors.push('Supabase Key (ANON or PUBLISHABLE) is not configured');
   } else if (key.length < 20) {
-    errors.push('VITE_SUPABASE_PUBLISHABLE_KEY appears invalid');
+    errors.push('Supabase Key appears invalid');
   }
 
   return {

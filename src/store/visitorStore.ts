@@ -22,7 +22,7 @@ interface VisitorStore {
   startSession: () => Promise<void>;
   updateSession: () => Promise<void>;
   getAverageStayDuration: () => number; // in seconds
-  syncWithSupabase: () => Promise<void>;
+  syncWithSupabase: (force?: boolean) => Promise<void>;
 }
 
 export const useVisitorStore = create<VisitorStore>()(
@@ -36,7 +36,14 @@ export const useVisitorStore = create<VisitorStore>()(
       },
       currentSession: null,
 
-      syncWithSupabase: async () => {
+      syncWithSupabase: async (force = false) => {
+        const { stats } = get();
+        const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
+
+        if (!force && stats.lastUpdated > fiveMinutesAgo && stats.totalSessions > 0) {
+          return;
+        }
+
         try {
           // Attempt to get global stats from Supabase
           const { data, error } = await supabase

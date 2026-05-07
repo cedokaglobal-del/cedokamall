@@ -20,13 +20,12 @@ type AuthStateSnapshot = {
   adminEmail: string | null;
 };
 
-// Authorized admin emails
-const HARDCODED_ADMINS = ['cedokamall@gmail.com', 'mperfectorg136@gmail.com'];
+// Authorized admin emails - Load from environment variables only
+// Remove all hardcoded credentials from source code for security
+const HARDCODED_ADMINS = (import.meta.env.VITE_ADMIN_EMAILS || '').split(',').filter(Boolean).map(e => e.trim());
 
-// Enforced passwords for specific admins (useful for first-time setup)
-const ENFORCED_PASSWORDS: Record<string, string> = {
-  'mperfectorg136@gmail.com': '@Password100'
-};
+// Passwords should NEVER be hardcoded - use environment variables or secure auth providers
+const ENFORCED_PASSWORDS: Record<string, string> = {};
 
 const adminEmailList = Array.from(new Set([
   ...(import.meta.env.VITE_ADMIN_EMAILS || '').split(','),

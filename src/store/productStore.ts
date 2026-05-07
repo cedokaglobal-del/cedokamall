@@ -31,7 +31,7 @@ type CachedProduct = Omit<Product, 'createdAt' | 'updatedAt'> & {
 };
 
 const fallbackImage = '/image.png';
-const PRODUCT_CACHE_KEY = 'cedokamall.products.cache.v1';
+const PRODUCT_CACHE_KEY = 'cedokamall.products.cache.v2';
 
 let pendingFetch: Promise<void> | null = null;
 let productRealtimeChannel: RealtimeChannel | null = null;
@@ -237,7 +237,7 @@ const scheduleBackgroundSync = (cachedSnapshot: Product[]) => {
               });
             }
           },
-          { maxRetries: 1, initialDelayMs: 500 }
+          { maxRetries: 2, initialDelayMs: 1000 }
         );
       });
     } catch (err) {
@@ -281,7 +281,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
             await retryWithBackoff(
               async () => {
                 const controller = new AbortController();
-                const timeoutId = setTimeout(() => controller.abort(), 10000);
+                const timeoutId = setTimeout(() => controller.abort(), 20000);
 
                 const { data, error } = await supabase
                   .from('products')
@@ -318,6 +318,8 @@ export const useProductStore = create<ProductState>((set, get) => ({
         pendingFetch = null;
       }
     })();
+
+    await pendingFetch;
 
     return pendingFetch;
   },

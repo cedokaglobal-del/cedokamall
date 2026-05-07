@@ -4,6 +4,7 @@ import { motion } from 'framer-motion';
 import {
   ArrowRight,
   ChevronRight,
+  Package,
   ShieldCheck,
   Star,
   Timer,
@@ -56,7 +57,7 @@ const CountdownTimer = () => {
       {[time.h, time.m, time.s].map((value, index) => (
         <span
           key={index}
-          className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-navy text-gold text-lg font-bold shadow-md border border-gold/20 will-change-contents"
+          className="inline-flex h-10 w-10 items-center justify-center rounded-md bg-navy text-gold text-lg font-bold shadow-md border border-gold/20"
         >
           {String(value).padStart(2, '0')}
         </span>
@@ -123,7 +124,7 @@ const WelcomeGreeting = () => {
       animate={{ opacity: 1, x: 0, scale: 1 }}
       exit={{ opacity: 0, x: 50, scale: 0.95 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className="fixed bottom-24 right-8 z-[100] max-w-sm rounded-md bg-white p-6 shadow-2xl border-l-4 border-gold will-change-transform"
+      className="fixed bottom-24 right-8 z-[100] max-w-sm rounded-md bg-white p-6 shadow-2xl border-l-4 border-gold"
     >
       <div className="flex items-start gap-4">
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gold/10 flex-shrink-0 animate-pulse">
@@ -402,7 +403,7 @@ const Index = () => {
       </section>
 
       {/* Main Product List */}
-      <section className="container py-16 content-visibility-auto">
+      <section className="container py-16">
         <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
           <div>
             <h2 className="font-serif text-4xl font-bold text-navy">Product List</h2>
@@ -413,11 +414,44 @@ const Index = () => {
             <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-5">
-          {products.slice(0, 10).map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
-        </div>
+        {isLoading && products.length === 0 ? (
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            {[...Array(10)].map((_, i) => (
+              <div key={i} className="aspect-[4/5] animate-pulse rounded-lg bg-gray-100" />
+            ))}
+          </div>
+        ) : error && products.length === 0 ? (
+          <div className="rounded-lg bg-red-50 p-12 text-center text-red-800">
+            <p className="font-bold">Unable to load products</p>
+            <p className="text-sm mt-2">{error}</p>
+            <button 
+              onClick={() => useProductStore.getState().fetchProducts(true)}
+              className="mt-4 rounded-md bg-red-100 px-4 py-2 text-sm font-bold hover:bg-red-200 transition-colors"
+            >
+              Retry
+            </button>
+          </div>
+        ) : hasLoaded && products.length === 0 ? (
+          <div className="rounded-lg border border-dashed border-gold-antique/20 p-20 text-center">
+            <div className="mx-auto w-16 h-16 bg-ivory rounded-full flex items-center justify-center mb-4">
+              <Package className="w-8 h-8 text-gold/40" />
+            </div>
+            <p className="text-navy/60 font-medium">Our catalog is currently being updated.</p>
+            <p className="text-sm text-navy/40 mt-1">Please check back in a few moments.</p>
+            <button 
+              onClick={() => useProductStore.getState().fetchProducts(true)}
+              className="mt-6 rounded-md bg-navy text-gold px-6 py-2 text-sm font-bold hover:bg-gold hover:text-navy transition-all duration-300"
+            >
+              Refresh Catalog
+            </button>
+          </div>
+        ) : (
+          <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            {products.slice(0, 10).map((product, idx) => (
+              <ProductCard key={product.id} product={product} priority={idx < 4} />
+            ))}
+          </div>
+        )}
       </section>
 
       {/* Recommended Section - Premium Highlight */}
@@ -429,11 +463,19 @@ const Index = () => {
             <p className="text-champagne/60 font-sans tracking-widest uppercase text-xs">Exclusively selected for your discerning taste</p>
             <div className="h-1 w-24 bg-gold mx-auto mt-6" />
           </div>
-          <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-6">
-            {recommended.map((product) => (
-              <ProductCard key={product.id} product={product} />
-            ))}
-          </div>
+          {isLoading && products.length === 0 ? (
+            <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-6">
+              {[...Array(6)].map((_, i) => (
+                <div key={i} className="aspect-[4/5] animate-pulse rounded-lg bg-white/5" />
+              ))}
+            </div>
+          ) : (
+            <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-6">
+              {recommended.map((product) => (
+                <ProductCard key={product.id} product={product} />
+              ))}
+            </div>
+          )}
           <div className="mt-16 text-center">
             <Link
               to="/shop"
@@ -447,7 +489,7 @@ const Index = () => {
       </section>
 
       {/* Popular Search Section */}
-      <section className="container py-12 content-visibility-auto">
+      <section className="container py-12">
         <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
           <h2 className="font-serif text-4xl font-bold text-navy">Popular Search</h2>
           <Link to="/shop" className="group flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-gold hover:text-gold-antique transition-colors">
@@ -455,15 +497,21 @@ const Index = () => {
             <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-5">
-          {trending.map((product) => (
-            <ProductCard key={product.id} product={product} />
-          ))}
+        <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          {isLoading && products.length === 0 ? (
+            [...Array(5)].map((_, i) => (
+              <div key={i} className="aspect-[4/5] animate-pulse rounded-lg bg-gray-100" />
+            ))
+          ) : (
+            trending.map((product) => (
+              <ProductCard key={product.id} product={product} />
+            ))
+          )}
         </div>
       </section>
 
       {/* Flash Deals */}
-      {flashDeals.length > 0 && (
+      {(flashDeals.length > 0 || (isLoading && products.length === 0)) && (
         <section className="bg-white border-y border-gold-antique/10 py-24">
           <div className="container">
             <div className="mb-16 flex flex-col md:flex-row items-center justify-between gap-8">
@@ -478,10 +526,16 @@ const Index = () => {
               </div>
               <CountdownTimer />
             </div>
-            <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-5">
-              {flashDeals.map((product) => (
-                <ProductCard key={product.id} product={product} />
-              ))}
+            <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              {isLoading && products.length === 0 ? (
+                [...Array(5)].map((_, i) => (
+                  <div key={i} className="aspect-[4/5] animate-pulse rounded-lg bg-gray-100" />
+                ))
+              ) : (
+                flashDeals.map((product) => (
+                  <ProductCard key={product.id} product={product} />
+                ))
+              )}
             </div>
           </div>
         </section>

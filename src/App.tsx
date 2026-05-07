@@ -17,6 +17,7 @@ import { useSEO } from "@/hooks/useSEO";
 import { subscribeToProductChanges, useProductStore } from "@/store/productStore";
 import { useVisitorStore } from "@/store/visitorStore";
 import { safeLazy } from "@/utils/lazy";
+import { addConnectionHints } from "@/utils/performance";
 
 // --- Route-level code splitting (each page loads on demand) ---
 const Index        = safeLazy(() => import("./pages/Index"));
@@ -24,6 +25,7 @@ const ShopPage     = safeLazy(() => import("./pages/ShopPage"));
 const ProductPage  = safeLazy(() => import("./pages/ProductPage"));
 const CartPage     = safeLazy(() => import("./pages/CartPage"));
 const NotFound     = safeLazy(() => import("./pages/NotFound"));
+
 // Admin pages (heavy, only loaded when admin visits)
 const AdminLogin      = safeLazy(() => import("./pages/AdminLogin"));
 const AdminDashboard  = safeLazy(() => import("./pages/AdminDashboard"));
@@ -32,8 +34,8 @@ const AdminAnalytics  = safeLazy(() => import("./pages/AdminAnalytics"));
 
 // Lightweight page spinner shown while a chunk is loading
 const PageLoader = () => (
-  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "#0D1B2A" }}>
-    <div style={{ width: 40, height: 40, border: "3px solid #C9A84C", borderTopColor: "transparent", borderRadius: "50%", animation: "spin 0.7s linear infinite" }} />
+  <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "#0f1117" }}>
+    <div style={{ width: 48, height: 48, border: "4px solid #C9A84C", borderBottomColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
     <style>{`@keyframes spin{to{transform:rotate(360deg)}}`}</style>
   </div>
 );
@@ -69,6 +71,8 @@ const App = () => {
       console.log('✅ Supabase configuration is valid');
     }
 
+    addConnectionHints();
+
     // Start database health checks only during development
     const healthCheckInterval = startHealthCheck(60000);
 
@@ -82,7 +86,17 @@ const App = () => {
       }
     };
 
-    fetchInBackground();
+    // Initial fetch: call directly to ensure data starts loading immediately
+    const initialFetchTimeout = setTimeout(() => {
+      void fetchInBackground();
+    }, 100);
+
+    const backgroundFetchHandle =
+      typeof window !== "undefined" && "requestIdleCallback" in window
+        ? window.requestIdleCallback(() => {
+            void fetchInBackground();
+          }, { timeout: 5000 })
+        : null;
     const unsubscribeProductRealtime = subscribeToProductChanges();
 
     // Initialize visitor session
@@ -125,6 +139,10 @@ const App = () => {
     return () => {
       unsubscribeProductRealtime();
       stopWebVitals();
+      clearTimeout(initialFetchTimeout);
+      if (typeof window !== "undefined" && "cancelIdleCallback" in window && backgroundFetchHandle !== null) {
+        window.cancelIdleCallback(backgroundFetchHandle as number);
+      }
       if (healthCheckInterval) {
         clearInterval(healthCheckInterval);
       }

@@ -10,7 +10,7 @@ interface TransactionState {
   hasLoaded: boolean;
   lastSyncedAt: string | null;
   
-  fetchTransactions: () => Promise<void>;
+  fetchTransactions: (force?: boolean) => Promise<void>;
   addTransaction: (transaction: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>) => Promise<void>;
   getTransactionSummary: (days?: number) => TransactionSummary;
   getAnalyticsData: (days?: number) => AnalyticsData;
@@ -41,15 +41,15 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
   hasLoaded: loadCachedTransactions().length > 0,
   lastSyncedAt: null,
   
-  fetchTransactions: async () => {
+  fetchTransactions: async (force = false) => {
     const state = get();
     // If recently loaded (within 5 mins), don't fetch again unless forced or empty
     const fiveMinutesAgo = Date.now() - 5 * 60 * 1000;
-    if (state.hasLoaded && state.lastSyncedAt && new Date(state.lastSyncedAt).getTime() > fiveMinutesAgo) {
+    if (!force && state.hasLoaded && state.lastSyncedAt && new Date(state.lastSyncedAt).getTime() > fiveMinutesAgo) {
       return;
     }
 
-    if (state.isLoading) return;
+    if (state.isLoading && !force) return;
     set({ isLoading: true });
     try {
       await retryWithBackoff(async () => {

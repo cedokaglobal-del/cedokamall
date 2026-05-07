@@ -15,7 +15,7 @@ interface CartState {
   isOpen: boolean;
   couponCode: string;
   discount: number;
-  addItem: (item: Omit<CartItem, 'quantity'>) => void;
+  addItem: (item: Omit<CartItem, 'quantity'> & { quantity?: number }) => void;
   removeItem: (id: string) => void;
   updateQuantity: (id: string, quantity: number) => void;
   toggleCart: () => void;
@@ -38,12 +38,21 @@ export const useCartStore = create<CartState>((set, get) => ({
   couponCode: '',
   discount: 0,
   addItem: (item) => set((state) => {
+    const desiredQuantity = Math.max(1, Math.min(item.quantity ?? 1, item.inStock));
     const existing = state.items.find((i) => i.id === item.id);
     if (existing) {
-      // If item exists, we don't increment. Just return current state.
-      return { items: state.items };
+      return {
+        items: state.items.map((entry) =>
+          entry.id === item.id
+            ? {
+                ...entry,
+                quantity: Math.min(entry.quantity + desiredQuantity, entry.inStock),
+              }
+            : entry
+        ),
+      };
     }
-    return { items: [...state.items, { ...item, quantity: 1 }] };
+    return { items: [...state.items, { ...item, quantity: desiredQuantity }] };
   }),
   removeItem: (id) => set((state) => ({ items: state.items.filter((i) => i.id !== id) })),
   clearCart: () => set({ items: [] }),

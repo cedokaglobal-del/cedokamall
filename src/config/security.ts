@@ -3,12 +3,13 @@
  * Ensures the application follows industry security best practices
  */
 
-// Content Security Policy Headers
+// Content Security Policy Headers - STRICT for security
+// Removed 'unsafe-inline' and 'unsafe-eval' to prevent XSS attacks
 export const CSP_HEADERS = {
   "Content-Security-Policy": 
     "default-src 'self'; " +
-    "script-src 'self' 'unsafe-inline' 'unsafe-eval' *.unsplash.com *.googleapis.com *.gstatic.com; " +
-    "style-src 'self' 'unsafe-inline' *.googleapis.com *.gstatic.com; " +
+    "script-src 'self' *.unsplash.com *.googleapis.com *.gstatic.com; " +
+    "style-src 'self' *.googleapis.com *.gstatic.com; " +
     "img-src 'self' data: https: *.unsplash.com *.gstatic.com; " +
     "font-src 'self' data: *.googleapis.com *.gstatic.com; " +
     "connect-src 'self' *.unsplash.com *.googleapis.com *.gstatic.com; " +
