@@ -275,23 +275,23 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
   return (
     <form onSubmit={handleSubmit} className="space-y-8">
       <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-        <TabsList className="grid w-full grid-cols-5 mb-8 bg-muted/50 p-1 rounded-xl">
+        <TabsList className="grid w-full grid-cols-2 gap-2 sm:grid-cols-4 mb-6 bg-muted/50 p-1 rounded-xl">
           <TabsTrigger value="general" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
             <Info className="w-4 h-4 mr-2" />
-            <span className="hidden md:inline">General</span>
+            <span className="text-xs sm:text-sm">General</span>
           </TabsTrigger>
           <TabsTrigger value="pricing" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
             <Tag className="w-4 h-4 mr-2" />
-            <span className="hidden md:inline">Pricing</span>
+            <span className="text-xs sm:text-sm">Pricing</span>
           </TabsTrigger>
           <TabsTrigger value="features" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
             <ListPlus className="w-4 h-4 mr-2" />
-            <span className="hidden md:inline">Features</span>
+            <span className="text-xs sm:text-sm">Features</span>
             <span className="text-destructive ml-1">*</span>
           </TabsTrigger>
           <TabsTrigger value="media" className="rounded-lg data-[state=active]:bg-background data-[state=active]:shadow-sm">
             <ImageIcon className="w-4 h-4 mr-2" />
-            <span className="hidden md:inline">Media</span>
+            <span className="text-xs sm:text-sm">Media</span>
           </TabsTrigger>
         </TabsList>
 

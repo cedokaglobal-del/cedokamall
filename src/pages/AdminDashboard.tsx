@@ -70,6 +70,11 @@ const AdminDashboard = () => {
   const [isClearAllOpen, setIsClearAllOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const visitorStats = useVisitorStore((state) => state.stats);
+  const avgStayDuration = useVisitorStore((state) => state.getAverageStayDuration());
+  const syncVisitorStats = useVisitorStore((state) => state.syncWithSupabase);
+  const subscribeToVisitorRealtime = useVisitorStore((state) => state.subscribeToRealtime);
+  const isVisitorRealtimeConnected = useVisitorStore((state) => state.isRealtimeConnected);
 
   const lowStockProducts = useMemo(
     () => products.filter((product) => product.inStock > 0 && product.inStock < 10),
@@ -98,23 +103,31 @@ const AdminDashboard = () => {
   );
   const recentProducts = useMemo(() => products.slice(0, 6), [products]);
 
-  // Real Analytics Data
+  useEffect(() => {
+    const unsubscribe = subscribeToVisitorRealtime();
+    return () => {
+      unsubscribe();
+    };
+  }, [subscribeToVisitorRealtime]);
+
   const fetchTransactions = useTransactionStore((state) => state.fetchTransactions);
   const getTransactionSummary = useTransactionStore((state) => state.getTransactionSummary);
-  const transactionSummary = useMemo(() => getTransactionSummary(30), [getTransactionSummary]);
-  const visitorStats = useVisitorStore((state) => state.stats);
-  const avgStayDuration = useVisitorStore((state) => state.getAverageStayDuration());
+  const transactions = useTransactionStore((state) => state.transactions);
+  const transactionSummary = useMemo(
+    () => getTransactionSummary(30),
+    [getTransactionSummary, transactions]
+  );
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
       void fetchTransactions();
-      void useVisitorStore.getState().syncWithSupabase();
+      void syncVisitorStats();
     }, 120);
 
     return () => {
       window.clearTimeout(timer);
     };
-  }, [fetchTransactions]);
+  }, [fetchTransactions, syncVisitorStats]);
 
   const handleRefresh = async () => {
     try {
@@ -122,7 +135,7 @@ const AdminDashboard = () => {
       await Promise.all([
         fetchProducts(true),
         fetchTransactions(true),
-        useVisitorStore.getState().syncWithSupabase(true)
+        syncVisitorStats(true),
       ]);
       toast.success('Dashboard refreshed');
     } catch (error) {
@@ -235,7 +248,7 @@ const AdminDashboard = () => {
     {
       label: 'Site Visitors',
       value: visitorStats.totalVisitors.toLocaleString(),
-      change: '+24%',
+      change: isVisitorRealtimeConnected ? 'LIVE' : 'SYNC',
       icon: Users,
       color: 'text-orange-600',
       bgColor: 'bg-orange-100',

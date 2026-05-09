@@ -8,15 +8,16 @@ interface AnalyticsChartProps {
 }
 
 const COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
+const currencyFormatter = new Intl.NumberFormat('en-NG', {
+  style: 'currency',
+  currency: 'NGN',
+  notation: 'compact',
+  minimumFractionDigits: 0,
+});
 
 const AnalyticsCharts = ({ data }: AnalyticsChartProps) => {
   const formatCurrency = (value: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-      notation: 'compact',
-      minimumFractionDigits: 0,
-    }).format(value);
+    return currencyFormatter.format(value);
   };
 
   const StatCard = ({

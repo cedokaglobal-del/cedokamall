@@ -1,21 +1,6 @@
 import type { LucideIcon } from 'lucide-react';
 import {
-  Blend,
-  ChefHat,
-  Fan,
-  Headphones,
-  Laptop,
-  Microwave,
-  MonitorPlay,
   Package,
-  Refrigerator,
-  Smartphone,
-  Speaker,
-  Tablet,
-  Tv,
-  WashingMachine,
-  Wind,
-  Zap,
 } from 'lucide-react';
 import { Product } from '@/types/product';
 
@@ -28,24 +13,24 @@ export interface Category {
 }
 
 const CATEGORY_META: Record<string, { icon: LucideIcon; subcategory?: string }> = {
-  Smartphones: { icon: Smartphone, subcategory: 'Electronics' },
-  Laptops: { icon: Laptop, subcategory: 'Electronics' },
-  Tablets: { icon: Tablet, subcategory: 'Electronics' },
-  'Audio & Sound': { icon: Headphones, subcategory: 'Electronics' },
-  Cameras: { icon: MonitorPlay, subcategory: 'Electronics' },
-  Gaming: { icon: Blend, subcategory: 'Electronics' },
+  Smartphones: { icon: Package, subcategory: 'Electronics' },
+  Laptops: { icon: Package, subcategory: 'Electronics' },
+  Tablets: { icon: Package, subcategory: 'Electronics' },
+  'Audio & Sound': { icon: Package, subcategory: 'Electronics' },
+  Cameras: { icon: Package, subcategory: 'Electronics' },
+  Gaming: { icon: Package, subcategory: 'Electronics' },
   Accessories: { icon: Package, subcategory: 'Electronics' },
-  TV: { icon: Tv, subcategory: 'Home Appliances' },
-  Refrigerators: { icon: Refrigerator, subcategory: 'Home Appliances' },
-  'Washing Machines': { icon: WashingMachine, subcategory: 'Home Appliances' },
-  'Air Conditioners': { icon: Wind, subcategory: 'Home Appliances' },
-  Fans: { icon: Fan, subcategory: 'Home Appliances' },
-  Generators: { icon: Zap, subcategory: 'Home Appliances' },
-  Freezers: { icon: Refrigerator, subcategory: 'Home Appliances' },
-  'Sound Systems': { icon: Speaker, subcategory: 'Electronics' },
-  'Smart Home': { icon: Microwave, subcategory: 'Smart Living' },
-  Solar: { icon: Zap, subcategory: 'Energy' },
-  'Kitchen Accessories': { icon: ChefHat, subcategory: 'Kitchen' },
+  TV: { icon: Package, subcategory: 'Home Appliances' },
+  Refrigerators: { icon: Package, subcategory: 'Home Appliances' },
+  'Washing Machines': { icon: Package, subcategory: 'Home Appliances' },
+  'Air Conditioners': { icon: Package, subcategory: 'Home Appliances' },
+  Fans: { icon: Package, subcategory: 'Home Appliances' },
+  Generators: { icon: Package, subcategory: 'Home Appliances' },
+  Freezers: { icon: Package, subcategory: 'Home Appliances' },
+  'Sound Systems': { icon: Package, subcategory: 'Electronics' },
+  'Smart Home': { icon: Package, subcategory: 'Smart Living' },
+  Solar: { icon: Package, subcategory: 'Energy' },
+  'Kitchen Accessories': { icon: Package, subcategory: 'Kitchen' },
 };
 
 export const DEFAULT_CATEGORY_NAMES = [

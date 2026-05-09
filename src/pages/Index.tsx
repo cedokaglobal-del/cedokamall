@@ -152,8 +152,15 @@ const WelcomeGreeting = () => {
 };
 
 const Index = () => {
-  const { products, isLoading, error, hasLoaded } = useProductStore();
+  const products = useProductStore((state) => state.products);
+  const isLoading = useProductStore((state) => state.isLoading);
+  const error = useProductStore((state) => state.error);
+  const hasLoaded = useProductStore((state) => state.hasLoaded);
   const categories = useMemo(() => buildCategories(products), [products]);
+  const topCategories = useMemo(
+    () => [...categories].sort((a, b) => b.count - a.count).slice(0, 8),
+    [categories]
+  );
 
   const flashDeals = useMemo(
     () => products.filter((product) => product.badge === 'FLASH DEAL').slice(0, 5),
@@ -195,27 +202,32 @@ const Index = () => {
     type: 'website',
   });
 
-  useStructuredData([
-    getOrganizationSchema(),
-    getStoreSchema(),
-    getWebsiteSchema(),
-    getBreadcrumbSchema([{ name: 'Home', url: SEO_CONFIG.siteUrl }]),
-    getItemListSchema(
-      categories.slice(0, 8).map((category, index) => ({
-        position: index + 1,
-        name: category.name,
-        url: `${SEO_CONFIG.siteUrl}/shop?category=${category.slug}`,
-      }))
-    ),
-    getItemListSchema(
-      products.slice(0, 10).map((product, index) => ({
-        position: index + 1,
-        name: product.name,
-        url: `${SEO_CONFIG.siteUrl}/product/${product.id}`,
-        image: product.image,
-      }))
-    ),
-  ]);
+  const structuredDataSchemas = useMemo(
+    () => [
+      getOrganizationSchema(),
+      getStoreSchema(),
+      getWebsiteSchema(),
+      getBreadcrumbSchema([{ name: 'Home', url: SEO_CONFIG.siteUrl }]),
+      getItemListSchema(
+        topCategories.map((category, index) => ({
+          position: index + 1,
+          name: category.name,
+          url: `${SEO_CONFIG.siteUrl}/shop?category=${category.slug}`,
+        }))
+      ),
+      getItemListSchema(
+        products.slice(0, 10).map((product, index) => ({
+          position: index + 1,
+          name: product.name,
+          url: `${SEO_CONFIG.siteUrl}/product/${product.id}`,
+          image: product.image,
+        }))
+      ),
+    ],
+    [products, topCategories]
+  );
+
+  useStructuredData(structuredDataSchemas);
 
   useEffect(() => {
     const calculateVisitors = () => {
@@ -256,7 +268,7 @@ const Index = () => {
       <Header />
 
       {/* Hero Section */}
-      <section className="relative flex min-h-[600px] items-center overflow-hidden bg-navy text-champagne">
+      <section className="relative flex min-h-[460px] sm:min-h-[560px] items-center overflow-hidden bg-navy text-champagne">
         <div
           className="absolute inset-0 opacity-10"
           style={{
@@ -264,7 +276,7 @@ const Index = () => {
               "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C9A84C' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
           }}
         />
-        <div className="container relative z-10 py-20 md:py-32">
+        <div className="container relative z-10 py-14 sm:py-20 md:py-32">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
@@ -281,25 +293,25 @@ const Index = () => {
                 The Elite Marketplace
               </motion.span>
             </div>
-            <h1 className="mb-8 font-serif text-5xl font-bold leading-[1.1] sm:text-6xl md:text-8xl text-white">
+            <h1 className="mb-8 font-serif text-4xl font-bold leading-[1.1] sm:text-6xl md:text-8xl text-white">
               Everything You Need.
               <br />
               <span className="text-gradient-gold drop-shadow-xl italic">Delivered Nationwide.</span>
             </h1>
-            <p className="mb-12 max-w-2xl text-lg leading-relaxed text-champagne/80 md:text-2xl font-sans font-light">
+            <p className="mb-10 sm:mb-12 max-w-2xl text-base sm:text-lg leading-relaxed text-champagne/80 md:text-2xl font-sans font-light">
               The most Affordable, Reliable &amp; Original Electrical Equipment and Gadgets with Warranties - LG, Hisense, MeWe, Maxi etc
             </p>
             <div className="flex flex-col gap-6 sm:flex-row">
               <Link
                 to="/shop"
-                className="inline-flex items-center justify-center gap-3 rounded-md bg-gold px-12 py-5 text-xl font-bold text-navy shadow-2xl transition-all duration-300 hover:bg-gold-antique hover:text-white transform hover:-translate-y-1 active:scale-95 will-change-transform"
+                className="inline-flex items-center justify-center gap-3 rounded-md bg-gold px-8 sm:px-12 py-4 sm:py-5 text-lg sm:text-xl font-bold text-navy shadow-2xl transition-all duration-300 hover:bg-gold-antique hover:text-white transform hover:-translate-y-1 active:scale-95 will-change-transform"
               >
                 Explore Shop
                 <ArrowRight className="h-6 w-6 transition-transform group-hover:translate-x-1" />
               </Link>
               <Link
                 to="/shop?deals=true"
-                className="inline-flex items-center justify-center gap-3 rounded-md border border-gold/30 bg-white/5 px-12 py-5 text-xl font-bold text-champagne backdrop-blur-md transition-all duration-300 hover:bg-white/10 hover:border-gold will-change-transform"
+                className="inline-flex items-center justify-center gap-3 rounded-md border border-gold/30 bg-white/5 px-8 sm:px-12 py-4 sm:py-5 text-lg sm:text-xl font-bold text-champagne backdrop-blur-md transition-all duration-300 hover:bg-white/10 hover:border-gold will-change-transform"
               >
                 Flash Deals
               </Link>
@@ -314,23 +326,23 @@ const Index = () => {
       {/* Trust Bar */}
       <div className="overflow-hidden border-y border-gold-antique/10 bg-white py-6 shadow-sm">
         <div className="container flex flex-nowrap justify-start gap-8 overflow-x-auto whitespace-nowrap text-sm no-scrollbar md:flex-wrap md:justify-center md:gap-16">
-          <span className="flex flex-shrink-0 items-center gap-3 font-semibold text-navy/80 uppercase tracking-widest text-[10px]">
+          <span className="flex flex-shrink-0 items-center gap-3 font-semibold text-navy/80 uppercase tracking-widest text-xs">
             <Users className="h-4 w-4 text-gold" />
             <strong>1.2M+</strong> Elite Members
           </span>
-          <span className="flex flex-shrink-0 items-center gap-3 font-semibold text-navy/80 uppercase tracking-widest text-[10px]">
+          <span className="flex flex-shrink-0 items-center gap-3 font-semibold text-navy/80 uppercase tracking-widest text-xs">
             <Star className="h-4 w-4 fill-gold text-gold" />
             <strong>4.9/5</strong> Excellence Rating
           </span>
-          <span className="flex flex-shrink-0 items-center gap-3 font-semibold text-navy/80 uppercase tracking-widest text-[10px]">
+          <span className="flex flex-shrink-0 items-center gap-3 font-semibold text-navy/80 uppercase tracking-widest text-xs">
             <ShieldCheck className="h-4 w-4 text-gold" />
             <strong>100%</strong> Secured Trust
           </span>
-          <span className="flex flex-shrink-0 items-center gap-3 font-semibold text-navy/80 uppercase tracking-widest text-[10px]">
+          <span className="flex flex-shrink-0 items-center gap-3 font-semibold text-navy/80 uppercase tracking-widest text-xs">
             <Truck className="h-4 w-4 text-gold" />
             <strong>Premium</strong> Logistics
           </span>
-          <span className="flex flex-shrink-0 items-center gap-3 font-bold text-gold uppercase tracking-widest text-[10px]">
+          <span className="flex flex-shrink-0 items-center gap-3 font-bold text-gold uppercase tracking-widest text-xs">
             {visitorCount.toLocaleString()} Browsing Now
           </span>
         </div>
@@ -353,10 +365,7 @@ const Index = () => {
             </Link>
           </div>
           <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
-            {categories
-              .sort((a, b) => b.count - a.count)
-              .slice(0, 8)
-              .map((category, index) => (
+            {topCategories.map((category, index) => (
                 <Link 
                   key={category.slug} 
                   to={`/shop?category=${category.slug}`}

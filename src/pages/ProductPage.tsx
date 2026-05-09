@@ -11,7 +11,6 @@ import {
   Share2,
   Shield,
   ShoppingCart,
-  Sparkles,
   Star,
   Truck,
 } from 'lucide-react';
@@ -314,7 +313,7 @@ const ProductPage = () => {
                     {product.features && product.features.length > 0 && (
                       <div className="rounded-[1.5rem] border border-gold-antique/10 bg-white p-5 md:p-6">
                         <div className="mb-5 flex items-center gap-2">
-                          <Sparkles className="h-4 w-4 text-gold" />
+                          <Star className="h-4 w-4 text-gold" />
                           <h2 className="text-sm font-bold uppercase tracking-[0.24em] text-navy">
                             Product Features
                           </h2>

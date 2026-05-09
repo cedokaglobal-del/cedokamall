@@ -1,11 +1,11 @@
 import { motion } from 'framer-motion';
-import { Trophy, Star, Zap, Crown } from 'lucide-react';
+import { Trophy, Star } from 'lucide-react';
 
 const tiers = [
   { name: 'Bronze', icon: Star, points: 0, color: 'text-amber-700' },
-  { name: 'Silver', icon: Zap, points: 5000, color: 'text-gray-400' },
+  { name: 'Silver', icon: Star, points: 5000, color: 'text-gray-400' },
   { name: 'Gold', icon: Trophy, points: 15000, color: 'text-gold' },
-  { name: 'Platinum', icon: Crown, points: 50000, color: 'text-purple-400' },
+  { name: 'Platinum', icon: Trophy, points: 50000, color: 'text-purple-400' },
 ];
 
 const LoyaltyBanner = () => {

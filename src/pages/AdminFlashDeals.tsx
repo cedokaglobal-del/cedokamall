@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
 import AdminLayout from '@/components/AdminLayout';
 import FlashDealForm from '@/components/FlashDealForm';
 import { Card } from '@/components/ui/card';
@@ -9,7 +8,6 @@ import { flashDealStore } from '@/store/flashDealStore';
 import { Trash2, Edit2, Eye } from 'lucide-react';
 
 const AdminFlashDeals = () => {
-  const navigate = useNavigate();
   const [deals, setDeals] = useState<FlashDeal[]>([]);
   const [showForm, setShowForm] = useState(false);
   const [isLoading, setIsLoading] = useState(false);

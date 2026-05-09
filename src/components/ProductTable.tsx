@@ -18,13 +18,15 @@ interface ProductTableProps {
   isLoading?: boolean;
 }
 
+const ngnFormatter = new Intl.NumberFormat('en-NG', {
+  style: 'currency',
+  currency: 'NGN',
+  minimumFractionDigits: 0,
+});
+
 const ProductTable = ({ products, onEdit, onDelete, isLoading = false }: ProductTableProps) => {
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-      minimumFractionDigits: 0,
-    }).format(price);
+    return ngnFormatter.format(price);
   };
 
   const getStockStatus = (stock: number) => {

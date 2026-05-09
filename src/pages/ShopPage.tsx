@@ -22,15 +22,15 @@ const ShopPage = () => {
   const searchTerm = searchParams.get('q') || searchParams.get('search');
   const dealsOnly = searchParams.get('deals') === 'true';
 
-  const { products, isLoading, error, hasLoaded } = useProductStore();
+  const products = useProductStore((state) => state.products);
+  const isLoading = useProductStore((state) => state.isLoading);
+  const error = useProductStore((state) => state.error);
+  const hasLoaded = useProductStore((state) => state.hasLoaded);
   const categories = useMemo(() => buildCategories(products), [products]);
 
   const [selectedCategory, setSelectedCategory] = useState(categoryParam || 'all');
   const [sortBy, setSortBy] = useState('popular');
   const [priceRange, setPriceRange] = useState<[number, number]>(DEFAULT_PRICE_RANGE);
-  const [canScrollLeft, setCanScrollLeft] = useState(false);
-  const [canScrollRight, setCanScrollRight] = useState(true);
-  const scrollContainerRef = useRef<HTMLDivElement>(null);
   const hasInitializedPriceRange = useRef(false);
 
   const maxProductPrice = useMemo(
@@ -52,22 +52,6 @@ const ShopPage = () => {
 
     setSelectedCategory('all');
   }, [categoryParam]);
-
-  const checkScroll = () => {
-    if (!scrollContainerRef.current) {
-      return;
-    }
-
-    const { scrollLeft, scrollWidth, clientWidth } = scrollContainerRef.current;
-    setCanScrollLeft(scrollLeft > 0);
-    setCanScrollRight(scrollLeft < scrollWidth - clientWidth - 10);
-  };
-
-  useEffect(() => {
-    checkScroll();
-    window.addEventListener('resize', checkScroll);
-    return () => window.removeEventListener('resize', checkScroll);
-  }, [categories.length]);
 
   useEffect(() => {
     if (sliderMax <= 0) {
@@ -171,38 +155,43 @@ const ShopPage = () => {
     robots: searchTerm ? 'noindex, follow' : 'index, follow',
   });
 
-  useStructuredData([
-    getBreadcrumbSchema([
-      { name: 'Home', url: SEO_CONFIG.siteUrl },
-      { name: 'Shop', url: `${SEO_CONFIG.siteUrl}/shop` },
-      ...(activeCategory
-        ? [
-            {
-              name: activeCategory.name,
-              url: `${SEO_CONFIG.siteUrl}/shop?category=${activeCategory.slug}`,
-            },
-          ]
-        : []),
-    ]),
-    getCollectionPageSchema({
-      name: activeCategory
-        ? `${activeCategory.name} Collection`
-        : dealsOnly
-          ? 'Flash Deals'
-          : 'Shop All Products',
-      description: pageDescription,
-      url: searchTerm ? `${SEO_CONFIG.siteUrl}/shop` : pageUrl,
-      itemCount: filteredProducts.length,
-    }),
-    getItemListSchema(
-      filteredProducts.slice(0, 24).map((product, index) => ({
-        position: index + 1,
-        name: product.name,
-        url: `${SEO_CONFIG.siteUrl}/product/${product.id}`,
-        image: product.image,
-      }))
-    ),
-  ]);
+  const structuredDataSchemas = useMemo(
+    () => [
+      getBreadcrumbSchema([
+        { name: 'Home', url: SEO_CONFIG.siteUrl },
+        { name: 'Shop', url: `${SEO_CONFIG.siteUrl}/shop` },
+        ...(activeCategory
+          ? [
+              {
+                name: activeCategory.name,
+                url: `${SEO_CONFIG.siteUrl}/shop?category=${activeCategory.slug}`,
+              },
+            ]
+          : []),
+      ]),
+      getCollectionPageSchema({
+        name: activeCategory
+          ? `${activeCategory.name} Collection`
+          : dealsOnly
+            ? 'Flash Deals'
+            : 'Shop All Products',
+        description: pageDescription,
+        url: searchTerm ? `${SEO_CONFIG.siteUrl}/shop` : pageUrl,
+        itemCount: filteredProducts.length,
+      }),
+      getItemListSchema(
+        filteredProducts.slice(0, 24).map((product, index) => ({
+          position: index + 1,
+          name: product.name,
+          url: `${SEO_CONFIG.siteUrl}/product/${product.id}`,
+          image: product.image,
+        }))
+      ),
+    ],
+    [activeCategory, dealsOnly, filteredProducts, pageDescription, pageUrl, searchTerm]
+  );
+
+  useStructuredData(structuredDataSchemas);
 
   return (
     <div className="min-h-screen bg-ivory">
@@ -241,13 +230,11 @@ const ShopPage = () => {
         <div className="mb-10 lg:hidden">
           <div className="relative">
             <div
-              ref={scrollContainerRef}
-              onScroll={checkScroll}
               className="flex gap-3 overflow-x-auto pb-4 no-scrollbar"
             >
               <button
                 onClick={() => setSelectedCategory('all')}
-                className={`flex-shrink-0 whitespace-nowrap rounded-md px-6 py-2 text-xs font-bold uppercase tracking-widest transition-all ${
+                className={`flex-shrink-0 whitespace-nowrap rounded-md px-6 py-3 text-sm font-bold uppercase tracking-widest transition-all ${
                   selectedCategory === 'all'
                     ? 'bg-gold text-navy shadow-lg'
                     : 'bg-white text-navy/60 hover:text-navy'
@@ -259,7 +246,7 @@ const ShopPage = () => {
                 <button
                   key={category.slug}
                   onClick={() => setSelectedCategory(category.slug)}
-                  className={`flex-shrink-0 whitespace-nowrap rounded-md px-6 py-2 text-xs font-bold uppercase tracking-widest transition-all ${
+                  className={`flex-shrink-0 whitespace-nowrap rounded-md px-6 py-3 text-sm font-bold uppercase tracking-widest transition-all ${
                     selectedCategory === category.slug
                       ? 'bg-gold text-navy shadow-lg'
                       : 'bg-white text-navy/60 hover:text-navy'
@@ -269,6 +256,7 @@ const ShopPage = () => {
                 </button>
               ))}
             </div>
+            <p className="mt-2 text-xs font-medium text-navy/45">Swipe left or right to view more categories.</p>
           </div>
         </div>
 

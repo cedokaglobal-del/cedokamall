@@ -31,6 +31,7 @@ const AdminLogin      = safeLazy(() => import("./pages/AdminLogin"));
 const AdminDashboard  = safeLazy(() => import("./pages/AdminDashboard"));
 const AdminProducts   = safeLazy(() => import("./pages/AdminProducts"));
 const AdminAnalytics  = safeLazy(() => import("./pages/AdminAnalytics"));
+const AdminFlashDeals = safeLazy(() => import("./pages/AdminFlashDeals"));
 
 // Lightweight page spinner shown while a chunk is loading
 const PageLoader = () => (
@@ -101,7 +102,7 @@ const App = () => {
 
     // Initialize visitor session
     const visitorStore = useVisitorStore.getState();
-    visitorStore.startSession();
+    void visitorStore.startSession();
 
     // Periodically update session duration (every 30 seconds)
     const sessionInterval = setInterval(() => {
@@ -117,6 +118,11 @@ const App = () => {
     };
  
     const handleVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') {
+        void useVisitorStore.getState().updateSession({ flush: true });
+        return;
+      }
+
       if (document.visibilityState === 'visible') {
         const now = Date.now();
         if (now - lastFetchRef.current > 30000) {
@@ -132,7 +138,7 @@ const App = () => {
     // Log performance metrics before page unload
     const handleBeforeUnload = () => {
       logMetricsSummary();
-      useVisitorStore.getState().updateSession();
+      void useVisitorStore.getState().updateSession({ flush: true });
     };
     window.addEventListener('beforeunload', handleBeforeUnload);
 
@@ -196,6 +202,14 @@ const App = () => {
                     element={
                       <ProtectedRoute>
                         <AdminAnalytics />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/flash-deals"
+                    element={
+                      <ProtectedRoute>
+                        <AdminFlashDeals />
                       </ProtectedRoute>
                     }
                   />

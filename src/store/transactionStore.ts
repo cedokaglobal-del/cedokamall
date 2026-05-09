@@ -207,52 +207,60 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
     const { transactions, getTransactionSummary } = get();
     const summary = getTransactionSummary(days);
 
+    const cutoffDate = new Date();
+    cutoffDate.setDate(cutoffDate.getDate() - days);
+    const recentCompletedTransactions = transactions.filter(
+      (transaction) =>
+        transaction.status === 'completed' && new Date(transaction.createdAt) >= cutoffDate
+    );
+
+    const dailyBuckets = new Map<
+      string,
+      { revenue: number; orders: number; customers: Set<string> }
+    >();
+    const categoryTotals = {} as Record<string, { revenue: number; orders: number }>;
+
+    recentCompletedTransactions.forEach((transaction) => {
+      const dateStr = new Date(transaction.createdAt).toISOString().split('T')[0];
+      const existingDayBucket = dailyBuckets.get(dateStr) ?? {
+        revenue: 0,
+        orders: 0,
+        customers: new Set<string>(),
+      };
+      existingDayBucket.revenue += transaction.amount;
+      existingDayBucket.orders += 1;
+      if (transaction.customerEmail) {
+        existingDayBucket.customers.add(transaction.customerEmail);
+      }
+      dailyBuckets.set(dateStr, existingDayBucket);
+
+      const category = transaction.category || 'General';
+      if (!categoryTotals[category]) {
+        categoryTotals[category] = { revenue: 0, orders: 0 };
+      }
+      categoryTotals[category].revenue += transaction.amount;
+      categoryTotals[category].orders += 1;
+    });
+
     const dailyMetrics: DailyMetric[] = [];
     for (let i = days - 1; i >= 0; i--) {
       const date = new Date();
       date.setDate(date.getDate() - i);
       const dateStr = date.toISOString().split('T')[0];
-
-      const dayTransactions = transactions.filter(
-        (t) =>
-          new Date(t.createdAt).toISOString().split('T')[0] === dateStr &&
-          t.status === 'completed'
-      );
+      const dayBucket = dailyBuckets.get(dateStr);
+      const dayRevenue = dayBucket?.revenue ?? 0;
+      const dayOrders = dayBucket?.orders ?? 0;
 
       dailyMetrics.push({
         date: dateStr,
-        revenue: dayTransactions.reduce((sum, t) => sum + t.amount, 0),
-        orders: dayTransactions.length,
-        customers: new Set(dayTransactions.map((t) => t.customerEmail)).size,
-        avgOrderValue:
-          dayTransactions.length > 0
-            ? Math.round(
-                dayTransactions.reduce((sum, t) => sum + t.amount, 0) / dayTransactions.length
-              )
-            : 0,
+        revenue: dayRevenue,
+        orders: dayOrders,
+        customers: dayBucket?.customers.size ?? 0,
+        avgOrderValue: dayOrders > 0 ? Math.round(dayRevenue / dayOrders) : 0,
       });
     }
 
-    const cutoffDate = new Date();
-    cutoffDate.setDate(cutoffDate.getDate() - days);
-
-    const recentTransactions = transactions.filter(
-      (t) => new Date(t.createdAt) >= cutoffDate && t.status === 'completed'
-    );
-
     const totalRevenue = summary.totalRevenue;
-    const categoryTotals = recentTransactions.reduce(
-      (acc, t) => {
-        const cat = t.category || 'General';
-        if (!acc[cat]) {
-          acc[cat] = { revenue: 0, orders: 0 };
-        }
-        acc[cat].revenue += t.amount;
-        acc[cat].orders += 1;
-        return acc;
-      },
-      {} as Record<string, { revenue: number; orders: number }>
-    );
 
     const categoryMetrics: CategoryMetric[] = Object.entries(categoryTotals).map(
       ([category, data]) => ({

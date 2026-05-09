@@ -5,7 +5,15 @@ import { useCartStore } from '@/store/cartStore';
 const formatPrice = (amount: number) => `\u20A6${amount.toLocaleString()}`;
 
 const MiniCart = () => {
-  const { items, isOpen, toggleCart, removeItem, getSubtotal, clearCart } = useCartStore();
+  const items = useCartStore((state) => state.items);
+  const isOpen = useCartStore((state) => state.isOpen);
+  const toggleCart = useCartStore((state) => state.toggleCart);
+  const removeItem = useCartStore((state) => state.removeItem);
+  const getSubtotal = useCartStore((state) => state.getSubtotal);
+  const clearCart = useCartStore((state) => state.clearCart);
+  const subtotal = getSubtotal();
+  const freeShippingRemaining = Math.max(0, 50000 - subtotal);
+  const freeShippingProgress = Math.min(100, (subtotal / 50000) * 100);
 
   if (!isOpen) return null;
 
@@ -27,15 +35,15 @@ const MiniCart = () => {
         ) : (
           <>
             <div className="flex-1 space-y-4 overflow-y-auto p-4">
-              {getSubtotal() < 50000 && (
+              {subtotal < 50000 && (
                 <div className="rounded-lg bg-muted p-3">
                   <p className="mb-1 text-xs text-muted-foreground">
-                    Add {formatPrice(50000 - getSubtotal())} for FREE shipping!
+                    Add {formatPrice(freeShippingRemaining)} for FREE shipping!
                   </p>
                   <div className="h-2 overflow-hidden rounded-full bg-border">
                     <div
                       className="h-full rounded-full bg-primary transition-all"
-                      style={{ width: `${Math.min(100, (getSubtotal() / 50000) * 100)}%` }}
+                      style={{ width: `${freeShippingProgress}%` }}
                     />
                   </div>
                 </div>
@@ -66,14 +74,14 @@ const MiniCart = () => {
             <div className="space-y-3 border-t p-4">
               <div className="flex justify-between font-bold">
                 <span>Subtotal</span>
-                <span>{formatPrice(getSubtotal())}</span>
+                <span>{formatPrice(subtotal)}</span>
               </div>
               <Link
                 to="/cart"
                 onClick={toggleCart}
                 className="block w-full rounded-lg bg-accent py-3 text-center font-bold text-accent-foreground transition-colors hover:bg-cta-orange-light"
               >
-                Checkout - {formatPrice(getSubtotal())}
+                Checkout - {formatPrice(subtotal)}
               </Link>
               <div className="flex gap-2">
                 <button

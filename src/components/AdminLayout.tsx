@@ -23,6 +23,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     { icon: Home, label: 'Dashboard', href: '/admin' },
     { icon: Package, label: 'Products', href: '/admin/products' },
     { icon: BarChart3, label: 'Analytics', href: '/admin/analytics' },
+    { icon: Package, label: 'Flash Deals', href: '/admin/flash-deals' },
   ];
 
   const isActive = (href: string) => {
@@ -39,7 +40,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       >
         <div className="flex flex-col h-full">
           {/* Logo */}
-          <div className="p-6 border-b border-gold/10">
+          <div className="p-4 sm:p-6 border-b border-gold/10">
             <Link to="/admin" className="flex items-center gap-3" onClick={() => setSidebarOpen(false)}>
               <img
                 src="/logo.png"
@@ -51,7 +52,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           </div>
 
           {/* Navigation */}
-          <nav className="flex-1 overflow-y-auto p-6 space-y-3">
+          <nav className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-3">
             {menuItems.map((item) => {
               const Icon = item.icon;
               const active = isActive(item.href);
@@ -74,7 +75,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
           </nav>
 
           {/* Logout */}
-          <div className="p-6 border-t border-gold/10">
+          <div className="p-4 sm:p-6 border-t border-gold/10">
             <button
               className="flex w-full items-center gap-4 rounded-md px-4 py-3 text-sm font-bold uppercase tracking-widest text-red-400 hover:bg-red-500/10 transition-colors"
               onClick={handleLogout}
@@ -89,19 +90,19 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
       {/* Main Content */}
       <div className="flex-1 flex flex-col overflow-hidden">
         {/* Top Bar */}
-        <header className="bg-white border-b border-gold-antique/10 px-6 py-4 flex items-center justify-between shadow-sm relative z-10">
-          <div className="flex items-center gap-6">
+        <header className="bg-white border-b border-gold-antique/10 px-4 sm:px-6 py-3 sm:py-4 flex items-center justify-between shadow-sm relative z-10">
+          <div className="flex items-center gap-3 sm:gap-6 min-w-0">
             <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="lg:hidden p-2 text-navy hover:bg-ivory rounded-md transition-colors"
             >
               {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
             </button>
-            <h1 className="font-serif text-xl font-bold text-navy">Administrative Excellence</h1>
+            <h1 className="font-serif text-base sm:text-xl font-bold text-navy truncate">Administrative Excellence</h1>
           </div>
 
           {/* User Menu */}
-          <div className="flex items-center gap-6">
+          <div className="flex items-center gap-3 sm:gap-6">
             <div className="text-right hidden sm:block">
               <p className="text-xs font-bold uppercase tracking-widest text-navy">{adminEmail || 'Authority'}</p>
               <p className="text-[10px] font-medium text-navy/40 uppercase tracking-tighter">Authorized Personnel</p>
@@ -113,7 +114,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         </header>
 
         {/* Content */}
-        <main className="flex-1 overflow-auto p-8 lg:p-12">
+        <main className="flex-1 overflow-auto p-4 sm:p-6 lg:p-12">
           {children}
         </main>
       </div>

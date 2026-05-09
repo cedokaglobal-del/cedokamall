@@ -16,23 +16,27 @@ interface TransactionHistoryProps {
   limit?: number;
 }
 
+const currencyFormatter = new Intl.NumberFormat('en-NG', {
+  style: 'currency',
+  currency: 'NGN',
+  minimumFractionDigits: 0,
+});
+
+const dateFormatter = new Intl.DateTimeFormat('en-NG', {
+  year: 'numeric',
+  month: 'short',
+  day: 'numeric',
+  hour: '2-digit',
+  minute: '2-digit',
+});
+
 const TransactionHistory = ({ transactions, limit = 10 }: TransactionHistoryProps) => {
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-NG', {
-      style: 'currency',
-      currency: 'NGN',
-      minimumFractionDigits: 0,
-    }).format(amount);
+    return currencyFormatter.format(amount);
   };
 
   const formatDate = (date: Date | string) => {
-    return new Intl.DateTimeFormat('en-NG', {
-      year: 'numeric',
-      month: 'short',
-      day: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit',
-    }).format(new Date(date));
+    return dateFormatter.format(new Date(date));
   };
 
   const getStatusIcon = (status: string) => {

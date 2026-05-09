@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import AdminLayout from '@/components/AdminLayout';
 import AnalyticsCharts from '@/components/AnalyticsCharts';
 import TransactionHistory from '@/components/TransactionHistory';
@@ -7,33 +7,55 @@ import { Button } from '@/components/ui/button';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useTransactionStore } from '@/store/transactionStore';
 import { useVisitorStore } from '@/store/visitorStore';
-import { AnalyticsData } from '@/types/transaction';
 import { Calendar, Download, Users, Clock } from 'lucide-react';
 
+const currencyFormatter = new Intl.NumberFormat('en-NG', {
+  style: 'currency',
+  currency: 'NGN',
+  notation: 'compact',
+});
+
 const AdminAnalytics = () => {
-  const [analyticsData, setAnalyticsData] = useState<AnalyticsData | null>(null);
   const [timeRange, setTimeRange] = useState('30');
-  const [isLoading, setIsLoading] = useState(true);
+  const [isVisitorLoading, setIsVisitorLoading] = useState(true);
 
   const fetchTransactions = useTransactionStore((state) => state.fetchTransactions);
   const getAnalyticsData = useTransactionStore((state) => state.getAnalyticsData);
   const transactions = useTransactionStore((state) => state.transactions);
+  const isTransactionLoading = useTransactionStore((state) => state.isLoading);
+  const visitorStats = useVisitorStore((state) => state.stats);
+  const avgStayDuration = useVisitorStore((state) => state.getAverageStayDuration());
+  const syncVisitorStats = useVisitorStore((state) => state.syncWithSupabase);
+  const subscribeToVisitorRealtime = useVisitorStore((state) => state.subscribeToRealtime);
+  const analyticsData = useMemo(
+    () => getAnalyticsData(Number(timeRange)),
+    [getAnalyticsData, timeRange, transactions]
+  );
 
   useEffect(() => {
-    const loadData = async () => {
-      setIsLoading(true);
+    void fetchTransactions();
+  }, [fetchTransactions]);
+
+  useEffect(() => {
+    const loadVisitors = async () => {
+      setIsVisitorLoading(true);
       try {
-        await fetchTransactions();
-        const data = getAnalyticsData(Number(timeRange));
-        setAnalyticsData(data);
+        await syncVisitorStats();
       } catch (error) {
-        console.error('Error loading analytics:', error);
+        console.error('Error loading visitor analytics:', error);
       } finally {
-        setIsLoading(false);
+        setIsVisitorLoading(false);
       }
     };
-    void loadData();
-  }, [timeRange, fetchTransactions, getAnalyticsData]);
+    void loadVisitors();
+  }, [syncVisitorStats]);
+
+  useEffect(() => {
+    const unsubscribe = subscribeToVisitorRealtime();
+    return () => {
+      unsubscribe();
+    };
+  }, [subscribeToVisitorRealtime]);
 
   const handleExport = () => {
     if (!analyticsData) return;
@@ -55,7 +77,7 @@ const AdminAnalytics = () => {
     document.body.removeChild(element);
   };
 
-  if (isLoading) {
+  if (isTransactionLoading || isVisitorLoading) {
     return (
       <AdminLayout>
         <div className="flex items-center justify-center min-h-screen">
@@ -65,30 +87,20 @@ const AdminAnalytics = () => {
     );
   }
 
-  if (!analyticsData) {
-    return (
-      <AdminLayout>
-        <div className="flex items-center justify-center min-h-screen">
-          <p className="text-destructive">Error loading analytics data</p>
-        </div>
-      </AdminLayout>
-    );
-  }
-
   return (
     <AdminLayout>
       <div className="space-y-6">
         {/* Header */}
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
             <h1 className="text-3xl font-bold">Analytics & Insights</h1>
             <p className="text-muted-foreground mt-2">Track your store performance and transactions</p>
           </div>
 
-          <div className="flex gap-3">
+          <div className="flex flex-col gap-3 sm:flex-row">
             {/* Time Range Selector */}
             <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="w-[200px]">
+              <SelectTrigger className="w-full sm:w-[200px]">
                 <Calendar className="w-4 h-4 mr-2" />
                 <SelectValue placeholder="Select time range" />
               </SelectTrigger>
@@ -134,11 +146,7 @@ const AdminAnalytics = () => {
           <Card className="p-6">
             <h3 className="font-semibold mb-2">Total Refunds</h3>
             <p className="text-3xl font-bold text-orange-600">
-              {new Intl.NumberFormat('en-NG', {
-                style: 'currency',
-                currency: 'NGN',
-                notation: 'compact',
-              }).format(analyticsData.summary.totalRefunds)}
+              {currencyFormatter.format(analyticsData.summary.totalRefunds)}
             </p>
             <p className="text-sm text-muted-foreground mt-2">Refunded in last {timeRange} days</p>
           </Card>
@@ -147,11 +155,7 @@ const AdminAnalytics = () => {
           <Card className="p-6">
             <h3 className="font-semibold mb-2">Avg Order Value</h3>
             <p className="text-3xl font-bold text-green-600">
-              {new Intl.NumberFormat('en-NG', {
-                style: 'currency',
-                currency: 'NGN',
-                notation: 'compact',
-              }).format(analyticsData.summary.avgOrderValue)}
+              {currencyFormatter.format(analyticsData.summary.avgOrderValue)}
             </p>
             <p className="text-sm text-muted-foreground mt-2">Average per transaction</p>
           </Card>
@@ -163,7 +167,7 @@ const AdminAnalytics = () => {
               <h3 className="font-semibold">Site Visitors</h3>
             </div>
             <p className="text-3xl font-bold text-orange-600">
-              {useVisitorStore.getState().stats.totalVisitors.toLocaleString()}
+              {visitorStats.totalVisitors.toLocaleString()}
             </p>
             <p className="text-sm text-muted-foreground mt-2">Total unique visitors</p>
           </Card>
@@ -175,7 +179,7 @@ const AdminAnalytics = () => {
               <h3 className="font-semibold">Avg. Stay Duration</h3>
             </div>
             <p className="text-3xl font-bold text-purple-600">
-              {Math.floor(useVisitorStore.getState().getAverageStayDuration() / 60)}m {useVisitorStore.getState().getAverageStayDuration() % 60}s
+              {Math.floor(avgStayDuration / 60)}m {avgStayDuration % 60}s
             </p>
             <p className="text-sm text-muted-foreground mt-2">Average session time</p>
           </Card>

@@ -96,9 +96,14 @@ export const usePageTitle = (title: string) => {
  * Hook to add one or more JSON-LD structured data blocks
  */
 export const useStructuredData = (schema: StructuredDataNode | StructuredDataNode[]) => {
+  const schemas = Array.isArray(schema) ? schema : [schema];
+  const schemaSignature = JSON.stringify(schemas);
+
   useEffect(() => {
-    const schemas = Array.isArray(schema) ? schema : [schema];
-    const scripts: HTMLScriptElement[] = [];
+    const existingScripts = Array.from(
+      document.querySelectorAll('script[data-managed-structured-data="true"]')
+    );
+    existingScripts.forEach((script) => script.remove());
 
     schemas.forEach((entry, index) => {
       const script = document.createElement('script');
@@ -107,15 +112,13 @@ export const useStructuredData = (schema: StructuredDataNode | StructuredDataNod
       script.setAttribute('data-managed-structured-data', 'true');
       script.setAttribute('data-schema-index', String(index));
       document.head.appendChild(script);
-      scripts.push(script);
     });
 
     return () => {
-      scripts.forEach((script) => {
-        if (document.head.contains(script)) {
-          document.head.removeChild(script);
-        }
-      });
+      const managedScripts = Array.from(
+        document.querySelectorAll('script[data-managed-structured-data="true"]')
+      );
+      managedScripts.forEach((script) => script.remove());
     };
-  }, [schema]);
+  }, [schemaSignature]);
 };

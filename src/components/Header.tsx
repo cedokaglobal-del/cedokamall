@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { Search, ShoppingCart, Heart, Menu, X, MapPin, Phone, ChevronDown } from 'lucide-react';
+import { Search, ShoppingCart, Menu, X, MapPin, Phone, ChevronDown } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
-import { buildCategories } from '@/data/products';
+import { buildCategories, slugifyCategory } from '@/data/products';
 import { useProductStore } from '@/store/productStore';
 import { lazy, Suspense } from 'react';
 const MiniCart = lazy(() => import('./MiniCart'));
@@ -17,7 +17,7 @@ const Header = () => {
   const [catMenuOpen, setCatMenuOpen] = useState(false);
   
   const navigate = useNavigate();
-  const { products } = useProductStore();
+  const products = useProductStore((state) => state.products);
   const itemCount = useCartStore((s) => s.getItemCount());
   const toggleCart = useCartStore((s) => s.toggleCart);
   const isCartOpen = useCartStore((s) => s.isOpen);
@@ -32,7 +32,18 @@ const Header = () => {
     e.preventDefault();
     const term = searchQuery.trim();
     if (term) {
-      navigate(`/shop?q=${encodeURIComponent(term)}`);
+      const normalizedTerm = term.toLowerCase();
+      const product = products.find((item) =>
+        item.name.toLowerCase().includes(normalizedTerm) ||
+        item.description.toLowerCase().includes(normalizedTerm) ||
+        item.seller.toLowerCase().includes(normalizedTerm)
+      );
+      const categorySlug = product?.category ? slugifyCategory(product.category) : '';
+      const search = new URLSearchParams({ q: term });
+      if (categorySlug) {
+        search.set('category', categorySlug);
+      }
+      navigate(`/shop?${search.toString()}`);
     } else {
       // If empty and searched, clear the filter
       navigate('/shop');
@@ -129,7 +140,7 @@ const Header = () => {
             />
             <button 
               type="submit" 
-              className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 p-2 hover:text-gold transition-colors duration-300 flex-shrink-0 active:scale-95 rounded-md hover:bg-white/5" 
+              className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 min-h-11 min-w-11 p-2 hover:text-gold transition-colors duration-300 flex-shrink-0 active:scale-95 rounded-md hover:bg-white/5" 
               aria-label="Search"
             >
               <Search className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -138,18 +149,10 @@ const Header = () => {
 
           {/* Actions */}
           <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
-            <Link 
-              to="/wishlist" 
-              className="hidden sm:flex items-center justify-center p-2 sm:p-2.5 hover:text-gold transition-all duration-300 rounded-lg hover:bg-white/5 active:scale-95" 
-              title="Wishlist"
-              aria-label="Wishlist"
-            >
-              <Heart className="w-5 h-5 sm:w-6 sm:h-6" />
-            </Link>
             <button 
               type="button" 
               onClick={toggleCart} 
-              className="relative flex items-center justify-center p-2 sm:p-2.5 hover:text-gold transition-all duration-300 rounded-lg hover:bg-white/5 group active:scale-95" 
+              className="relative flex min-h-11 min-w-11 items-center justify-center p-2 sm:p-2.5 hover:text-gold transition-all duration-300 rounded-lg hover:bg-white/5 group active:scale-95" 
               title="Shopping Cart"
               aria-label="Shopping Cart"
             >
@@ -164,7 +167,7 @@ const Header = () => {
             <button 
               type="button" 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
-              className="md:hidden p-2 hover:text-gold transition-all duration-300 rounded-lg hover:bg-white/5 active:scale-95" 
+              className="md:hidden min-h-11 min-w-11 p-2 hover:text-gold transition-all duration-300 rounded-lg hover:bg-white/5 active:scale-95" 
               title="Menu"
               aria-label="Toggle menu"
             >
