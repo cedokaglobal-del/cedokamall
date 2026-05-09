@@ -92,11 +92,7 @@ export default defineConfig(({ mode }) => ({
       format: {
         comments: false,
       },
-      mangle: {
-        properties: {
-          regex: /^_/,
-        },
-      },
+      mangle: true,
     },
   },
   define: {

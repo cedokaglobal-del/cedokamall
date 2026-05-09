@@ -52,17 +52,15 @@ const currency = new Intl.NumberFormat('en-NG', {
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
-  const {
-    products,
-    isLoading,
-    error,
-    addProduct,
-    updateProduct,
-    deleteProduct,
-    clearAllProducts,
-    fetchProducts,
-    lastSyncedAt,
-  } = useProductStore();
+  const products = useProductStore((s) => s.products);
+  const isLoading = useProductStore((s) => s.isLoading);
+  const error = useProductStore((s) => s.error);
+  const addProduct = useProductStore((s) => s.addProduct);
+  const updateProduct = useProductStore((s) => s.updateProduct);
+  const deleteProduct = useProductStore((s) => s.deleteProduct);
+  const clearAllProducts = useProductStore((s) => s.clearAllProducts);
+  const fetchProducts = useProductStore((s) => s.fetchProducts);
+  const lastSyncedAt = useProductStore((s) => s.lastSyncedAt);
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | undefined>();
@@ -111,23 +109,24 @@ const AdminDashboard = () => {
   }, [subscribeToVisitorRealtime]);
 
   const fetchTransactions = useTransactionStore((state) => state.fetchTransactions);
-  const getTransactionSummary = useTransactionStore((state) => state.getTransactionSummary);
   const transactions = useTransactionStore((state) => state.transactions);
   const transactionSummary = useMemo(
-    () => getTransactionSummary(30),
-    [getTransactionSummary, transactions]
+    () => useTransactionStore.getState().getTransactionSummary(30),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [transactions]
   );
 
   useEffect(() => {
     const timer = window.setTimeout(() => {
-      void fetchTransactions();
-      void syncVisitorStats();
+      void useTransactionStore.getState().fetchTransactions();
+      void useVisitorStore.getState().syncWithSupabase();
     }, 120);
 
     return () => {
       window.clearTimeout(timer);
     };
-  }, [fetchTransactions, syncVisitorStats]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleRefresh = async () => {
     try {

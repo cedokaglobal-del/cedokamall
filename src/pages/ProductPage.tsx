@@ -31,10 +31,13 @@ const formatPrice = (amount: number) => `\u20A6${amount.toLocaleString()}`;
 const ProductPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { getProductById, products, isLoading, hasLoaded, rateProduct } = useProductStore();
+  const products = useProductStore((s) => s.products);
+  const isLoading = useProductStore((s) => s.isLoading);
+  const hasLoaded = useProductStore((s) => s.hasLoaded);
+  const rateProduct = useProductStore((s) => s.rateProduct);
   const addItem = useCartStore((state) => state.addItem);
 
-  const product = useMemo(() => getProductById(id || ''), [getProductById, id]);
+  const product = useMemo(() => products.find((p) => p.id === id), [products, id]);
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);

@@ -10,24 +10,26 @@ interface Props {
 interface State {
   hasError: boolean;
   error: Error | null;
+  componentStack: string;
 }
 
 export class ErrorBoundary extends Component<Props, State> {
   constructor(props: Props) {
     super(props);
-    this.state = { hasError: false, error: null };
+    this.state = { hasError: false, error: null, componentStack: '' };
   }
 
   static getDerivedStateFromError(error: Error): State {
-    return { hasError: true, error };
+    return { hasError: true, error, componentStack: '' };
   }
 
-  componentDidCatch(error: Error) {
-    console.error('ErrorBoundary caught:', error);
+  componentDidCatch(error: Error, errorInfo: { componentStack?: string }) {
+    console.error('ErrorBoundary caught:', error, errorInfo?.componentStack);
+    this.setState({ componentStack: errorInfo?.componentStack || '' });
   }
 
   reset = () => {
-    this.setState({ hasError: false, error: null });
+    this.setState({ hasError: false, error: null, componentStack: '' });
   };
 
   render() {
@@ -51,6 +53,11 @@ export class ErrorBoundary extends Component<Props, State> {
                     ? 'A new version of the site is available. Please refresh to continue.' 
                     : (this.state.error?.message || 'An unexpected error occurred. Please try again.')}
                 </p>
+                {this.state.componentStack && (
+                  <pre className="mt-4 max-h-48 overflow-auto rounded bg-muted p-3 text-left text-[10px] text-muted-foreground">
+                    {this.state.componentStack}
+                  </pre>
+                )}
               </div>
               <div className="flex gap-3 justify-center">
                 <Button onClick={() => window.location.reload()} className="gap-2 shadow-lg shadow-primary/20">

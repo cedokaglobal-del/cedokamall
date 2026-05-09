@@ -57,10 +57,11 @@ const ScrollToTop = () => {
 };
 
 const App = () => {
-  const fetchProducts = useProductStore((state) => state.fetchProducts);
   const lastFetchRef = useRef<number>(0);
 
   useEffect(() => {
+    const fetchProducts = useProductStore.getState().fetchProducts;
+
     // Initialize performance monitoring
     const stopWebVitals = initWebVitals();
 
@@ -113,7 +114,7 @@ const App = () => {
       const now = Date.now();
       if (now - lastFetchRef.current > 30000) {
         lastFetchRef.current = now;
-        void fetchProducts(true);
+        useProductStore.getState().fetchProducts(true);
       }
     };
  
@@ -127,7 +128,7 @@ const App = () => {
         const now = Date.now();
         if (now - lastFetchRef.current > 30000) {
           lastFetchRef.current = now;
-          void fetchProducts(true);
+          useProductStore.getState().fetchProducts(true);
         }
       }
     };
@@ -157,7 +158,7 @@ const App = () => {
       document.removeEventListener('visibilitychange', handleVisibilityChange);
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
-  }, [fetchProducts]);
+  }, []);
 
   return (
     <QueryClientProvider client={queryClient}>

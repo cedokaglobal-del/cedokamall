@@ -29,18 +29,20 @@ const AdminAnalytics = () => {
   const subscribeToVisitorRealtime = useVisitorStore((state) => state.subscribeToRealtime);
   const analyticsData = useMemo(
     () => getAnalyticsData(Number(timeRange)),
-    [getAnalyticsData, timeRange, transactions]
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [timeRange, transactions]
   );
 
   useEffect(() => {
     void fetchTransactions();
-  }, [fetchTransactions]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
     const loadVisitors = async () => {
       setIsVisitorLoading(true);
       try {
-        await syncVisitorStats();
+        await useVisitorStore.getState().syncWithSupabase();
       } catch (error) {
         console.error('Error loading visitor analytics:', error);
       } finally {
@@ -48,14 +50,16 @@ const AdminAnalytics = () => {
       }
     };
     void loadVisitors();
-  }, [syncVisitorStats]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
-    const unsubscribe = subscribeToVisitorRealtime();
+    const unsubscribe = useVisitorStore.getState().subscribeToRealtime();
     return () => {
       unsubscribe();
     };
-  }, [subscribeToVisitorRealtime]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   const handleExport = () => {
     if (!analyticsData) return;

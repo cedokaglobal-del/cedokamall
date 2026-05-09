@@ -17,23 +17,21 @@ import { Plus, Search, Filter, Trash2 } from 'lucide-react';
 
 const AdminProducts = () => {
   const navigate = useNavigate();
-  const { 
-    products, 
-    filter, 
-    setFilter, 
-    addProduct, 
-    updateProduct, 
-    deleteProduct,
-    clearAllProducts,
-    getFilteredProducts 
-  } = useProductStore();
+  const products = useProductStore((s) => s.products);
+  const filter = useProductStore((s) => s.filter);
+  const setFilter = useProductStore((s) => s.setFilter);
+  const addProduct = useProductStore((s) => s.addProduct);
+  const updateProduct = useProductStore((s) => s.updateProduct);
+  const deleteProduct = useProductStore((s) => s.deleteProduct);
+  const clearAllProducts = useProductStore((s) => s.clearAllProducts);
+  const getFilteredProducts = useProductStore((s) => s.getFilteredProducts);
   
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | undefined>();
   const [isLoading, setIsLoading] = useState(false);
   const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false);
 
-  const filteredProducts = useMemo(() => getFilteredProducts(), [getFilteredProducts]);
+  const filteredProducts = useMemo(() => getFilteredProducts(), [filter, products]);
   const categories = useMemo(() => getCategoryOptions(products), [products]);
 
   const handleAddProduct = () => {

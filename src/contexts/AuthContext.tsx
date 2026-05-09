@@ -1,4 +1,4 @@
-import { createContext, useEffect, useState, type ReactNode } from 'react';
+import { createContext, useEffect, useState, useMemo, useCallback, type ReactNode } from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { AuthContext } from '@/contexts/auth-context';
 import { isSupabaseConfigured, supabase } from '@/lib/supabase';
@@ -249,21 +249,21 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setAdminEmail(null);
   };
 
-  const checkAuth = () => isAuthenticated && isAdmin;
+  const checkAuth = useCallback(() => isAuthenticated && isAdmin, [isAuthenticated, isAdmin]);
+
+  const value = useMemo(() => ({
+    isAuthenticated,
+    isAdmin,
+    adminEmail,
+    login,
+    loginWithMagicLink,
+    logout,
+    checkAuth,
+    isLoading,
+  }), [isAuthenticated, isAdmin, adminEmail, login, loginWithMagicLink, logout, checkAuth, isLoading]);
 
   return (
-    <AuthContext.Provider
-      value={{ 
-        isAuthenticated, 
-        isAdmin, 
-        adminEmail, 
-        login, 
-        loginWithMagicLink, 
-        logout, 
-        checkAuth, 
-        isLoading 
-      }}
-    >
+    <AuthContext.Provider value={value}>
       {children}
     </AuthContext.Provider>
   );

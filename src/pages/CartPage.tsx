@@ -11,7 +11,14 @@ const formatPrice = (n: number) => '₦' + n.toLocaleString();
 
 const CartPage = () => {
   const navigate = useNavigate();
-  const { items, removeItem, updateQuantity, getSubtotal, getTotal, applyCoupon, couponCode, discount } = useCartStore();
+  const items = useCartStore((s) => s.items);
+  const removeItem = useCartStore((s) => s.removeItem);
+  const updateQuantity = useCartStore((s) => s.updateQuantity);
+  const getSubtotal = useCartStore((s) => s.getSubtotal);
+  const getTotal = useCartStore((s) => s.getTotal);
+  const applyCoupon = useCartStore((s) => s.applyCoupon);
+  const couponCode = useCartStore((s) => s.couponCode);
+  const discount = useCartStore((s) => s.discount);
   const [coupon, setCoupon] = useState('');
   const [step, setStep] = useState(0); // 0=cart, 1=delivery-method, 2=payment/address, 3=confirm, 4=done
   const [deliveryMethod, setDeliveryMethod] = useState<'walk-in' | 'delivery' | null>(null);
