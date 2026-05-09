@@ -165,7 +165,6 @@ const App = () => {
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <ErrorBoundary>
             <BrowserRouter future={{ v7_startTransition: true, v7_relativeSplatPath: true }}>
               <SEOUpdater />
               <ScrollToTop />
@@ -218,7 +217,6 @@ const App = () => {
                 </Routes>
               </Suspense>
             </BrowserRouter>
-          </ErrorBoundary>
         </TooltipProvider>
       </AuthProvider>
     </QueryClientProvider>
