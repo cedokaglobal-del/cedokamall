@@ -266,10 +266,10 @@ We appreciate your business! 🙏
           <div className="grid lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-4">
               {items.map((item) => (
-                <div key={item.id} className="flex gap-4 bg-card rounded-xl border p-4">
-                  <img src={item.image} alt={item.name} className="w-24 h-24 object-cover rounded-lg" />
-                  <div className="flex-1">
-                    <h3 className="font-medium">{item.name}</h3>
+                <div key={item.id} className="flex gap-4 overflow-hidden bg-card rounded-xl border p-4">
+                  <img src={item.image} alt={item.name} className="w-24 h-24 shrink-0 object-cover rounded-lg" />
+                  <div className="min-w-0 flex-1">
+                    <h3 className="truncate font-medium">{item.name}</h3>
                     <p className="text-lg font-bold text-primary mt-1">{formatPrice(item.price)}</p>
                     <div className="flex items-center gap-2 mt-2">
                       <span className="text-sm text-muted-foreground">Quantity: 1</span>

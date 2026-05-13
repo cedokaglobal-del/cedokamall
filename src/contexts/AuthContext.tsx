@@ -142,7 +142,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  const login = async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
+  const login = useCallback(async (email: string, password: string): Promise<{ success: boolean; message?: string }> => {
     try {
       setIsLoading(true);
 
@@ -168,27 +168,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         password,
       });
 
-      // Special handling for the new admin if sign-in fails
-      if (error && normalizedEmail === 'mperfectorg136@gmail.com' && password === '@Password100') {
-        if (error.message.includes('Email not confirmed')) {
-          return { success: false, message: 'Your email is not confirmed. Please check your inbox for a confirmation link.' };
-        }
-
-        console.info('Special admin account not found. Attempting auto-provisioning...');
-        
-        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
-          email: normalizedEmail,
-          password,
-        });
-
-        if (!signUpError && signUpData.session) {
-          data = signUpData;
-          error = null;
-        } else if (!signUpError) {
-          return { success: true, message: 'Account created! Please check your email for a confirmation link to activate your access.' };
-        }
-      }
-
       if (error) {
         return { success: false, message: error.message };
       }
@@ -209,9 +188,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const loginWithMagicLink = async (email: string): Promise<{ success: boolean; message: string }> => {
+  const loginWithMagicLink = useCallback(async (email: string): Promise<{ success: boolean; message: string }> => {
     try {
       setIsLoading(true);
       const normalizedEmail = email.trim().toLowerCase();
@@ -237,9 +216,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, []);
 
-  const logout = async () => {
+  const logout = useCallback(async () => {
     if (isSupabaseConfigured) {
       await supabase.auth.signOut();
     }
@@ -247,7 +226,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     setIsAuthenticated(false);
     setIsAdmin(false);
     setAdminEmail(null);
-  };
+  }, []);
 
   const checkAuth = useCallback(() => isAuthenticated && isAdmin, [isAuthenticated, isAdmin]);
 
@@ -260,7 +239,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     logout,
     checkAuth,
     isLoading,
-  }), [isAuthenticated, isAdmin, adminEmail, login, loginWithMagicLink, logout, checkAuth, isLoading]);
+  }), [isAuthenticated, isAdmin, adminEmail, checkAuth, isLoading]);
 
   return (
     <AuthContext.Provider value={value}>

@@ -111,8 +111,8 @@ const ProductCard = ({ product, priority = false }: { product: Product, priority
 
         {/* Price Section */}
         <div className="flex items-center justify-between gap-3 border-t border-gold-antique/10 pt-3 mt-2">
-          <div className="flex flex-col">
-            <span className="text-base sm:text-lg font-bold tracking-tight text-gold transition-colors duration-300">
+          <div className="flex min-w-0 flex-col">
+            <span className="break-words text-base sm:text-lg font-bold tracking-tight text-gold transition-colors duration-300">
               {formatPrice(product.price)}
             </span>
             {product.originalPrice && (

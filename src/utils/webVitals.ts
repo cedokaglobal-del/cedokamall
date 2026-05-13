@@ -109,8 +109,7 @@ export const getMetrics = (): PerformanceMetrics => metrics;
  * Initialize Core Web Vitals monitoring
  */
 export const initWebVitals = () => {
-  if (typeof window === 'undefined') return () => {};
-  if (!import.meta.env.DEV && !window.__ANALYTICS_ENDPOINT__) return () => {};
+  if (typeof window === 'undefined') return;
 
   // Use PerformanceObserver to track metrics
   try {
@@ -126,10 +125,8 @@ export const initWebVitals = () => {
     });
 
     observer.observe({ entryTypes: ['paint', 'largest-contentful-paint', 'layout-shift', 'first-input'] });
-    return () => observer.disconnect();
   } catch (err) {
     console.debug('Web Vitals observer setup failed:', err);
-    return () => {};
   }
 };
 
@@ -137,10 +134,6 @@ export const initWebVitals = () => {
  * Log Core Web Vitals summary
  */
 export const logMetricsSummary = () => {
-  if (!import.meta.env.DEV) {
-    return;
-  }
-
   const fcpValue = metrics.fcp ? `${metrics.fcp.toFixed(2)}ms` : 'N/A';
   const lcpValue = metrics.lcp ? `${metrics.lcp.toFixed(2)}ms` : 'N/A';
   const clsValue = metrics.cls ? `${metrics.cls.toFixed(4)}` : 'N/A';

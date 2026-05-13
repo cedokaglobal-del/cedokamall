@@ -31,10 +31,10 @@ const AnalyticsCharts = ({ data }: AnalyticsChartProps) => {
     change: number;
     isPositive: boolean;
   }) => (
-    <Card className="p-6">
+    <Card className="overflow-hidden p-6">
       <p className="text-sm text-muted-foreground mb-2">{label}</p>
       <div className="flex items-center justify-between">
-        <p className="text-2xl font-bold">{value}</p>
+        <p className="break-words text-2xl font-bold">{value}</p>
         <div className={`flex items-center gap-1 text-sm font-medium ${isPositive ? 'text-green-600' : 'text-red-600'}`}>
           {isPositive ? <TrendingUp className="w-4 h-4" /> : <TrendingDown className="w-4 h-4" />}
           {Math.abs(change).toFixed(1)}%

@@ -28,7 +28,7 @@ const LoyaltyBanner = () => {
               CedokaPoints <span className="text-gradient-gold">Loyalty Program</span>
             </h2>
             <p className="text-primary-foreground/70 text-sm mb-4">Earn 1 point per ₦1 spent. Redeem for discounts, free shipping & exclusive perks!</p>
-            <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-4 flex-wrap overflow-hidden">
               {tiers.map((t) => (
                 <div key={t.name} className={`flex items-center gap-1 text-sm ${t.name === currentTier.name ? 'font-bold' : 'opacity-50'}`}>
                   <t.icon className={`w-4 h-4 ${t.color}`} />

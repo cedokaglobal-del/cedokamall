@@ -203,7 +203,7 @@ const ShopPage = () => {
               {activeCategory?.name || (dealsOnly ? 'Elite Deals' : 'Premium Catalog')}
             </h1>
             <div className="mt-2 h-1 w-16 bg-gold" />
-            <p className="mt-4 max-w-2xl text-sm leading-6 text-navy/60">{pageDescription}</p>
+            <p className="mt-4 max-w-2xl break-words text-sm leading-6 text-navy/60">{pageDescription}</p>
           </div>
           <div className="flex items-center gap-4">
             <select

@@ -18,9 +18,10 @@ import {
 export const useSEO = (meta?: PageMeta) => {
   const location = useLocation();
   const routeKey = location.pathname.split('/')[1] || 'home';
-  const pageMeta = meta || PAGE_METAS[routeKey] || PAGE_METAS.home;
+  const pageMetaStr = JSON.stringify(meta || PAGE_METAS[routeKey] || PAGE_METAS.home);
 
   useEffect(() => {
+    const pageMeta: PageMeta = JSON.parse(pageMetaStr);
     document.title = pageMeta.title;
 
     const setMetaTag = (tag: MetaTag) => {
@@ -83,7 +84,7 @@ export const useSEO = (meta?: PageMeta) => {
       document.head.appendChild(canonical);
     }
     canonical.setAttribute('href', pageMeta.url || getCanonicalUrl(location.pathname));
-  }, [pageMeta, location.pathname]);
+  }, [pageMetaStr, location.pathname]);
 };
 
 export const usePageTitle = (title: string) => {

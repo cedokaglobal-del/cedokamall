@@ -51,7 +51,7 @@ const MiniCart = () => {
 
               {items.map((item) => (
                 <div key={item.id} className="flex gap-3">
-                  <img src={item.image} alt={item.name} className="h-20 w-20 rounded-lg object-cover" />
+                  <img src={item.image} alt={item.name} className="h-16 sm:h-20 w-16 sm:w-20 shrink-0 rounded-lg object-cover" />
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{item.name}</p>
                     <p className="text-sm font-bold text-primary">{formatPrice(item.price)}</p>
@@ -83,7 +83,7 @@ const MiniCart = () => {
               >
                 Checkout - {formatPrice(subtotal)}
               </Link>
-              <div className="flex gap-2">
+              <div className="flex flex-wrap gap-2">
                 <button
                   type="button"
                   onClick={toggleCart}

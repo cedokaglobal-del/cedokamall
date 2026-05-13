@@ -14,10 +14,12 @@ import {
   CircleDollarSign,
   ShoppingCart,
   ArrowUpRight,
+  Lock,
 } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import {
   Dialog,
   DialogContent,
@@ -38,6 +40,8 @@ import type { Product, ProductFormData } from '@/types/product';
 import { useProductStore } from '@/store/productStore';
 import { useTransactionStore } from '@/store/transactionStore';
 import { useVisitorStore } from '@/store/visitorStore';
+import { useAuth } from '@/contexts/useAuth';
+import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import { safeLazy } from '@/utils/lazy';
 import { toast } from 'sonner';
@@ -52,6 +56,7 @@ const currency = new Intl.NumberFormat('en-NG', {
 
 const AdminDashboard = () => {
   const navigate = useNavigate();
+  const { adminEmail } = useAuth();
   const products = useProductStore((s) => s.products);
   const isLoading = useProductStore((s) => s.isLoading);
   const error = useProductStore((s) => s.error);
@@ -66,8 +71,11 @@ const AdminDashboard = () => {
   const [editingProduct, setEditingProduct] = useState<Product | undefined>();
   const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [isClearAllOpen, setIsClearAllOpen] = useState(false);
+  const [isConfirmClearAllOpen, setIsConfirmClearAllOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [clearPassword, setClearPassword] = useState('');
+  const [clearPasswordError, setClearPasswordError] = useState('');
   const visitorStats = useVisitorStore((state) => state.stats);
   const avgStayDuration = useVisitorStore((state) => state.getAverageStayDuration());
   const syncVisitorStats = useVisitorStore((state) => state.syncWithSupabase);
@@ -190,11 +198,54 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleClearAll = async () => {
+  const handleVerifyClearPassword = async () => {
+    try {
+      setClearPasswordError('');
+
+      if (!clearPassword) {
+        setClearPasswordError('Password is required');
+        return;
+      }
+
+      if (!adminEmail) {
+        setClearPasswordError('Admin session not found. Please log in again.');
+        return;
+      }
+
+      setIsSubmitting(true);
+
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: adminEmail,
+        password: clearPassword,
+      });
+
+      if (authError) {
+        setClearPasswordError('Incorrect password. Please try again.');
+        setIsSubmitting(false);
+        return;
+      }
+
+      setClearPassword('');
+      setClearPasswordError('');
+      setIsClearAllOpen(false);
+      setIsConfirmClearAllOpen(true);
+    } catch (error) {
+      console.error('Password verification failed:', error);
+      setClearPasswordError('An error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleConfirmClearAll = async () => {
     try {
       setIsSubmitting(true);
       await clearAllProducts();
-      setIsClearAllOpen(false);
+      setIsConfirmClearAllOpen(false);
+      toast.success('Catalog cleared successfully');
+    } catch (error) {
+      console.error('Clear all failed:', error);
+      toast.error('Failed to clear catalog. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -382,7 +433,7 @@ const AdminDashboard = () => {
               <div className="space-y-4">
                 <div className="p-4 rounded-2xl bg-white shadow-sm border border-primary/5">
                   <p className="text-xs text-muted-foreground font-bold uppercase mb-1">Product Name</p>
-                  <p className="font-bold text-lg line-clamp-1">{transactionSummary.topProduct}</p>
+                  <p className="break-words font-bold text-lg line-clamp-1">{transactionSummary.topProduct}</p>
                   <div className="mt-3 flex items-center gap-4">
                     <div className="flex-1">
                       <p className="text-[10px] text-muted-foreground uppercase font-bold">Orders</p>
@@ -463,7 +514,7 @@ const AdminDashboard = () => {
                       }}
                     />
                     <div className="min-w-0 flex-1">
-                      <p className="font-semibold line-clamp-2">{product.name}</p>
+                      <p className="break-words font-semibold line-clamp-2">{product.name}</p>
                       <p className="text-sm text-muted-foreground mt-1">{product.category}</p>
                       <p className="text-sm font-semibold text-primary mt-2">
                         {currency.format(product.price)}
@@ -561,22 +612,119 @@ const AdminDashboard = () => {
         </AlertDialogContent>
       </AlertDialog>
 
-      <AlertDialog open={isClearAllOpen} onOpenChange={setIsClearAllOpen}>
+      <Dialog 
+        open={isClearAllOpen} 
+        onOpenChange={(open) => {
+          setIsClearAllOpen(open);
+          if (!open) {
+            setClearPassword('');
+            setClearPasswordError('');
+          }
+        }}
+      >
+        <DialogContent className="max-w-md" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg text-red-600">
+              <Lock className="w-5 h-5" />
+              Clear Entire Catalog?
+            </DialogTitle>
+            <DialogDescription className="text-base">
+              This will permanently delete all <strong>{products.length} products</strong> from the database. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-6 border-y">
+            <p className="text-sm text-muted-foreground">
+              For security verification, please enter your admin password:
+            </p>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                Admin Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  type="password"
+                  placeholder="Enter your admin password"
+                  value={clearPassword}
+                  onChange={(e) => {
+                    setClearPassword(e.target.value);
+                    setClearPasswordError('');
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && clearPassword && !isSubmitting) {
+                      e.preventDefault();
+                      void handleVerifyClearPassword();
+                    }
+                  }}
+                  disabled={isSubmitting}
+                  className="pl-10 h-11"
+                  autoFocus
+                />
+              </div>
+              {clearPasswordError && (
+                <p className="text-xs text-red-600 font-medium bg-red-50 p-2 rounded">{clearPasswordError}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex gap-3 justify-end">
+            <Button 
+              variant="outline"
+              disabled={isSubmitting}
+              onClick={() => {
+                setClearPassword('');
+                setClearPasswordError('');
+                setIsClearAllOpen(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => void handleVerifyClearPassword()}
+              disabled={isSubmitting || !clearPassword}
+            >
+              {isSubmitting ? 'Verifying...' : 'Verify Password'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Clear All Confirmation */}
+      <AlertDialog open={isConfirmClearAllOpen} onOpenChange={setIsConfirmClearAllOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Clear Entire Catalog?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete all <strong>{products.length} products</strong> from the
-              database. This action cannot be undone.
+            <AlertDialogTitle className="flex items-center gap-2 text-lg text-red-600">
+              <Trash2 className="w-5 h-5" />
+              Are You Absolutely Sure?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base space-y-3">
+              <p className="font-semibold text-red-600">
+                ⚠️ WARNING: This action is irreversible!
+              </p>
+              <p>
+                You are about to permanently delete all <strong>{products.length} products</strong> from your catalog and database.
+              </p>
+              <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+                <li>All product data will be lost forever</li>
+                <li>Product images will remain on the server but will be orphaned</li>
+                <li>Customer reviews and ratings for these products will be deleted</li>
+                <li>This action cannot be undone or recovered</li>
+              </ul>
+              <p className="pt-2 text-sm font-medium">
+                Are you sure you want to proceed?
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex gap-3 justify-end">
             <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
             <AlertDialogAction
-              onClick={() => void handleClearAll()}
+              onClick={handleConfirmClearAll}
+              disabled={isSubmitting}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              Clear Catalog
+              {isSubmitting ? 'Clearing...' : 'Yes, Clear Everything'}
             </AlertDialogAction>
           </div>
         </AlertDialogContent>

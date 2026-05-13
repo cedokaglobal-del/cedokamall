@@ -205,7 +205,7 @@ const buildProductPayload = (productData: ProductFormData) => {
 
 const cachedProducts = loadCachedProducts();
 
-const scheduleBackgroundSync = (cachedSnapshot: Product[]) => {
+const scheduleBackgroundSync = () => {
   if (backgroundSyncTimeout) {
     clearTimeout(backgroundSyncTimeout);
   }
@@ -227,8 +227,9 @@ const scheduleBackgroundSync = (cachedSnapshot: Product[]) => {
 
             if (error) throw error;
 
+            const current = useProductStore.getState().products;
             const products = (data || []).map(mapSupabaseToProduct);
-            if (JSON.stringify(products) !== JSON.stringify(cachedSnapshot)) {
+            if (JSON.stringify(products) !== JSON.stringify(current)) {
               persistProducts(products);
               useProductStore.setState({
                 products,
@@ -261,7 +262,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
     
     // If we have cached products and not forcing, return immediately
     if (!force && state.products.length > 0) {
-      scheduleBackgroundSync(state.products);
+      scheduleBackgroundSync();
       return;
     }
 

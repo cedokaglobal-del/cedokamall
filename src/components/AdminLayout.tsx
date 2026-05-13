@@ -45,8 +45,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               <img
                 src="/logo.png"
                 alt="Cedoka Admin"
-                className="brightness-0 invert opacity-90"
-                style={{ height: '35px', width: 'auto' }}
+                className="brightness-0 invert opacity-90 h-7 sm:h-8 lg:h-9 w-auto"
               />
             </Link>
           </div>

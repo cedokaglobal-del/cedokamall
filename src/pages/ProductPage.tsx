@@ -5,14 +5,17 @@ import {
   CheckCircle2,
   ChevronRight,
   Heart,
+  MessageSquare,
   Minus,
   Plus,
   RotateCcw,
+  Send,
   Share2,
   Shield,
   ShoppingCart,
   Star,
   Truck,
+  User,
 } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -27,6 +30,31 @@ import { getOptimizedImageUrl, generateSrcSet, generateSizes } from '@/utils/per
 
 const fallbackImage = '/image.png';
 const formatPrice = (amount: number) => `\u20A6${amount.toLocaleString()}`;
+
+interface Review {
+  id: string;
+  name: string;
+  rating: number;
+  text: string;
+  date: string;
+}
+
+const STORAGE_KEY_REVIEWS = 'cedoka_reviews';
+
+const loadReviews = (productId: string): Review[] => {
+  try {
+    const data = localStorage.getItem(`${STORAGE_KEY_REVIEWS}_${productId}`);
+    return data ? (JSON.parse(data) as Review[]) : [];
+  } catch {
+    return [];
+  }
+};
+
+const saveReviews = (productId: string, reviews: Review[]): void => {
+  try {
+    localStorage.setItem(`${STORAGE_KEY_REVIEWS}_${productId}`, JSON.stringify(reviews));
+  } catch { /* noop */ }
+};
 
 const ProductPage = () => {
   const { id } = useParams();
@@ -175,16 +203,58 @@ const ProductPage = () => {
     toast.success(`${product.name} added to cart`);
   };
 
+  const [userRating, setUserRating] = useState<number>(() => {
+    if (!id) return 0;
+    try {
+      return Number(localStorage.getItem(`cedoka_rating_${id}`)) || 0;
+    } catch { return 0; }
+  });
+
   const handleRate = async (rating: number) => {
-    if (isRating) return;
+    if (isRating || userRating > 0) return;
     setIsRating(true);
     try {
       await rateProduct(product.id, rating);
+      localStorage.setItem(`cedoka_rating_${id}`, String(rating));
+      setUserRating(rating);
       toast.success('Thank you for your rating!');
     } catch {
       toast.error('Failed to submit rating. Please try again.');
     } finally {
       setIsRating(false);
+    }
+  };
+
+  const [reviews, setReviews] = useState<Review[]>(() => (id ? loadReviews(id) : []));
+  const [reviewForm, setReviewForm] = useState({ name: '', rating: 0, text: '' });
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
+  useEffect(() => {
+    if (id) {
+      setReviews(loadReviews(id));
+    }
+  }, [id]);
+
+  const handleSubmitReview = () => {
+    if (!reviewForm.text.trim() || reviewForm.rating === 0 || !id) return;
+    setIsSubmittingReview(true);
+    try {
+      const review: Review = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 10),
+        name: reviewForm.name.trim() || 'Anonymous',
+        rating: reviewForm.rating,
+        text: reviewForm.text.trim(),
+        date: new Date().toISOString(),
+      };
+      const updated = [review, ...reviews];
+      saveReviews(id, updated);
+      setReviews(updated);
+      setReviewForm({ name: '', rating: 0, text: '' });
+      toast.success('Review submitted!');
+    } catch {
+      toast.error('Failed to submit review. Please try again.');
+    } finally {
+      setIsSubmittingReview(false);
     }
   };
 
@@ -278,18 +348,18 @@ const ProductPage = () => {
             <section className="overflow-hidden rounded-[1.75rem] border border-gold-antique/10 bg-white shadow-premium">
               <div className="border-b border-gold-antique/10 bg-gradient-to-r from-white via-white to-gold/10 px-6 py-6 md:px-8">
                 <div className="mb-4 flex flex-wrap items-center gap-3 text-[11px] font-bold uppercase tracking-[0.22em] text-navy/55">
-                  <span>{product.category}</span>
-                  <span className="h-1 w-1 rounded-full bg-gold" />
-                  <span>Sold by {product.seller}</span>
+                  <span className="break-words">{product.category}</span>
+                  <span className="h-1 w-1 shrink-0 rounded-full bg-gold" />
+                  <span className="break-words">Sold by {product.seller}</span>
                   {product.sku && (
                     <>
-                      <span className="h-1 w-1 rounded-full bg-gold" />
-                      <span>SKU {product.sku}</span>
+                      <span className="h-1 w-1 shrink-0 rounded-full bg-gold" />
+                      <span className="break-words">SKU {product.sku}</span>
                     </>
                   )}
                 </div>
 
-                <h1 className="max-w-3xl font-serif text-3xl font-bold leading-tight text-navy md:text-5xl">
+                <h1 className="max-w-3xl break-words font-serif text-3xl font-bold leading-tight text-navy md:text-5xl">
                   {product.name}
                 </h1>
 
@@ -305,8 +375,8 @@ const ProductPage = () => {
                       />
                     ))}
                   </div>
-                  <span className="text-sm font-bold text-navy">{(product.rating || 0).toFixed(1)}</span>
-                  <span className="text-sm text-navy/45">{product.reviews || 0} verified reviews</span>
+                  <span className="break-words text-sm font-bold text-navy">{(product.rating || 0).toFixed(1)}</span>
+                  <span className="break-words text-sm text-navy/45">{product.reviews || 0} verified reviews</span>
                 </div>
               </div>
 
@@ -314,7 +384,7 @@ const ProductPage = () => {
                 <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_19rem] xl:items-start">
                   <div className="space-y-6">
                     {product.features && product.features.length > 0 && (
-                      <div className="rounded-[1.5rem] border border-gold-antique/10 bg-white p-5 md:p-6">
+                      <div className="overflow-hidden rounded-[1.5rem] border border-gold-antique/10 bg-white p-5 md:p-6">
                         <div className="mb-5 flex items-center gap-2">
                           <Star className="h-4 w-4 text-gold" />
                           <h2 className="text-sm font-bold uppercase tracking-[0.24em] text-navy">
@@ -338,7 +408,7 @@ const ProductPage = () => {
                     )}
 
                     {productSpecs.length > 0 && (
-                      <div className="rounded-[1.5rem] border border-gold-antique/10 bg-white p-5 md:p-6">
+                      <div className="overflow-hidden rounded-[1.5rem] border border-gold-antique/10 bg-white p-5 md:p-6">
                         <h2 className="text-sm font-bold uppercase tracking-[0.24em] text-navy">
                           Product Details
                         </h2>
@@ -357,46 +427,182 @@ const ProductPage = () => {
                       </div>
                     )}
 
-                    <div className="rounded-[1.5rem] border border-gold-antique/10 bg-white p-5 md:p-6">
+                    <div className="overflow-hidden rounded-[1.5rem] border border-gold-antique/10 bg-white p-5 md:p-6">
                       <h2 className="text-sm font-bold uppercase tracking-[0.24em] text-navy">
                         Rate This Product
                       </h2>
                       <div className="mt-4 flex flex-wrap items-center gap-3">
-                        {[1, 2, 3, 4, 5].map((rating) => (
+                        {userRating > 0 ? (
+                          <div className="flex items-center gap-2">
+                            <div className="flex">
+                              {[1, 2, 3, 4, 5].map((star) => (
+                                <Star
+                                  key={star}
+                                  className={cn(
+                                    'h-5 w-5',
+                                    star <= userRating ? 'fill-gold text-gold' : 'fill-gray-200 text-gray-200'
+                                  )}
+                                />
+                              ))}
+                            </div>
+                            <span className="text-sm text-navy/55">Your rating: {userRating}/5</span>
+                          </div>
+                        ) : (
+                          <>
+                            {[1, 2, 3, 4, 5].map((rating) => (
+                              <button
+                                key={rating}
+                                type="button"
+                                onMouseEnter={() => setHoverRating(rating)}
+                                onMouseLeave={() => setHoverRating(0)}
+                                onClick={() => void handleRate(rating)}
+                                disabled={isRating}
+                                className="rounded-full border border-gold-antique/10 bg-ivory px-3 py-2 transition-colors hover:border-gold hover:bg-gold/10 disabled:cursor-not-allowed"
+                                aria-label={`Rate ${product.name} ${rating} star${rating > 1 ? 's' : ''}`}
+                              >
+                                <Star
+                                  className={cn(
+                                    'h-5 w-5',
+                                    rating <= (hoverRating || Math.round(product.rating || 0))
+                                      ? 'fill-gold text-gold'
+                                      : 'fill-gray-200 text-gray-200'
+                                  )}
+                                />
+                              </button>
+                            ))}
+                          </>
+                        )}
+                        <span className="text-[13px] text-navy/55 md:text-sm">
+                          {isRating ? 'Submitting your rating...' : userRating > 0 ? 'You have rated this product.' : 'Tap a star to share your feedback.'}
+                        </span>
+                      </div>
+                    </div>
+
+                  <div className="overflow-hidden rounded-[1.5rem] border border-gold-antique/10 bg-white p-5 md:p-6">
+                    <div className="mb-5 flex items-center gap-2">
+                      <MessageSquare className="h-4 w-4 text-gold" />
+                      <h2 className="text-sm font-bold uppercase tracking-[0.24em] text-navy">
+                        Customer Reviews
+                      </h2>
+                      <span className="ml-auto text-xs text-navy/45">({reviews.length})</span>
+                    </div>
+
+                    {reviews.length > 0 ? (
+                      <div className="mb-6 max-h-[400px] space-y-4 overflow-y-auto">
+                        {reviews.map((review) => (
+                            <div
+                              key={review.id}
+                              className="overflow-hidden rounded-2xl border border-gold-antique/10 bg-ivory/50 p-4"
+                          >
+                            <div className="mb-2 flex items-start justify-between gap-3">
+                              <div className="flex items-center gap-2.5">
+                                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-gold/10">
+                                  <User className="h-4 w-4 text-gold" />
+                                </div>
+                                <div className="min-w-0">
+                                  <p className="truncate text-[13px] font-bold text-navy">
+                                    {review.name}
+                                  </p>
+                                  <p className="text-[10px] text-navy/40">
+                                    {new Date(review.date).toLocaleDateString('en-US', {
+                                      year: 'numeric',
+                                      month: 'short',
+                                      day: 'numeric',
+                                    })}
+                                  </p>
+                                </div>
+                              </div>
+                              <div className="flex shrink-0">
+                                {[1, 2, 3, 4, 5].map((star) => (
+                                  <Star
+                                    key={star}
+                                    className={cn(
+                                      'h-3 w-3',
+                                      star <= review.rating
+                                        ? 'fill-gold text-gold'
+                                        : 'fill-gray-200 text-gray-200'
+                                    )}
+                                  />
+                                ))}
+                              </div>
+                            </div>
+                            <p className="break-words text-[13px] leading-6 text-navy/74">{review.text}</p>
+                          </div>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="mb-6 text-center text-[13px] text-navy/50">
+                        No reviews yet. Be the first to review this product!
+                      </p>
+                    )}
+
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        placeholder="Your name (optional)"
+                        value={reviewForm.name}
+                        onChange={(e) =>
+                          setReviewForm((prev) => ({ ...prev, name: e.target.value }))
+                        }
+                        className="w-full rounded-2xl border border-gold-antique/10 bg-ivory/50 px-4 py-3 text-sm text-navy placeholder:text-navy/30 focus:border-gold focus:outline-none"
+                      />
+                      <div className="flex items-center gap-1">
+                        <span className="mr-2 text-xs font-bold uppercase tracking-[0.18em] text-navy/55">
+                          Your rating:
+                        </span>
+                        {[1, 2, 3, 4, 5].map((star) => (
                           <button
-                            key={rating}
+                            key={star}
                             type="button"
-                            onMouseEnter={() => setHoverRating(rating)}
-                            onMouseLeave={() => setHoverRating(0)}
-                            onClick={() => void handleRate(rating)}
-                            disabled={isRating}
-                            className="rounded-full border border-gold-antique/10 bg-ivory px-3 py-2 transition-colors hover:border-gold hover:bg-gold/10 disabled:cursor-not-allowed"
-                            aria-label={`Rate ${product.name} ${rating} star${rating > 1 ? 's' : ''}`}
+                            onClick={() =>
+                              setReviewForm((prev) => ({ ...prev, rating: star }))
+                            }
+                            className="p-0.5"
                           >
                             <Star
                               className={cn(
                                 'h-5 w-5',
-                                rating <= (hoverRating || Math.round(product.rating || 0))
+                                star <= reviewForm.rating
                                   ? 'fill-gold text-gold'
                                   : 'fill-gray-200 text-gray-200'
                               )}
                             />
                           </button>
                         ))}
-                        <span className="text-[13px] text-navy/55 md:text-sm">
-                          {isRating ? 'Submitting your rating...' : 'Tap a star to share your feedback.'}
-                        </span>
                       </div>
+                      <textarea
+                        placeholder="Write your review..."
+                        value={reviewForm.text}
+                        onChange={(e) =>
+                          setReviewForm((prev) => ({ ...prev, text: e.target.value }))
+                        }
+                        rows={3}
+                        className="w-full resize-none rounded-2xl border border-gold-antique/10 bg-ivory/50 px-4 py-3 text-sm text-navy placeholder:text-navy/30 focus:border-gold focus:outline-none"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSubmitReview}
+                        disabled={
+                          isSubmittingReview ||
+                          !reviewForm.text.trim() ||
+                          reviewForm.rating === 0
+                        }
+                        className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gold py-3 text-xs font-bold uppercase tracking-widest text-navy transition-all hover:bg-gold-antique hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
+                      >
+                        <Send className="h-4 w-4" />
+                        {isSubmittingReview ? 'Submitting...' : 'Submit Review'}
+                      </button>
                     </div>
+                  </div>
                   </div>
 
                   <aside className="space-y-4">
-                  <div className="rounded-[1.5rem] border border-gold-antique/10 bg-navy p-5 text-champagne shadow-xl md:p-6">
+                  <div className="overflow-hidden rounded-[1.5rem] border border-gold-antique/10 bg-navy p-5 text-champagne shadow-xl md:p-6">
                     <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-champagne/70">
                       Today&apos;s Price
                     </p>
                     <div className="mt-3 flex flex-wrap items-end gap-3">
-                      <span className="text-4xl font-bold tracking-tight text-gold">{formatPrice(product.price)}</span>
+                      <span className="break-words text-4xl font-bold tracking-tight text-gold">{formatPrice(product.price)}</span>
                       {product.originalPrice && (
                         <span className="text-base text-champagne/50 line-through">
                           {formatPrice(product.originalPrice)}
@@ -404,7 +610,7 @@ const ProductPage = () => {
                       )}
                     </div>
                     {product.originalPrice && discount > 0 && (
-                      <p className="mt-2 text-sm text-champagne/75">
+                      <p className="mt-2 break-words text-sm text-champagne/75">
                         You save {formatPrice(product.originalPrice - product.price)} today.
                       </p>
                     )}
@@ -416,9 +622,9 @@ const ProductPage = () => {
                           product.inStock > 10 ? 'bg-gold' : 'bg-red-500 animate-pulse'
                         )}
                       />
-                      <span className="text-[11px] font-bold uppercase tracking-[0.18em] text-champagne/80 md:text-xs">
-                        {product.inStock > 10 ? 'Available for Immediate Delivery' : `Only ${product.inStock} units left`}
-                      </span>
+                    <span className="break-words text-[11px] font-bold uppercase tracking-[0.18em] text-champagne/80 md:text-xs">
+                      {product.inStock > 10 ? 'Available for Immediate Delivery' : `Only ${product.inStock} units left`}
+                    </span>
                     </div>
 
                     <div className="mt-6 grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-2">
@@ -477,7 +683,7 @@ const ProductPage = () => {
                     </div>
                   </div>
 
-                  <div className="rounded-[1.5rem] border border-gold-antique/10 bg-white p-5 md:p-6">
+                  <div className="overflow-hidden rounded-[1.5rem] border border-gold-antique/10 bg-white p-5 md:p-6">
                     <h2 className="text-sm font-bold uppercase tracking-[0.24em] text-navy">
                       Delivery & Assurance
                     </h2>
@@ -489,49 +695,49 @@ const ProductPage = () => {
                           </div>
                           <div>
                             <p className="text-[13px] font-bold text-navy md:text-sm">{label}</p>
-                            <p className="mt-1 text-[13px] leading-6 text-navy/60 md:text-sm">{description}</p>
+                            <p className="mt-1 break-words text-[13px] leading-6 text-navy/60 md:text-sm">{description}</p>
                           </div>
                         </div>
                       ))}
                     </div>
                   </div>
 
-                  <div className="rounded-[1.5rem] border border-gold-antique/10 bg-white p-5 md:p-6">
+                  <div className="overflow-hidden rounded-[1.5rem] border border-gold-antique/10 bg-white p-5 md:p-6">
                     <h2 className="text-sm font-bold uppercase tracking-[0.24em] text-navy">
                       Purchase Snapshot
                     </h2>
                     <dl className="mt-4 space-y-4 text-[13px] md:text-sm">
                       <div className="flex items-center justify-between gap-4 border-b border-gold-antique/10 pb-3">
                         <dt className="text-navy/55">Seller</dt>
-                        <dd className="font-semibold text-navy">{product.seller}</dd>
+                        <dd className="break-words font-semibold text-navy">{product.seller}</dd>
                       </div>
                       {product.warranty && (
                         <div className="flex items-center justify-between gap-4 border-b border-gold-antique/10 pb-3">
                           <dt className="text-navy/55">Warranty</dt>
-                          <dd className="font-semibold text-navy">{product.warranty}</dd>
+                          <dd className="break-words font-semibold text-navy">{product.warranty}</dd>
                         </div>
                       )}
                       {product.color && (
                         <div className="flex items-center justify-between gap-4 border-b border-gold-antique/10 pb-3">
                           <dt className="text-navy/55">Color</dt>
-                          <dd className="font-semibold text-navy">{product.color}</dd>
+                          <dd className="break-words font-semibold text-navy">{product.color}</dd>
                         </div>
                       )}
                       <div className="flex items-center justify-between gap-4">
                         <dt className="text-navy/55">Category</dt>
-                        <dd className="font-semibold text-navy">{product.category}</dd>
+                        <dd className="break-words font-semibold text-navy">{product.category}</dd>
                       </div>
                     </dl>
                   </div>
                   </aside>
                 </div>
 
-                <div className="rounded-[1.5rem] border border-gold-antique/10 bg-ivory/70 p-5 md:p-6">
+                <div className="overflow-hidden rounded-[1.5rem] border border-gold-antique/10 bg-ivory/70 p-5 md:p-6">
                   <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-navy/55">
                     Product Overview
                   </p>
                   <div className="mt-4 rounded-2xl bg-white/80 p-4 md:p-5">
-                    <p className="text-justify text-sm leading-7 text-navy/74 md:text-[15px]">
+                    <p className="break-words text-sm leading-7 text-navy/74 md:text-[15px]">
                       {product.description}
                     </p>
                   </div>

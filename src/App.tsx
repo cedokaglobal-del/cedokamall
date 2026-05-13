@@ -159,7 +159,7 @@ const App = () => {
       window.removeEventListener('beforeunload', handleBeforeUnload);
     };
   }, []);
-
+  
   return (
     <QueryClientProvider client={queryClient}>
       <AuthProvider>

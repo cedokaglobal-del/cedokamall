@@ -83,7 +83,9 @@ const buildInitialFormData = (product?: Product): ProductFormData => ({
 });
 
 const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: ProductFormProps) => {
-  const { categories, addCategory, removeCategory } = useCategoryStore();
+  const categories = useCategoryStore((s) => s.categories);
+  const addCategory = useCategoryStore((s) => s.addCategory);
+  const removeCategory = useCategoryStore((s) => s.removeCategory);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategory, setNewCategory] = useState('');
   const [isUploadingImages, setIsUploadingImages] = useState(false);
@@ -143,18 +145,22 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
     toast.success(`Category "${trimmed}" added successfully`);
   };
 
-  const handleDeleteCategory = (cat: string, e: React.MouseEvent) => {
-    e.stopPropagation();
-    if (categories.length <= 1) {
-      toast.error('At least one category must exist');
-      return;
-    }
-    removeCategory(cat);
-    if (formData.category === cat) {
-      setFormData(prev => ({ ...prev, category: '' }));
-    }
-    toast.success(`Category "${cat}" removed`);
-  };
+const handleDeleteCategory = (cat: string, e: React.MouseEvent) => {
+     e.stopPropagation();
+     if (categories.length <= 1) {
+       toast.error('At least one category must exist');
+       return;
+     }
+     if (cat === 'Kitchen Accessories') {
+       toast.error('"Kitchen Accessories" cannot be deleted as it is the default category.');
+       return;
+     }
+     removeCategory(cat);
+     if (formData.category === cat) {
+       setFormData(prev => ({ ...prev, category: 'Kitchen Accessories' }));
+     }
+     toast.success(`Category "${cat}" removed`);
+   };
 
   const handleAddFeature = () => {
     const trimmed = featureInput.trim();
@@ -374,7 +380,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
                             onKeyDown={(e) => e.key === 'Enter' && handleAddCategory()}
                           />
                         </div>
-                        <div className="flex justify-end gap-3">
+                        <div className="flex flex-wrap justify-end gap-3">
                           <Button variant="ghost" onClick={() => setIsAddingCategory(false)}>Cancel</Button>
                           <Button onClick={handleAddCategory} className="px-6">Add Category</Button>
                         </div>
@@ -534,7 +540,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
                   </Button>
                 </div>
 
-                <div className="min-h-[100px] rounded-xl border border-dashed border-muted-foreground/30 bg-muted/5 p-4">
+                <div className="min-h-[100px] overflow-hidden rounded-xl border border-dashed border-muted-foreground/30 bg-muted/5 p-4">
                   {(formData.features || []).length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center py-4 text-muted-foreground">
                       <ListPlus className="w-8 h-8 mb-2 opacity-20" />

@@ -13,10 +13,14 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Product, ProductFormData, ProductFilter } from '@/types/product';
 import { getCategoryOptions } from '@/data/products';
 import { useProductStore } from '@/store/productStore';
-import { Plus, Search, Filter, Trash2 } from 'lucide-react';
+import { useAuth } from '@/contexts/useAuth';
+import { supabase } from '@/lib/supabase';
+import { Lock, Plus, Search, Filter, Trash2 } from 'lucide-react';
+import { toast } from 'sonner';
 
 const AdminProducts = () => {
   const navigate = useNavigate();
+  const { adminEmail } = useAuth();
   const products = useProductStore((s) => s.products);
   const filter = useProductStore((s) => s.filter);
   const setFilter = useProductStore((s) => s.setFilter);
@@ -29,7 +33,11 @@ const AdminProducts = () => {
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | undefined>();
   const [isLoading, setIsLoading] = useState(false);
-  const [isClearAllDialogOpen, setIsClearAllDialogOpen] = useState(false);
+  const [isClearAllPasswordOpen, setIsClearAllPasswordOpen] = useState(false);
+  const [isConfirmClearAllOpen, setIsConfirmClearAllOpen] = useState(false);
+  const [clearPassword, setClearPassword] = useState('');
+  const [clearPasswordError, setClearPasswordError] = useState('');
+  const [isClearing, setIsClearing] = useState(false);
 
   const filteredProducts = useMemo(() => getFilteredProducts(), [filter, products]);
   const categories = useMemo(() => getCategoryOptions(products), [products]);
@@ -80,13 +88,56 @@ const AdminProducts = () => {
     }
   };
 
-  const handleClearAllProducts = async () => {
+  const handleVerifyClearPassword = async () => {
     try {
-      setIsLoading(true);
-      await clearAllProducts();
-      setIsClearAllDialogOpen(false);
+      setClearPasswordError('');
+
+      if (!clearPassword) {
+        setClearPasswordError('Password is required');
+        return;
+      }
+
+      if (!adminEmail) {
+        setClearPasswordError('Admin session not found. Please log in again.');
+        return;
+      }
+
+      setIsClearing(true);
+
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: adminEmail,
+        password: clearPassword,
+      });
+
+      if (authError) {
+        setClearPasswordError('Incorrect password. Please try again.');
+        setIsClearing(false);
+        return;
+      }
+
+      setClearPassword('');
+      setClearPasswordError('');
+      setIsClearAllPasswordOpen(false);
+      setIsConfirmClearAllOpen(true);
+    } catch (error) {
+      console.error('Password verification failed:', error);
+      setClearPasswordError('An error occurred. Please try again.');
     } finally {
-      setIsLoading(false);
+      setIsClearing(false);
+    }
+  };
+
+  const handleConfirmClearAll = async () => {
+    try {
+      setIsClearing(true);
+      await clearAllProducts();
+      setIsConfirmClearAllOpen(false);
+      toast.success('Catalog cleared successfully');
+    } catch (error) {
+      console.error('Clear all failed:', error);
+      toast.error('Failed to clear catalog. Please try again.');
+    } finally {
+      setIsClearing(false);
     }
   };
 
@@ -113,7 +164,7 @@ const AdminProducts = () => {
             </Button>
             {products.length > 0 && (
               <Button 
-                onClick={() => setIsClearAllDialogOpen(true)} 
+                onClick={() => setIsClearAllPasswordOpen(true)} 
                 size="lg" 
                 variant="destructive" 
                 className="gap-2"
@@ -243,25 +294,117 @@ const AdminProducts = () => {
         />
       </div>
 
-      {/* Clear All Dialog */}
-      <AlertDialog open={isClearAllDialogOpen} onOpenChange={setIsClearAllDialogOpen}>
+      {/* Clear All - Password Verification */}
+      <Dialog open={isClearAllPasswordOpen} onOpenChange={(open) => {
+        setIsClearAllPasswordOpen(open);
+        if (!open) {
+          setClearPassword('');
+          setClearPasswordError('');
+        }
+      }}>
+        <DialogContent className="max-w-md" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg text-red-600">
+              <Lock className="w-5 h-5" />
+              Clear All Products
+            </DialogTitle>
+            <DialogDescription className="text-base">
+              This will permanently delete all <strong>{products.length} products</strong>. Please verify your identity.
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="space-y-4 py-6 border-y">
+            <p className="text-sm text-muted-foreground">
+              Enter your admin password to continue:
+            </p>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                Admin Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  type="password"
+                  placeholder="Enter your admin password"
+                  value={clearPassword}
+                  onChange={(e) => {
+                    setClearPassword(e.target.value);
+                    setClearPasswordError('');
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && clearPassword && !isClearing) {
+                      e.preventDefault();
+                      void handleVerifyClearPassword();
+                    }
+                  }}
+                  disabled={isClearing}
+                  className="pl-10 h-11"
+                  autoFocus
+                />
+              </div>
+              {clearPasswordError && (
+                <p className="text-xs text-red-600 font-medium bg-red-50 p-2 rounded">{clearPasswordError}</p>
+              )}
+            </div>
+          </div>
+
+          <div className="flex gap-3 justify-end">
+            <Button 
+              variant="outline"
+              disabled={isClearing}
+              onClick={() => {
+                setClearPassword('');
+                setClearPasswordError('');
+                setIsClearAllPasswordOpen(false);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => void handleVerifyClearPassword()}
+              disabled={isClearing || !clearPassword}
+            >
+              {isClearing ? 'Verifying...' : 'Verify Password'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Clear All Confirmation */}
+      <AlertDialog open={isConfirmClearAllOpen} onOpenChange={setIsConfirmClearAllOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Clear All Products?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete all {products.length} products from your catalog. This action cannot be undone. 
-              <br /><br />
-              You can still add new products after clearing. Are you sure you want to continue?
+            <AlertDialogTitle className="flex items-center gap-2 text-lg text-red-600">
+              <Trash2 className="w-5 h-5" />
+              Are You Absolutely Sure?
+            </AlertDialogTitle>
+            <AlertDialogDescription className="text-base space-y-3">
+              <p className="font-semibold text-red-600">
+                ⚠️ WARNING: This action is irreversible!
+              </p>
+              <p>
+                You are about to permanently delete all <strong>{products.length} products</strong> from your catalog and database.
+              </p>
+              <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
+                <li>All product data will be lost forever</li>
+                <li>Product images will remain on the server but will be orphaned</li>
+                <li>Customer reviews and ratings for these products will be deleted</li>
+                <li>This action cannot be undone or recovered</li>
+              </ul>
+              <p className="pt-2 text-sm font-medium">
+                Are you sure you want to proceed?
+              </p>
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="flex gap-4 justify-end">
-            <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
-            <AlertDialogAction 
-              onClick={handleClearAllProducts} 
-              disabled={isLoading}
+          <div className="flex gap-3 justify-end">
+            <AlertDialogCancel disabled={isClearing}>Cancel</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleConfirmClearAll}
+              disabled={isClearing}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              {isLoading ? 'Clearing...' : 'Clear All'}
+              {isClearing ? 'Clearing...' : 'Yes, Clear Everything'}
             </AlertDialogAction>
           </div>
         </AlertDialogContent>

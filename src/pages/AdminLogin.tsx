@@ -110,14 +110,14 @@ const AdminLogin = () => {
             {error && (
               <div className="mb-6 p-4 bg-red-500/10 border border-red-500/20 text-red-400 rounded-2xl text-sm flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
                 <span className="mt-0.5">⚠️</span> 
-                <span className="font-medium leading-relaxed">{error}</span>
+                <span className="break-words font-medium leading-relaxed">{error}</span>
               </div>
             )}
 
             {success && (
               <div className="mb-6 p-4 bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 rounded-2xl text-sm flex items-start gap-3 animate-in fade-in slide-in-from-top-2">
                 <Star className="w-5 h-5 shrink-0" />
-                <span className="font-medium leading-relaxed">{success}</span>
+                <span className="break-words font-medium leading-relaxed">{success}</span>
               </div>
             )}
 

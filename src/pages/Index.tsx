@@ -124,7 +124,7 @@ const WelcomeGreeting = () => {
       animate={{ opacity: 1, x: 0, scale: 1 }}
       exit={{ opacity: 0, x: 50, scale: 0.95 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className="fixed bottom-24 right-8 z-[100] max-w-sm rounded-md bg-white p-6 shadow-2xl border-l-4 border-gold"
+      className="fixed bottom-24 right-8 z-[100] max-w-sm overflow-hidden rounded-md bg-white p-6 shadow-2xl border-l-4 border-gold"
     >
       <div className="flex items-start gap-4">
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gold/10 flex-shrink-0 animate-pulse">
@@ -432,7 +432,7 @@ const Index = () => {
         ) : error && products.length === 0 ? (
           <div className="rounded-lg bg-red-50 p-12 text-center text-red-800">
             <p className="font-bold">Unable to load products</p>
-            <p className="text-sm mt-2">{error}</p>
+            <p className="break-words text-sm mt-2">{error}</p>
             <button 
               onClick={() => useProductStore.getState().fetchProducts(true)}
               className="mt-4 rounded-md bg-red-100 px-4 py-2 text-sm font-bold hover:bg-red-200 transition-colors"

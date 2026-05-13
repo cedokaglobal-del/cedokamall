@@ -67,7 +67,7 @@ const SpinWheel = () => {
               <p className="text-sm text-muted-foreground mb-4">Win CedokaPoints & discounts!</p>
 
               {/* Wheel */}
-              <div className="relative w-64 h-64 mx-auto mb-4">
+              <div className="relative w-56 sm:w-64 h-56 sm:h-64 mx-auto mb-4">
                 {/* Pointer */}
                 <div className="absolute -top-2 left-1/2 -translate-x-1/2 z-10 w-0 h-0 border-l-[12px] border-r-[12px] border-t-[20px] border-l-transparent border-r-transparent border-t-foreground" />
                 <svg

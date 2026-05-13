@@ -15,7 +15,7 @@ interface FlashDealFormProps {
 const FlashDealForm = ({ onSubmit, isLoading = false }: FlashDealFormProps) => {
   const { register, handleSubmit, formState: { errors } } = useForm<FlashDealRequest>();
   const [selectedProduct, setSelectedProduct] = useState<string>('');
-  const { products } = useProductStore();
+  const products = useProductStore((s) => s.products);
 
   const handleFormSubmit = (data: FlashDealRequest) => {
     if (!selectedProduct) {
@@ -31,7 +31,7 @@ const FlashDealForm = ({ onSubmit, isLoading = false }: FlashDealFormProps) => {
   };
 
   return (
-    <Card className="p-6">
+    <Card className="overflow-hidden p-6">
       <h2 className="text-2xl font-bold mb-6">Create Flash Deal</h2>
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
         {/* Product Selection */}
@@ -41,7 +41,7 @@ const FlashDealForm = ({ onSubmit, isLoading = false }: FlashDealFormProps) => {
             id="product"
             value={selectedProduct}
             onChange={(e) => setSelectedProduct(e.target.value)}
-            className="w-full mt-2 p-2 border rounded-lg"
+            className="w-full max-w-full mt-2 p-2 border rounded-lg"
           >
             <option value="">Select a product...</option>
             {products.map((product) => (

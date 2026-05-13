@@ -76,7 +76,7 @@ const ProductTable = ({ products, onEdit, onDelete, isLoading = false }: Product
                       <img
                         src={product.image}
                         alt={product.name}
-                        className="w-10 h-10 rounded object-cover"
+                        className="w-8 lg:w-10 h-8 lg:h-10 rounded object-cover"
                         onError={(e) => {
                           (e.target as HTMLImageElement).src = '/image.png';
                         }}
@@ -87,7 +87,7 @@ const ProductTable = ({ products, onEdit, onDelete, isLoading = false }: Product
                       </div>
                     </div>
                   </TableCell>
-                  <TableCell>{product.category}</TableCell>
+                  <TableCell className="max-w-[160px] truncate">{product.category}</TableCell>
                   <TableCell>
                     <div className="font-semibold">{formatPrice(product.price)}</div>
                     {discount > 0 && (
@@ -103,7 +103,7 @@ const ProductTable = ({ products, onEdit, onDelete, isLoading = false }: Product
                     </div>
                     <p className={`text-xs ${stockStatus.color}`}>{stockStatus.label}</p>
                   </TableCell>
-                  <TableCell>{product.seller}</TableCell>
+                  <TableCell className="max-w-[160px] truncate">{product.seller}</TableCell>
                   <TableCell>
                     <div className="flex gap-2">
                       <Button

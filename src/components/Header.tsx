@@ -64,7 +64,7 @@ const Header = () => {
     <>
       {/* Top bar */}
       <div className="bg-navy text-champagne text-xs sm:text-sm py-2 sm:py-2.5 border-b border-gold-antique/20 transition-all duration-300">
-        <div className="container flex justify-between items-center font-sans gap-2 sm:gap-4">
+        <div className="container flex justify-between items-center font-sans gap-2 sm:gap-4 flex-wrap">
           <div className="flex items-center gap-2 sm:gap-4 flex-wrap min-w-0">
             <span className="flex items-center gap-1 opacity-90 text-xs sm:text-sm whitespace-nowrap">
               <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-gold flex-shrink-0" /> 

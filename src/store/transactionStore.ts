@@ -34,11 +34,13 @@ const loadCachedTransactions = (): Transaction[] => {
   }
 };
 
+const cachedTransactions = loadCachedTransactions();
+
 export const useTransactionStore = create<TransactionState>((set, get) => ({
-  transactions: loadCachedTransactions(),
+  transactions: cachedTransactions,
   isLoading: false,
   error: null,
-  hasLoaded: loadCachedTransactions().length > 0,
+  hasLoaded: cachedTransactions.length > 0,
   lastSyncedAt: null,
   
   fetchTransactions: async (force = false) => {

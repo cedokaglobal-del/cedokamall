@@ -91,9 +91,9 @@ const TransactionHistory = ({ transactions, limit = 10 }: TransactionHistoryProp
           <TableBody>
             {displayTransactions.map((transaction) => (
               <TableRow key={transaction.id} className="hover:bg-muted/50">
-                <TableCell className="font-mono text-sm">{transaction.orderId}</TableCell>
-                <TableCell className="font-medium line-clamp-1">{transaction.productName}</TableCell>
-                <TableCell className="text-sm text-muted-foreground">{transaction.customerEmail}</TableCell>
+                <TableCell className="max-w-[160px] truncate font-mono text-sm">{transaction.orderId}</TableCell>
+                <TableCell className="max-w-[200px] truncate font-medium">{transaction.productName}</TableCell>
+                <TableCell className="max-w-[200px] truncate text-sm text-muted-foreground">{transaction.customerEmail}</TableCell>
                 <TableCell className="font-semibold">{formatCurrency(transaction.amount)}</TableCell>
                 <TableCell className="text-center">{transaction.quantity}</TableCell>
                 <TableCell className="text-sm">{transaction.category}</TableCell>
