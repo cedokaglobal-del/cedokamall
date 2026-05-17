@@ -19,6 +19,7 @@ interface ProductState {
   deleteProduct: (id: string) => Promise<void>;
   clearAllProducts: () => Promise<void>;
   rateProduct: (id: string, rating: number) => Promise<void>;
+  decrementStock: (id: string, quantity: number) => Promise<void>;
   setFilter: (filter: ProductFilter) => void;
 
   getFilteredProducts: () => Product[];
@@ -430,6 +431,40 @@ export const useProductStore = create<ProductState>((set, get) => ({
       throw error;
     }
   },
+
+  decrementStock: async (id: string, quantity: number) => {
+     try {
+       const current = get().products.find((p) => p.id === id);
+       if (!current) return;
+
+       const newStock = Math.max(0, current.inStock - quantity);
+
+       const { data, error } = await supabase
+         .from('products')
+         .update({ stock: newStock })
+         .eq('id', id)
+         .select();
+
+       if (error) throw error;
+
+       const row = data?.[0];
+       if (row) {
+         set((state) => {
+           const products = state.products.map((product) =>
+             product.id === id ? mapSupabaseToProduct(row) : product
+           );
+           persistProducts(products);
+           return {
+             products,
+             lastSyncedAt: new Date().toISOString(),
+           };
+         });
+       }
+     } catch (error) {
+       console.error('Error decrementing stock:', error);
+       throw error;
+     }
+   },
 
   clearAllProducts: async () => {
     try {

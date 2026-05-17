@@ -25,6 +25,57 @@ import {
 } from '@/config/seo';
 import { useSEO, useStructuredData } from '@/hooks/useSEO';
 import { useProductStore } from '@/store/productStore';
+import type { Product } from '@/types/product';
+
+// Seasonal product ordering
+const DRY_SEASON_KEYWORDS = ['freezer', 'refrigerator', 'air conditioner', 'ac', 'cooling', 'fan', 'cooler'];
+const RAINY_SEASON_KEYWORDS = ['television', 'tv', 'sound', 'speaker', 'generator', 'inverter', 'stabilizer', 'home theatre'];
+
+const getSeasonalProducts = (products: Product[]): Product[] => {
+  const now = new Date();
+  const month = now.getMonth();
+  const isDrySeason = month >= 10 || month <= 2;
+
+  const priorityKeywords = isDrySeason ? DRY_SEASON_KEYWORDS : RAINY_SEASON_KEYWORDS;
+
+  const scored = products.map(product => {
+    const name = product.name.toLowerCase();
+    let score = 0;
+    for (const kw of priorityKeywords) {
+      if (name.includes(kw)) {
+        score += 10;
+      }
+    }
+    score += (product.searchCount || 0) * 0.5;
+    score += (product.salesCount || 0) * 0.3;
+    score += (product.rating || 0) * 0.2;
+    return { product, score };
+  });
+
+  scored.sort((a, b) => b.score - a.score);
+
+  const seasonal = scored.filter(p => p.score >= 10).map(p => p.product);
+  const others = scored.filter(p => p.score < 10).map(p => p.product);
+
+  const shuffledOthers = [...others].sort(() => Math.random() - 0.5);
+
+  const categorySet = new Set<string>();
+  const orderedOthers: Product[] = [];
+  for (const p of shuffledOthers) {
+    if (!categorySet.has(p.category)) {
+      orderedOthers.push(p);
+      categorySet.add(p.category);
+    }
+  }
+  for (const p of shuffledOthers) {
+    if (!categorySet.has(p.category)) {
+      orderedOthers.push(p);
+      categorySet.add(p.category);
+    }
+  }
+
+  return [...seasonal.slice(0, 2), ...orderedOthers];
+};
 
 const CountdownTimer = () => {
   const [time, setTime] = useState({ h: 5, m: 42, s: 18 });
@@ -164,6 +215,10 @@ const Index = () => {
 
   const flashDeals = useMemo(
     () => products.filter((product) => product.badge === 'FLASH DEAL').slice(0, 5),
+    [products]
+  );
+  const seasonalProducts = useMemo(
+    () => getSeasonalProducts(products),
     [products]
   );
   const trending = useMemo(
@@ -456,7 +511,7 @@ const Index = () => {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {products.slice(0, 10).map((product, idx) => (
+            {seasonalProducts.slice(0, 10).map((product, idx) => (
               <ProductCard key={product.id} product={product} priority={idx < 4} />
             ))}
           </div>

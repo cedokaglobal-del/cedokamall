@@ -25,6 +25,7 @@ const AdminAnalytics = () => {
   const isTransactionLoading = useTransactionStore((state) => state.isLoading);
   const visitorStats = useVisitorStore((state) => state.stats);
   const avgStayDuration = useVisitorStore((state) => state.getAverageStayDuration());
+  const visitorDailyMetrics = useVisitorStore((state) => state.getDailyVisitorMetrics());
   const syncVisitorStats = useVisitorStore((state) => state.syncWithSupabase);
   const subscribeToVisitorRealtime = useVisitorStore((state) => state.subscribeToRealtime);
   const analyticsData = useMemo(
@@ -126,7 +127,7 @@ const AdminAnalytics = () => {
         </div>
 
         {/* Analytics Charts */}
-        <AnalyticsCharts data={analyticsData} />
+        <AnalyticsCharts data={analyticsData} visitorDailyMetrics={visitorDailyMetrics} />
 
         {/* Transaction History */}
         <div>

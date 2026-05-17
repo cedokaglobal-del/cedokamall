@@ -2,7 +2,7 @@ import type { Config } from "tailwindcss";
 
 export default {
   darkMode: ["class"],
-  content: ["./pages/**/*.{ts,tsx}", "./components/**/*.{ts,tsx}", "./app/**/*.{ts,tsx}", "./src/**/*.{ts,tsx}"],
+  content: ["./src/**/*.{ts,tsx}"],
   prefix: "",
   theme: {
     container: {
@@ -14,9 +14,10 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['"Inter"', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'sans-serif'],
-        serif: ['"Cormorant Garamond"', 'serif'],
-        display: ['"Cormorant Garamond"', 'serif'],
+        sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', '"Noto Sans"', 'sans-serif', '"Apple Color Emoji"', '"Segoe UI Emoji"', '"Segoe UI Symbol"', '"Noto Color Emoji"'],
+        serif: ['Georgia', 'Cambria', '"Times New Roman"', 'Times', 'serif'],
+        display: ['Georgia', 'Cambria', '"Times New Roman"', 'Times', 'serif'],
+        mono: ['Menlo', 'Monaco', 'Consolas', '"Liberation Mono"', '"Courier New"', 'monospace'],
       },
       fontSize: {
         // Responsive typography scaling for professional appearance

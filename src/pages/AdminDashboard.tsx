@@ -69,13 +69,17 @@ const AdminDashboard = () => {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | undefined>();
-  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [isClearAllOpen, setIsClearAllOpen] = useState(false);
   const [isConfirmClearAllOpen, setIsConfirmClearAllOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [clearPassword, setClearPassword] = useState('');
   const [clearPasswordError, setClearPasswordError] = useState('');
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deletePasswordError, setDeletePasswordError] = useState('');
+  const [isDeletePasswordOpen, setIsDeletePasswordOpen] = useState(false);
+  const [pendingDeleteProduct, setPendingDeleteProduct] = useState<Product | null>(null);
   const visitorStats = useVisitorStore((state) => state.stats);
   const avgStayDuration = useVisitorStore((state) => state.getAverageStayDuration());
   const syncVisitorStats = useVisitorStore((state) => state.syncWithSupabase);
@@ -186,17 +190,56 @@ const AdminDashboard = () => {
     }
   };
 
-  const handleConfirmDelete = async () => {
-    if (!deleteTarget) return;
+const handleVerifyDeletePassword = async () => {
+     try {
+       setDeletePasswordError('');
 
-    try {
-      setIsSubmitting(true);
-      await deleteProduct(deleteTarget.id);
-      setDeleteTarget(null);
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
+       if (!deletePassword) {
+         setDeletePasswordError('Password is required');
+         return;
+       }
+
+       if (!adminEmail) {
+         setDeletePasswordError('Admin session not found. Please log in again.');
+         return;
+       }
+
+       setIsSubmitting(true);
+
+       const { error: authError } = await supabase.auth.signInWithPassword({
+         email: adminEmail,
+         password: deletePassword,
+       });
+
+       if (authError) {
+         setDeletePasswordError('Incorrect password. Please try again.');
+         setIsSubmitting(false);
+         return;
+       }
+
+       setDeletePassword('');
+       setDeletePasswordError('');
+       setIsDeletePasswordOpen(false);
+       setDeleteTarget(pendingDeleteProduct);
+     } catch (error) {
+       console.error('Password verification failed:', error);
+       setDeletePasswordError('An error occurred. Please try again.');
+     } finally {
+       setIsSubmitting(false);
+     }
+   };
+
+   const handleConfirmDelete = async () => {
+     if (!deleteTarget) return;
+
+     try {
+       setIsSubmitting(true);
+       await deleteProduct(deleteTarget.id);
+       setDeleteTarget(null);
+     } finally {
+       setIsSubmitting(false);
+     }
+   };
 
   const handleVerifyClearPassword = async () => {
     try {
@@ -545,7 +588,10 @@ const AdminDashboard = () => {
                     <Button
                       variant="destructive"
                       size="sm"
-                      onClick={() => setDeleteTarget(product)}
+                      onClick={() => {
+                        setPendingDeleteProduct(product);
+                        setIsDeletePasswordOpen(true);
+                      }}
                       className="gap-1.5"
                     >
                       <Trash2 className="w-4 h-4" /> Delete
@@ -591,26 +637,104 @@ const AdminDashboard = () => {
         </DialogContent>
       </Dialog>
 
-      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Product?</AlertDialogTitle>
-            <AlertDialogDescription>
-              <strong>"{deleteTarget?.name}"</strong> will be permanently removed from the catalog.
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <div className="flex gap-3 justify-end">
-            <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => void handleConfirmDelete()}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              Delete
-            </AlertDialogAction>
-          </div>
-        </AlertDialogContent>
-      </AlertDialog>
+<Dialog open={isDeletePasswordOpen} onOpenChange={(open) => {
+         setIsDeletePasswordOpen(open);
+         if (!open) {
+           setDeletePassword('');
+           setDeletePasswordError('');
+           setPendingDeleteProduct(null);
+         }
+       }}>
+         <DialogContent className="max-w-md" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+           <DialogHeader>
+             <DialogTitle className="flex items-center gap-2 text-lg text-red-600">
+               <Lock className="w-5 h-5" />
+               Verify Password to Delete
+             </DialogTitle>
+             <DialogDescription className="text-base">
+               Enter your admin password to delete <strong>"{pendingDeleteProduct?.name}"</strong>. This action cannot be undone.
+             </DialogDescription>
+           </DialogHeader>
+
+           <div className="space-y-4 py-6 border-y">
+             <p className="text-sm text-muted-foreground">
+               For security verification, please enter your admin password:
+             </p>
+             <div className="space-y-2">
+               <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                 Admin Password
+               </label>
+               <div className="relative">
+                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                 <Input
+                   type="password"
+                   placeholder="Enter your admin password"
+                   value={deletePassword}
+                   onChange={(e) => {
+                     setDeletePassword(e.target.value);
+                     setDeletePasswordError('');
+                   }}
+                   onKeyDown={(e) => {
+                     if (e.key === 'Enter' && deletePassword && !isSubmitting) {
+                       e.preventDefault();
+                       void handleVerifyDeletePassword();
+                     }
+                   }}
+                   disabled={isSubmitting}
+                   className="pl-10 h-11"
+                   autoFocus
+                 />
+               </div>
+               {deletePasswordError && (
+                 <p className="text-xs text-red-600 font-medium bg-red-50 p-2 rounded">{deletePasswordError}</p>
+               )}
+             </div>
+           </div>
+
+           <div className="flex gap-3 justify-end">
+             <Button
+               variant="outline"
+               disabled={isSubmitting}
+               onClick={() => {
+                 setDeletePassword('');
+                 setDeletePasswordError('');
+                 setIsDeletePasswordOpen(false);
+                 setPendingDeleteProduct(null);
+               }}
+             >
+               Cancel
+             </Button>
+             <Button
+               variant="destructive"
+               onClick={() => void handleVerifyDeletePassword()}
+               disabled={isSubmitting || !deletePassword}
+             >
+               {isSubmitting ? 'Verifying...' : 'Verify Password'}
+             </Button>
+           </div>
+         </DialogContent>
+       </Dialog>
+
+       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+         <AlertDialogContent>
+           <AlertDialogHeader>
+             <AlertDialogTitle>Delete Product?</AlertDialogTitle>
+             <AlertDialogDescription>
+               <strong>"{deleteTarget?.name}"</strong> will be permanently removed from the catalog.
+               This action cannot be undone.
+             </AlertDialogDescription>
+           </AlertDialogHeader>
+           <div className="flex gap-3 justify-end">
+             <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
+             <AlertDialogAction
+               onClick={() => void handleConfirmDelete()}
+               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+             >
+               Delete
+             </AlertDialogAction>
+           </div>
+         </AlertDialogContent>
+       </AlertDialog>
 
       <Dialog 
         open={isClearAllOpen} 

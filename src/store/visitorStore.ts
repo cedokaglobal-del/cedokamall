@@ -17,13 +17,22 @@ interface VisitorStats {
   lastUpdated: number;
 }
 
+interface DailyVisitorRecord {
+  date: string;
+  visitors: number;
+  sessions: number;
+  duration: number;
+}
+
 interface VisitorStore {
   stats: VisitorStats;
   currentSession: VisitorSession | null;
   isRealtimeConnected: boolean;
+  dailyLog: DailyVisitorRecord[];
   startSession: () => Promise<void>;
   updateSession: (options?: { flush?: boolean }) => Promise<void>;
   getAverageStayDuration: () => number;
+  getDailyVisitorMetrics: () => DailyVisitorRecord[];
   syncWithSupabase: (force?: boolean) => Promise<void>;
   subscribeToRealtime: () => () => void;
 }
@@ -108,6 +117,7 @@ export const useVisitorStore = create<VisitorStore>()(
       },
       currentSession: null,
       isRealtimeConnected: false,
+      dailyLog: [],
 
       syncWithSupabase: async (force = false) => {
         const { stats } = get();
@@ -207,6 +217,23 @@ export const useVisitorStore = create<VisitorStore>()(
         }
         const isNewVisitor = !hasSeenVisitor();
 
+        // Daily log: if it's a new day, snapshot previous day's data
+        const today = new Date().toISOString().split('T')[0];
+        const { dailyLog, stats } = get();
+        const lastLoggedDate = dailyLog.length > 0 ? dailyLog[dailyLog.length - 1].date : null;
+        if (lastLoggedDate && lastLoggedDate !== today) {
+          const updatedLog = [
+            ...dailyLog,
+            {
+              date: lastLoggedDate,
+              visitors: stats.totalVisitors,
+              sessions: stats.totalSessions,
+              duration: stats.totalDuration,
+            },
+          ];
+          set({ dailyLog: updatedLog });
+        }
+
         set((state) => ({
           currentSession: {
             id: createSessionId(),
@@ -290,11 +317,16 @@ export const useVisitorStore = create<VisitorStore>()(
 
         return Math.floor(stats.totalDuration / stats.totalSessions);
       },
+
+      getDailyVisitorMetrics: () => {
+        return get().dailyLog;
+      },
     }),
     {
       name: STORE_KEY,
       partialize: (state) => ({
         stats: state.stats,
+        dailyLog: state.dailyLog,
       }),
     }
   )

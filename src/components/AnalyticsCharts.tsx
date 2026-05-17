@@ -3,8 +3,16 @@ import { Card } from '@/components/ui/card';
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts';
 import { TrendingUp, TrendingDown } from 'lucide-react';
 
+interface DailyVisitorRecord {
+  date: string;
+  visitors: number;
+  sessions: number;
+  duration: number;
+}
+
 interface AnalyticsChartProps {
   data: AnalyticsData;
+  visitorDailyMetrics?: DailyVisitorRecord[];
 }
 
 const COLORS = ['#3b82f6', '#ef4444', '#10b981', '#f59e0b', '#8b5cf6', '#ec4899'];
@@ -15,7 +23,7 @@ const currencyFormatter = new Intl.NumberFormat('en-NG', {
   minimumFractionDigits: 0,
 });
 
-const AnalyticsCharts = ({ data }: AnalyticsChartProps) => {
+const AnalyticsCharts = ({ data, visitorDailyMetrics }: AnalyticsChartProps) => {
   const formatCurrency = (value: number) => {
     return currencyFormatter.format(value);
   };
@@ -106,6 +114,38 @@ const AnalyticsCharts = ({ data }: AnalyticsChartProps) => {
           </ResponsiveContainer>
         </Card>
       </div>
+
+      {/* Visitor Trend Chart */}
+      {visitorDailyMetrics && visitorDailyMetrics.length > 0 && (
+        <Card className="p-6">
+          <h3 className="font-semibold mb-4">Visitor Trend</h3>
+          <ResponsiveContainer width="100%" height={300}>
+            <LineChart data={visitorDailyMetrics}>
+              <CartesianGrid strokeDasharray="3 3" />
+              <XAxis dataKey="date" tick={{ fontSize: 12 }} />
+              <YAxis tick={{ fontSize: 12 }} />
+              <Tooltip />
+              <Legend />
+              <Line
+                type="monotone"
+                dataKey="visitors"
+                stroke="#f59e0b"
+                dot={{ fill: '#f59e0b', r: 4 }}
+                activeDot={{ r: 6 }}
+                name="Visitors"
+              />
+              <Line
+                type="monotone"
+                dataKey="sessions"
+                stroke="#8b5cf6"
+                dot={{ fill: '#8b5cf6', r: 3 }}
+                activeDot={{ r: 5 }}
+                name="Sessions"
+              />
+            </LineChart>
+          </ResponsiveContainer>
+        </Card>
+      )}
 
       {/* Charts Row 2: Category Performance & Distribution */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">

@@ -30,14 +30,18 @@ const AdminProducts = () => {
   const clearAllProducts = useProductStore((s) => s.clearAllProducts);
   const getFilteredProducts = useProductStore((s) => s.getFilteredProducts);
   
-  const [isFormOpen, setIsFormOpen] = useState(false);
-  const [editingProduct, setEditingProduct] = useState<Product | undefined>();
-  const [isLoading, setIsLoading] = useState(false);
-  const [isClearAllPasswordOpen, setIsClearAllPasswordOpen] = useState(false);
-  const [isConfirmClearAllOpen, setIsConfirmClearAllOpen] = useState(false);
-  const [clearPassword, setClearPassword] = useState('');
-  const [clearPasswordError, setClearPasswordError] = useState('');
-  const [isClearing, setIsClearing] = useState(false);
+const [isFormOpen, setIsFormOpen] = useState(false);
+   const [editingProduct, setEditingProduct] = useState<Product | undefined>();
+   const [isLoading, setIsLoading] = useState(false);
+   const [isClearAllPasswordOpen, setIsClearAllPasswordOpen] = useState(false);
+   const [isConfirmClearAllOpen, setIsConfirmClearAllOpen] = useState(false);
+   const [clearPassword, setClearPassword] = useState('');
+   const [clearPasswordError, setClearPasswordError] = useState('');
+   const [isClearing, setIsClearing] = useState(false);
+   const [deletePassword, setDeletePassword] = useState('');
+   const [deletePasswordError, setDeletePasswordError] = useState('');
+   const [isDeletePasswordOpen, setIsDeletePasswordOpen] = useState(false);
+   const [pendingDeleteProduct, setPendingDeleteProduct] = useState<Product | null>(null);
 
   const filteredProducts = useMemo(() => getFilteredProducts(), [filter, products]);
   const categories = useMemo(() => getCategoryOptions(products), [products]);
@@ -52,14 +56,64 @@ const AdminProducts = () => {
     setIsFormOpen(true);
   };
 
-  const handleDeleteProduct = async (productId: string) => {
-    try {
-      setIsLoading(true);
-      await deleteProduct(productId);
-    } finally {
-      setIsLoading(false);
-    }
-  };
+const handleDeleteProduct = async (productId: string) => {
+     try {
+       setIsLoading(true);
+       await deleteProduct(productId);
+     } finally {
+       setIsLoading(false);
+     }
+   };
+
+   const handleDeleteWithPassword = (productId: string) => {
+     const product = products.find((p) => p.id === productId);
+     if (!product) return;
+     setPendingDeleteProduct(product);
+     setIsDeletePasswordOpen(true);
+   };
+
+   const handleVerifyDeletePassword = async () => {
+     try {
+       setDeletePasswordError('');
+
+       if (!deletePassword) {
+         setDeletePasswordError('Password is required');
+         return;
+       }
+
+       if (!adminEmail) {
+         setDeletePasswordError('Admin session not found. Please log in again.');
+         return;
+       }
+
+       setIsLoading(true);
+
+       const { error: authError } = await supabase.auth.signInWithPassword({
+         email: adminEmail,
+         password: deletePassword,
+       });
+
+       if (authError) {
+         setDeletePasswordError('Incorrect password. Please try again.');
+         setIsLoading(false);
+         return;
+       }
+
+       setDeletePassword('');
+       setDeletePasswordError('');
+       setIsDeletePasswordOpen(false);
+
+       if (pendingDeleteProduct) {
+         await deleteProduct(pendingDeleteProduct.id);
+       }
+       setPendingDeleteProduct(null);
+     } catch (error) {
+       console.error('Password verification failed:', error);
+       setDeletePasswordError('An error occurred. Please try again.');
+     } finally {
+       setIsLoading(false);
+     }
+   };
 
   const handleFilterChange = <K extends keyof ProductFilter>(
     key: K,
@@ -286,16 +340,95 @@ const AdminProducts = () => {
         </Card>
 
         {/* Products Table */}
-        <ProductTable
-          products={filteredProducts}
-          onEdit={handleEditProduct}
-          onDelete={handleDeleteProduct}
-          isLoading={isLoading}
-        />
+<ProductTable
+           products={filteredProducts}
+           onEdit={handleEditProduct}
+           onDelete={handleDeleteWithPassword}
+           isLoading={isLoading}
+         />
       </div>
 
-      {/* Clear All - Password Verification */}
-      <Dialog open={isClearAllPasswordOpen} onOpenChange={(open) => {
+{/* Single Product Delete - Password Verification */}
+       <Dialog open={isDeletePasswordOpen} onOpenChange={(open) => {
+         setIsDeletePasswordOpen(open);
+         if (!open) {
+           setDeletePassword('');
+           setDeletePasswordError('');
+           setPendingDeleteProduct(null);
+         }
+       }}>
+         <DialogContent className="max-w-md" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+           <DialogHeader>
+             <DialogTitle className="flex items-center gap-2 text-lg text-red-600">
+               <Lock className="w-5 h-5" />
+               Verify Password to Delete
+             </DialogTitle>
+             <DialogDescription className="text-base">
+               Enter your admin password to delete <strong>"{pendingDeleteProduct?.name}"</strong>. This action cannot be undone.
+             </DialogDescription>
+           </DialogHeader>
+
+           <div className="space-y-4 py-6 border-y">
+             <p className="text-sm text-muted-foreground">
+               For security verification, please enter your admin password:
+             </p>
+             <div className="space-y-2">
+               <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                 Admin Password
+               </label>
+               <div className="relative">
+                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                 <Input
+                   type="password"
+                   placeholder="Enter your admin password"
+                   value={deletePassword}
+                   onChange={(e) => {
+                     setDeletePassword(e.target.value);
+                     setDeletePasswordError('');
+                   }}
+                   onKeyDown={(e) => {
+                     if (e.key === 'Enter' && deletePassword && !isLoading) {
+                       e.preventDefault();
+                       void handleVerifyDeletePassword();
+                     }
+                   }}
+                   disabled={isLoading}
+                   className="pl-10 h-11"
+                   autoFocus
+                 />
+               </div>
+               {deletePasswordError && (
+                 <p className="text-xs text-red-600 font-medium bg-red-50 p-2 rounded">{deletePasswordError}</p>
+               )}
+             </div>
+           </div>
+
+           <div className="flex gap-3 justify-end">
+             <Button
+               variant="outline"
+               disabled={isLoading}
+               onClick={() => {
+                 setDeletePassword('');
+                 setDeletePasswordError('');
+                 setIsDeletePasswordOpen(false);
+                 setPendingDeleteProduct(null);
+               }}
+             >
+               Cancel
+             </Button>
+             <Button
+               variant="destructive"
+               onClick={() => void handleVerifyDeletePassword()}
+               disabled={isLoading || !deletePassword}
+             >
+               {isLoading ? 'Verifying...' : 'Verify Password'}
+             </Button>
+           </div>
+         </DialogContent>
+       </Dialog>
+
+       {/* Clear All - Password Verification */}
+       <Dialog open={isClearAllPasswordOpen} onOpenChange={(open) => {
         setIsClearAllPasswordOpen(open);
         if (!open) {
           setClearPassword('');

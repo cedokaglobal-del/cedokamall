@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { Trash2, Minus, Plus, ArrowRight, Tag, ArrowLeft, Check, Smartphone, MapPin, CreditCard, Upload, X } from 'lucide-react';
+import { Trash2, Minus, Plus, ArrowRight, Tag, ArrowLeft, Check, Smartphone, MapPin, CreditCard, Upload, X, FileText } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useCartStore } from '@/store/cartStore';
 import { transactionStore } from '@/store/transactionStore';
+import { useProductStore } from '@/store/productStore';
+import { generateInvoicePDF } from '@/utils/invoice';
 import { toast } from 'sonner';
 
 const formatPrice = (n: number) => '₦' + n.toLocaleString();
@@ -90,6 +92,13 @@ const CartPage = () => {
     const whatsappNumber = '2349128817136'; // Company WhatsApp number
     const encodedMessage = encodeURIComponent(message);
     window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
+  };
+
+  const decrementPromises: Promise<void>[] = [];
+  const handleDecrementStock = async () => {
+    const productStore = useProductStore.getState();
+    const decrements = items.map(item => productStore.decrementStock(item.id, item.quantity));
+    await Promise.all(decrements);
   };
 
   const handleOrderConfirmation = () => {
@@ -212,15 +221,63 @@ We appreciate your business! 🙏
         customerEmail: customerName,
         amount: item.price * item.quantity,
         quantity: item.quantity,
-        status: 'completed', // In this system, sending to WhatsApp is considered a completed intent
+        status: 'completed',
         type: 'sale',
         paymentMethod: paymentMethod === 'online' ? 'Transfer' : 'Cash',
         category: item.category || 'General',
       });
     });
 
+    // Decrement stock for each sold item
+    void handleDecrementStock();
+
     setOrderSent(true);
     toast.success('WhatsApp message sent! Please confirm on WhatsApp');
+  };
+
+  const downloadInvoicePDF = () => {
+    if (!customerName.trim()) {
+      toast.error('Please enter your name first');
+      return;
+    }
+
+    const orderNumber = 'CDK-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+    const timestamp = new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos' });
+    const subtotal = getTotal();
+    const deliveryFee = deliveryMethod === 'delivery' ? 2500 : 0;
+    const totalAmount = subtotal + deliveryFee;
+
+    let paymentNote = '';
+    if (paymentMethod === 'online') {
+      paymentNote = `Bank: Fidelity Bank\nAccount Name: CEDOKA GLOBAL LIMITED\nAccount Number: 5080201438\nAmount: ₦${totalAmount.toLocaleString()}`;
+    } else {
+      paymentNote = deliveryMethod === 'delivery' ? 'Cash on Delivery - Pay upon arrival' : 'Cash Payment - Pay at pickup';
+    }
+
+    const doc = generateInvoicePDF({
+      orderNumber,
+      dateTime: timestamp,
+      customerName,
+      deliveryMethod: deliveryMethod === 'walk-in' ? 'Walk-in / Store Pickup' : 'Home Delivery',
+      address,
+      phone,
+      items: items.map(item => ({
+        name: item.name,
+        quantity: item.quantity,
+        unitPrice: item.price,
+        total: item.price * item.quantity,
+      })),
+      subtotal,
+      deliveryFee,
+      discount,
+      discountCode: couponCode,
+      total: totalAmount,
+      paymentMethod: paymentMethod === 'online' ? 'Bank Transfer' : deliveryMethod === 'delivery' ? 'Cash on Delivery' : 'Cash',
+      paymentNote,
+    });
+
+    doc.save(`invoice-${orderNumber}.pdf`);
+    toast.success('Invoice PDF downloaded successfully');
   };
 
   const steps = deliveryMethod === 'walk-in' 
@@ -404,8 +461,23 @@ We appreciate your business! 🙏
               <div className="text-sm space-y-2 mb-4">
                 <div className="flex justify-between"><span>Subtotal</span><span>{formatPrice(getTotal())}</span></div>
                 <div className="flex justify-between"><span>Delivery</span><span className="text-green-600">FREE</span></div>
+                {discount > 0 && <div className="flex justify-between text-primary"><span>Discount ({couponCode})</span><span>-{Math.round(discount * 100)}%</span></div>}
                 <div className="border-t pt-2 flex justify-between font-bold"><span>Total</span><span>{formatPrice(getTotal())}</span></div>
               </div>
+            </div>
+
+            {/* Promo Code - Optional, coming soon */}
+            <div className="pt-2">
+              <div className="relative">
+                <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
+                <input
+                  type="text"
+                  placeholder="Promo code (coming soon)"
+                  disabled
+                  className="w-full pl-9 pr-3 py-2.5 border border-dashed rounded-lg text-sm bg-muted/30 text-muted-foreground/60 cursor-not-allowed"
+                />
+              </div>
+              <p className="text-[10px] text-muted-foreground/50 mt-1">Promo discount codes will be available soon</p>
             </div>
 
             <button onClick={() => setStep(2)} className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold hover:bg-primary/90 transition-colors">
@@ -514,8 +586,23 @@ We appreciate your business! 🙏
               <div className="text-sm space-y-2 mb-4">
                 <div className="flex justify-between"><span>Subtotal</span><span>{formatPrice(getTotal())}</span></div>
                 <div className="flex justify-between"><span>Delivery</span><span>₦2,500</span></div>
+                {discount > 0 && <div className="flex justify-between text-primary"><span>Discount ({couponCode})</span><span>-{Math.round(discount * 100)}%</span></div>}
                 <div className="border-t pt-2 flex justify-between font-bold"><span>Total</span><span>{formatPrice(getTotal() + 2500)}</span></div>
               </div>
+            </div>
+
+            {/* Promo Code - Optional, coming soon */}
+            <div className="pt-2">
+              <div className="relative">
+                <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
+                <input
+                  type="text"
+                  placeholder="Promo code (coming soon)"
+                  disabled
+                  className="w-full pl-9 pr-3 py-2.5 border border-dashed rounded-lg text-sm bg-muted/30 text-muted-foreground/60 cursor-not-allowed"
+                />
+              </div>
+              <p className="text-[10px] text-muted-foreground/50 mt-1">Promo discount codes will be available soon</p>
             </div>
 
             <button onClick={() => setStep(2)} className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold hover:bg-primary/90 transition-colors">
@@ -611,6 +698,20 @@ We appreciate your business! 🙏
               </p>
             </div>
 
+            {/* Promo Code - Optional, coming soon */}
+            <div className="pt-2">
+              <div className="relative">
+                <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground/40" />
+                <input
+                  type="text"
+                  placeholder="Promo code (coming soon)"
+                  disabled
+                  className="w-full pl-9 pr-3 py-2.5 border border-dashed rounded-lg text-sm bg-muted/30 text-muted-foreground/60 cursor-not-allowed"
+                />
+              </div>
+              <p className="text-[10px] text-muted-foreground/50 mt-1">Promo discount codes will be available soon</p>
+            </div>
+
             <div className="space-y-3">
               <h3 className="font-medium text-sm">Order Summary:</h3>
               {items.map(item => (
@@ -624,6 +725,12 @@ We appreciate your business! 🙏
                   <span>Subtotal</span>
                   <span>{formatPrice(getTotal())}</span>
                 </div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-sm mb-2 text-primary">
+                    <span>Discount ({couponCode})</span>
+                    <span>-{Math.round(discount * 100)}%</span>
+                  </div>
+                )}
                 {deliveryMethod === 'delivery' && (
                   <div className="flex justify-between text-sm mb-2">
                     <span>Delivery</span>
@@ -648,25 +755,34 @@ We appreciate your business! 🙏
               <p className="text-sm">Click "Send to WhatsApp" to send your complete order details. You'll receive confirmation via WhatsApp.</p>
             </div>
 
-            <button 
-              onClick={handleOrderConfirmation} 
-              disabled={
-                !customerName.trim() || 
-                (deliveryMethod === 'delivery' && (!phone.trim() || !address.trim())) ||
-                (deliveryMethod === 'delivery' && paymentMethod === 'online' && !receiptFile)
-              }
-              className="w-full py-3 rounded-xl bg-accent text-accent-foreground font-bold hover:bg-cta-orange-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-            >
-              {orderSent ? (
-                <>
-                  <Check className="w-5 h-5" /> Message Sent!
-                </>
-              ) : (
-                <>
-                  <Smartphone className="w-5 h-5" /> Send to WhatsApp 💬
-                </>
-              )}
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button 
+                onClick={handleOrderConfirmation} 
+                disabled={
+                  !customerName.trim() || 
+                  (deliveryMethod === 'delivery' && (!phone.trim() || !address.trim())) ||
+                  (deliveryMethod === 'delivery' && paymentMethod === 'online' && !receiptFile)
+                }
+                className="flex-1 py-3 rounded-xl bg-accent text-accent-foreground font-bold hover:bg-cta-orange-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                {orderSent ? (
+                  <>
+                    <Check className="w-5 h-5" /> Message Sent!
+                  </>
+                ) : (
+                  <>
+                    <Smartphone className="w-5 h-5" /> Send to WhatsApp 💬
+                  </>
+                )}
+              </button>
+              <button
+                onClick={downloadInvoicePDF}
+                disabled={!customerName.trim()}
+                className="py-3 px-4 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 font-medium hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+              >
+                <FileText className="w-5 h-5" /> Invoice PDF
+              </button>
+            </div>
 
             <p className="text-xs text-muted-foreground text-center">
               A WhatsApp message with your order details will be sent to 09128817136
