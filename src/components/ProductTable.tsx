@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Product } from '@/types/product';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
@@ -10,12 +11,14 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import PaginationControls from '@/components/PaginationControls';
 
 interface ProductTableProps {
   products: Product[];
   onEdit: (product: Product) => void;
   onDelete: (productId: string) => void;
   isLoading?: boolean;
+  pageSize?: number;
 }
 
 const ngnFormatter = new Intl.NumberFormat('en-NG', {
@@ -24,7 +27,9 @@ const ngnFormatter = new Intl.NumberFormat('en-NG', {
   minimumFractionDigits: 0,
 });
 
-const ProductTable = ({ products, onEdit, onDelete, isLoading = false }: ProductTableProps) => {
+const ProductTable = ({ products, onEdit, onDelete, isLoading = false, pageSize = 20 }: ProductTableProps) => {
+  const [page, setPage] = useState(1);
+
   const formatPrice = (price: number) => {
     return ngnFormatter.format(price);
   };
@@ -34,6 +39,13 @@ const ProductTable = ({ products, onEdit, onDelete, isLoading = false }: Product
     if (stock < 10) return { label: 'Low Stock', color: 'text-yellow-600' };
     return { label: 'In Stock', color: 'text-green-600' };
   };
+
+  const totalPages = Math.max(1, Math.ceil(products.length / pageSize));
+  const paginatedProducts = products.slice((page - 1) * pageSize, page * pageSize);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(1);
+  }, [products.length, totalPages, page]);
 
   if (products.length === 0) {
     return (
@@ -63,7 +75,7 @@ const ProductTable = ({ products, onEdit, onDelete, isLoading = false }: Product
             </TableRow>
           </TableHeader>
           <TableBody>
-            {products.map((product) => {
+            {paginatedProducts.map((product) => {
               const stockStatus = getStockStatus(product.inStock);
               const discount = product.originalPrice
                 ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
@@ -137,6 +149,13 @@ const ProductTable = ({ products, onEdit, onDelete, isLoading = false }: Product
           </TableBody>
         </Table>
       </div>
+      <PaginationControls
+        currentPage={page}
+        totalPages={totalPages}
+        onPageChange={setPage}
+        totalItems={products.length}
+        pageSize={pageSize}
+      />
     </Card>
   );
 };

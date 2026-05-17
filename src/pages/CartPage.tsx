@@ -30,6 +30,10 @@ const CartPage = () => {
   const [paymentMethod, setPaymentMethod] = useState('cash-on-delivery');
   const [receiptFile, setReceiptFile] = useState<File | null>(null);
   const [receiptFileName, setReceiptFileName] = useState('');
+  const [paymentBank, setPaymentBank] = useState('');
+  const [paymentRef, setPaymentRef] = useState('');
+  const [paymentAmount, setPaymentAmount] = useState('');
+  const [paymentDate, setPaymentDate] = useState('');
   const [attachmentFiles, setAttachmentFiles] = useState<File[]>([]);
   const [attachmentFileNames, setAttachmentFileNames] = useState<string[]>([]);
   const [orderSent, setOrderSent] = useState(false);
@@ -101,160 +105,31 @@ const CartPage = () => {
     await Promise.all(decrements);
   };
 
-  const handleOrderConfirmation = () => {
-    if (!customerName.trim()) {
-      toast.error('Please enter your full name');
-      return;
-    }
-
-    if (deliveryMethod === 'delivery') {
-      if (!phone.trim()) {
-        toast.error('Please enter your phone number');
-        return;
-      }
-      if (!address.trim()) {
-        toast.error('Please enter your delivery address');
-        return;
-      }
-    }
-
-    if (deliveryMethod === 'delivery' && paymentMethod === 'online' && !receiptFile) {
-      toast.error('Please upload payment receipt for online payment');
-      return;
-    }
-
-    // Format order details
-    const orderNumber = 'CDK-' + Math.random().toString(36).substr(2, 8).toUpperCase();
-    const timestamp = new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos' });
-    const itemsList = items.map(item => `  • ${item.name}\n    Qty: ${item.quantity} × ₦${item.price.toLocaleString()} = ₦${(item.price * item.quantity).toLocaleString()}`).join('\n');
+  const buildInvoiceData = (orderNumber: string, timestamp: string) => {
     const subtotal = getTotal();
-    const deliveryFee = deliveryMethod === 'delivery' ? 2500 : 0;
-    const totalAmount = subtotal + deliveryFee;
-
-    let paymentSection = '';
-    if (deliveryMethod === 'delivery' && paymentMethod === 'online') {
-      paymentSection = `
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💳 PAYMENT DETAILS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Bank: Fidelity Bank
-Account Name: CEDOKA GLOBAL LIMITED
-Account Number: 5080201438
-Amount: ₦${totalAmount.toLocaleString()}
-
-📎 Payment Receipt: ${receiptFileName}`;
-    } else if (deliveryMethod === 'walk-in' && paymentMethod === 'online') {
-      paymentSection = `
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💳 PAYMENT DETAILS
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Bank: Fidelity Bank
-Account Name: CEDOKA GLOBAL LIMITED
-Account Number: 5080201438
-Amount: ₦${totalAmount.toLocaleString()}
-
-📎 Payment Receipt: ${receiptFileName}
-
-⚠️ Payments must be confirmed at least 48hrs prior to pickup`;
-    } else {
-      paymentSection = `
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💰 PAYMENT METHOD
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${deliveryMethod === 'delivery' ? 'Cash on Delivery - Pay upon arrival' : 'Cash Payment - Pay at pickup'}`;
-    }
-
-    const message = `
-╔════════════════════════════════╗
-║  📦 NEW ORDER - CEDOKA MAL  📦  ║
-║      Electronics & Gadgets      ║
-╚════════════════════════════════╝
-
-📋 ORDER ID: ${orderNumber}
-📅 Date & Time: ${timestamp}
-👤 Customer: ${customerName}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📍 DELIVERY INFORMATION
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${deliveryMethod === 'walk-in' 
-  ? `Type: 🏪 Walk-in / Store Pickup
-Location: Nationwide (Delivery Across Nigeria)
-Hours: 9 AM - 6 PM Daily`
-  : `Type: 📦 Online Delivery
-Address: ${address}
-Phone: ${phone}
-⏱️ Estimated Delivery: 24-72 hours Nationwide`}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-🛍️ ITEMS ORDERED
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-${itemsList}
-
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-💵 PAYMENT SUMMARY
-━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-Subtotal ........... ₦${subtotal.toLocaleString()}
-${deliveryMethod === 'delivery' ? `Delivery Fee ........ ₦${deliveryFee.toLocaleString()}` : `Delivery ........... FREE ✓`}
-${discount > 0 ? `Discount (${couponCode}) .. -${Math.round(discount * 100)}%` : ''}
-────────────────────────────────
-TOTAL AMOUNT ....... ₦${totalAmount.toLocaleString()}
-${paymentSection}
-
-╔════════════════════════════════╗
-║  ✅ Please confirm this order  ║
-║   by replying with: CONFIRMED  ║
-╚════════════════════════════════╝
-
-Thank you for shopping with Cedoka! 
-We appreciate your business! 🙏
-    `.trim();
-
-    sendWhatsAppMessage(message);
-    
-    // Record transactions for analytics
-    items.forEach(item => {
-      void transactionStore.addTransaction({
-        orderId: orderNumber,
-        productId: item.id,
-        productName: item.name,
-        customerEmail: customerName,
-        amount: item.price * item.quantity,
-        quantity: item.quantity,
-        status: 'completed',
-        type: 'sale',
-        paymentMethod: paymentMethod === 'online' ? 'Transfer' : 'Cash',
-        category: item.category || 'General',
-      });
-    });
-
-    // Decrement stock for each sold item
-    void handleDecrementStock();
-
-    setOrderSent(true);
-    toast.success('WhatsApp message sent! Please confirm on WhatsApp');
-  };
-
-  const downloadInvoicePDF = () => {
-    if (!customerName.trim()) {
-      toast.error('Please enter your name first');
-      return;
-    }
-
-    const orderNumber = 'CDK-' + Math.random().toString(36).substr(2, 8).toUpperCase();
-    const timestamp = new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos' });
-    const subtotal = getTotal();
-    const deliveryFee = deliveryMethod === 'delivery' ? 2500 : 0;
+    const deliveryFee = 0;
     const totalAmount = subtotal + deliveryFee;
 
     let paymentNote = '';
     if (paymentMethod === 'online') {
-      paymentNote = `Bank: Fidelity Bank\nAccount Name: CEDOKA GLOBAL LIMITED\nAccount Number: 5080201438\nAmount: ₦${totalAmount.toLocaleString()}`;
+      paymentNote = [
+        `Bank: Fidelity Bank`,
+        `Account Name: CEDOKA GLOBAL LIMITED`,
+        `Account Number: 5080201438`,
+        `Amount Due: ₦${totalAmount.toLocaleString()}`,
+        ``,
+        `--- PAYMENT DETAILS FROM CUSTOMER ---`,
+        `Payer's Bank: ${paymentBank || 'Not provided'}`,
+        `Transaction Ref: ${paymentRef || 'Not provided'}`,
+        `Amount Paid: ${paymentAmount ? `₦${Number(paymentAmount).toLocaleString()}` : 'Not provided'}`,
+        `Payment Date: ${paymentDate || 'Not provided'}`,
+        `Receipt: ${receiptFileName || 'Not provided'}`,
+      ].join('\n');
     } else {
-      paymentNote = deliveryMethod === 'delivery' ? 'Cash on Delivery - Pay upon arrival' : 'Cash Payment - Pay at pickup';
+      paymentNote = deliveryMethod === 'delivery' ? 'Online Payment - Bank Transfer' : 'Cash Payment - Pay at pickup';
     }
 
-    const doc = generateInvoicePDF({
+    return {
       orderNumber,
       dateTime: timestamp,
       customerName,
@@ -272,10 +147,101 @@ We appreciate your business! 🙏
       discount,
       discountCode: couponCode,
       total: totalAmount,
-      paymentMethod: paymentMethod === 'online' ? 'Bank Transfer' : deliveryMethod === 'delivery' ? 'Cash on Delivery' : 'Cash',
+      paymentMethod: paymentMethod === 'online' ? 'Bank Transfer' : 'Cash',
       paymentNote,
+    };
+  };
+
+  const handleOrderConfirmation = () => {
+    if (!customerName.trim()) {
+      toast.error('Please enter your full name');
+      return;
+    }
+
+    if (deliveryMethod === 'delivery') {
+      if (!phone.trim()) {
+        toast.error('Please enter your phone number');
+        return;
+      }
+      if (!address.trim()) {
+        toast.error('Please enter your delivery address');
+        return;
+      }
+    }
+
+    if (paymentMethod === 'online') {
+      if (!receiptFile) {
+        toast.error('Please upload your payment receipt');
+        return;
+      }
+    }
+
+    const orderNumber = 'CDK-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+    const timestamp = new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos' });
+
+    // Generate and download PDF invoice first
+    const invoiceData = buildInvoiceData(orderNumber, timestamp);
+    const doc = generateInvoicePDF(invoiceData);
+    doc.save(`invoice-${orderNumber}.pdf`);
+
+    // Short WhatsApp message
+    const deliveryInfo = deliveryMethod === 'walk-in'
+      ? 'Walk-in / Store Pickup'
+      : `Delivery: ${address} | Tel: ${phone}`;
+
+    const message = `NEW ORDER - CedokaMall
+━━━━━━━━━━━━━━━━━━
+Order ID: ${orderNumber}
+Date: ${timestamp}
+Customer: ${customerName}
+Delivery: ${deliveryInfo}
+
+    Items:
+${items.map((item, i) => `  ${i + 1}. ${item.name} x${item.quantity} = ₦${(item.price * item.quantity).toLocaleString()}`).join('\n')}
+
+Total: ₦${invoiceData.total.toLocaleString()}
+Payment: ${invoiceData.paymentMethod}
+
+📎 PDF invoice has been downloaded. Please attach it to this chat.
+✅ Kindly confirm this order by replying: CONFIRMED`.trim();
+
+    sendWhatsAppMessage(message);
+
+    // Record transactions for analytics
+    items.forEach(item => {
+      void transactionStore.addTransaction({
+        orderId: orderNumber,
+        productId: item.id,
+        productName: item.name,
+        customerEmail: customerName,
+        amount: item.price * item.quantity,
+        quantity: item.quantity,
+        status: 'completed',
+        type: 'sale',
+        paymentMethod: paymentMethod === 'online' ? 'Transfer' : 'Cash',
+        deliveryMethod: deliveryMethod === 'walk-in' ? 'Walk-in / Store Pickup' : 'Home Delivery',
+        category: item.category || 'General',
+      });
     });
 
+    // Decrement stock for each sold item
+    void handleDecrementStock();
+
+    setOrderSent(true);
+    toast.success('📄 Invoice PDF downloaded! Please attach it to your WhatsApp message.', { duration: 6000 });
+  };
+
+  const downloadInvoicePDF = () => {
+    if (!customerName.trim()) {
+      toast.error('Please enter your name first');
+      return;
+    }
+
+    const orderNumber = 'CDK-' + Math.random().toString(36).substr(2, 8).toUpperCase();
+    const timestamp = new Date().toLocaleString('en-NG', { timeZone: 'Africa/Lagos' });
+
+    const invoiceData = buildInvoiceData(orderNumber, timestamp);
+    const doc = generateInvoicePDF(invoiceData);
     doc.save(`invoice-${orderNumber}.pdf`);
     toast.success('Invoice PDF downloaded successfully');
   };
@@ -415,10 +381,8 @@ We appreciate your business! 🙏
                     <h3 className="font-bold text-lg mb-2">Home Delivery 📦</h3>
                     <p className="text-sm text-muted-foreground mb-3">Get items delivered to your address</p>
                     <ul className="text-sm space-y-1 text-muted-foreground mb-4">
-                      <li>✓ ₦2,500 delivery fee</li>
                       <li>✓ 24-72 hours delivery</li>
                       <li>✓ Nationwide coverage</li>
-                      <li>✓ WhatsApp & Cash on Delivery</li>
                     </ul>
                   </div>
                 </div>
@@ -453,6 +417,82 @@ We appreciate your business! 🙏
                 <p><span className="font-semibold">Account Name:</span> CEDOKA GLOBAL LIMITED</p>
                 <p><span className="font-semibold">Account Number:</span> 5080201438</p>
                 <p><span className="font-semibold">Bank:</span> Fidelity Bank</p>
+              </div>
+            </div>
+
+            {/* Walk-in Receipt Upload & Payment Details */}
+            <div className="bg-blue-50 rounded-lg p-4 border border-blue-200 space-y-4">
+              <p className="text-sm font-medium mb-2">📸 Upload Payment Receipt <span className="text-red-500">*</span></p>
+              <div className="relative">
+                <input 
+                  type="file" 
+                  accept="image/*,.pdf,.doc,.docx"
+                  onChange={handleReceiptUpload}
+                  className="hidden"
+                  id="walkin-receipt-upload"
+                />
+                <label htmlFor="walkin-receipt-upload" className="flex items-center justify-center gap-2 p-3 border-2 border-dashed border-blue-300 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors bg-white">
+                  <Upload className="w-4 h-4" />
+                  <span className="text-sm">Click to upload receipt (PDF, JPG, PNG, DOC)</span>
+                </label>
+                {receiptFileName && (
+                  <div className="mt-2 flex items-center gap-2 p-2 bg-white rounded border border-green-300">
+                    <Check className="w-4 h-4 text-green-600" />
+                    <span className="text-sm text-green-700 break-words flex-1">{receiptFileName}</span>
+                    <button 
+                      onClick={() => { setReceiptFile(null); setReceiptFileName(''); }}
+                      className="text-red-500 hover:text-red-700 flex-shrink-0"
+                    >
+                      <X className="w-4 h-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
+
+              <div className="border-t border-blue-200 pt-3">
+                <p className="text-sm font-medium mb-1">💳 Enter Your Payment Details (Optional)</p>
+                <p className="text-xs text-blue-600 mb-3">For better tracking and easy resolution, please fill these in</p>
+                <div className="space-y-3">
+                  <div>
+                    <label className="text-xs font-medium text-gray-600 block mb-1">Bank Name You Paid From</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. GTBank, Access Bank, UBA"
+                      value={paymentBank}
+                      onChange={(e) => setPaymentBank(e.target.value)}
+                      className="w-full px-3 py-2.5 border rounded-lg text-sm bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-600 block mb-1">Transaction / Reference ID</label>
+                    <input
+                      type="text"
+                      placeholder="e.g. TXN1234567890"
+                      value={paymentRef}
+                      onChange={(e) => setPaymentRef(e.target.value)}
+                      className="w-full px-3 py-2.5 border rounded-lg text-sm bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-600 block mb-1">Amount Paid (₦)</label>
+                    <input
+                      type="number"
+                      placeholder="e.g. 50000"
+                      value={paymentAmount}
+                      onChange={(e) => setPaymentAmount(e.target.value)}
+                      className="w-full px-3 py-2.5 border rounded-lg text-sm bg-white"
+                    />
+                  </div>
+                  <div>
+                    <label className="text-xs font-medium text-gray-600 block mb-1">Date of Payment</label>
+                    <input
+                      type="date"
+                      value={paymentDate}
+                      onChange={(e) => setPaymentDate(e.target.value)}
+                      className="w-full px-3 py-2.5 border rounded-lg text-sm bg-white"
+                    />
+                  </div>
+                </div>
               </div>
             </div>
 
@@ -518,15 +558,6 @@ We appreciate your business! 🙏
 
             <div className="bg-green-50 rounded-lg p-4 border border-green-200">
               <p className="text-sm font-medium mb-3">💬 Payment Options</p>
-              <label className="flex items-center gap-2 text-sm mb-3">
-                <input 
-                  type="radio" 
-                  checked={paymentMethod === 'cash-on-delivery'} 
-                  onChange={() => setPaymentMethod('cash-on-delivery')} 
-                  className="accent-primary"
-                />
-                Cash on Delivery (Pay when item arrives)
-              </label>
               <label className="flex items-center gap-2 text-sm">
                 <input 
                   type="radio" 
@@ -539,43 +570,91 @@ We appreciate your business! 🙏
             </div>
 
             {paymentMethod === 'online' && (
-              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200 space-y-3">
+              <div className="bg-blue-50 rounded-lg p-4 border border-blue-200 space-y-4">
                 <div>
                   <p className="text-sm font-medium mb-2">🏦 Company Bank Account Details</p>
                   <div className="bg-white rounded p-3 space-y-1 text-sm font-mono">
                     <p><span className="font-semibold">Bank:</span> Fidelity Bank</p>
                     <p><span className="font-semibold">Account Name:</span> CEDOKA GLOBAL LIMITED</p>
                     <p><span className="font-semibold">Account Number:</span> 5080201438</p>
-                    <p><span className="font-semibold">Amount:</span> ₦{(getTotal() + 2500).toLocaleString()}</p>
+                    <p><span className="font-semibold">Amount:</span> ₦{getTotal().toLocaleString()}</p>
                   </div>
                 </div>
 
+                {/* Receipt Upload */}
                 <div>
-                  <p className="text-sm font-medium mb-2">📸 Upload Payment Receipt</p>
+                  <p className="text-sm font-medium mb-2">📸 Upload Payment Receipt <span className="text-red-500">*</span></p>
                   <div className="relative">
                     <input 
                       type="file" 
-                      accept="image/*,.pdf"
+                      accept="image/*,.pdf,.doc,.docx"
                       onChange={handleReceiptUpload}
                       className="hidden"
                       id="receipt-upload"
                     />
-                    <label htmlFor="receipt-upload" className="flex items-center justify-center gap-2 p-3 border-2 border-dashed border-blue-300 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors">
+                    <label htmlFor="receipt-upload" className="flex items-center justify-center gap-2 p-3 border-2 border-dashed border-blue-300 rounded-lg cursor-pointer hover:bg-blue-100 transition-colors bg-white">
                       <Upload className="w-4 h-4" />
-                      <span className="text-sm">Click to upload receipt (PDF, JPG, PNG)</span>
+                      <span className="text-sm">Click to upload receipt (PDF, JPG, PNG, DOC)</span>
                     </label>
                     {receiptFileName && (
                       <div className="mt-2 flex items-center gap-2 p-2 bg-white rounded border border-green-300">
                         <Check className="w-4 h-4 text-green-600" />
-                        <span className="text-sm text-green-700">{receiptFileName}</span>
+                        <span className="text-sm text-green-700 break-words flex-1">{receiptFileName}</span>
                         <button 
                           onClick={() => { setReceiptFile(null); setReceiptFileName(''); }}
-                          className="ml-auto text-red-500 hover:text-red-700"
+                          className="text-red-500 hover:text-red-700 flex-shrink-0"
                         >
                           <X className="w-4 h-4" />
                         </button>
                       </div>
                     )}
+                  </div>
+                </div>
+
+                {/* Payment Details */}
+                <div className="border-t border-blue-200 pt-3">
+                  <p className="text-sm font-medium mb-1">💳 Enter Your Payment Details (Optional)</p>
+                  <p className="text-xs text-blue-600 mb-3">For better tracking and easy resolution, please fill these in</p>
+                  <div className="space-y-3">
+                    <div>
+                      <label className="text-xs font-medium text-gray-600 block mb-1">Bank Name You Paid From</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. GTBank, Access Bank, UBA"
+                        value={paymentBank}
+                        onChange={(e) => setPaymentBank(e.target.value)}
+                        className="w-full px-3 py-2.5 border rounded-lg text-sm bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-600 block mb-1">Transaction / Reference ID</label>
+                      <input
+                        type="text"
+                        placeholder="e.g. TXN1234567890"
+                        value={paymentRef}
+                        onChange={(e) => setPaymentRef(e.target.value)}
+                        className="w-full px-3 py-2.5 border rounded-lg text-sm bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-600 block mb-1">Amount Paid (₦)</label>
+                      <input
+                        type="number"
+                        placeholder="e.g. 50000"
+                        value={paymentAmount}
+                        onChange={(e) => setPaymentAmount(e.target.value)}
+                        className="w-full px-3 py-2.5 border rounded-lg text-sm bg-white"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-xs font-medium text-gray-600 block mb-1">Date of Payment</label>
+                      <input
+                        type="date"
+                        value={paymentDate}
+                        onChange={(e) => setPaymentDate(e.target.value)}
+                        className="w-full px-3 py-2.5 border rounded-lg text-sm bg-white"
+                      />
+                    </div>
                   </div>
                 </div>
               </div>
@@ -587,7 +666,7 @@ We appreciate your business! 🙏
                 <div className="flex justify-between"><span>Subtotal</span><span>{formatPrice(getTotal())}</span></div>
                 <div className="flex justify-between"><span>Delivery</span><span>₦2,500</span></div>
                 {discount > 0 && <div className="flex justify-between text-primary"><span>Discount ({couponCode})</span><span>-{Math.round(discount * 100)}%</span></div>}
-                <div className="border-t pt-2 flex justify-between font-bold"><span>Total</span><span>{formatPrice(getTotal() + 2500)}</span></div>
+                <div className="border-t pt-2 flex justify-between font-bold"><span>Total</span><span>{formatPrice(getTotal())}</span></div>
               </div>
             </div>
 
@@ -644,7 +723,16 @@ We appreciate your business! 🙏
                 {receiptFileName && (
                   <div className="flex items-center gap-2 p-2 bg-white rounded border border-green-300">
                     <Check className="w-4 h-4 text-green-600" />
-                    <span className="text-sm text-green-700 font-medium">{receiptFileName}</span>
+                    <span className="text-sm text-green-700 font-medium truncate flex-1">{receiptFileName}</span>
+                  </div>
+                )}
+                {(paymentBank || paymentRef || paymentAmount || paymentDate) && (
+                  <div className="mt-3 bg-white rounded p-3 space-y-1.5 text-sm border border-amber-200">
+                    <p className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-2">Your Payment Info</p>
+                    {paymentBank && <p><span className="font-semibold">Bank:</span> {paymentBank}</p>}
+                    {paymentRef && <p><span className="font-semibold">Ref:</span> {paymentRef}</p>}
+                    {paymentAmount && <p><span className="font-semibold">Amount:</span> ₦{Number(paymentAmount).toLocaleString()}</p>}
+                    {paymentDate && <p><span className="font-semibold">Date:</span> {paymentDate}</p>}
                   </div>
                 )}
               </div>
@@ -731,12 +819,6 @@ We appreciate your business! 🙏
                     <span>-{Math.round(discount * 100)}%</span>
                   </div>
                 )}
-                {deliveryMethod === 'delivery' && (
-                  <div className="flex justify-between text-sm mb-2">
-                    <span>Delivery</span>
-                    <span>₦2,500</span>
-                  </div>
-                )}
                 {deliveryMethod === 'walk-in' && (
                   <div className="flex justify-between text-sm mb-2">
                     <span>Delivery</span>
@@ -745,7 +827,7 @@ We appreciate your business! 🙏
                 )}
                 <div className="flex justify-between font-bold text-lg pt-2 border-t">
                   <span>Total</span>
-                  <span className="text-primary">{formatPrice(getTotal() + (deliveryMethod === 'delivery' ? 2500 : 0))}</span>
+                  <span className="text-primary">{formatPrice(getTotal())}</span>
                 </div>
               </div>
             </div>
@@ -761,7 +843,7 @@ We appreciate your business! 🙏
                 disabled={
                   !customerName.trim() || 
                   (deliveryMethod === 'delivery' && (!phone.trim() || !address.trim())) ||
-                  (deliveryMethod === 'delivery' && paymentMethod === 'online' && !receiptFile)
+                  (paymentMethod === 'online' && !receiptFile)
                 }
                 className="flex-1 py-3 rounded-xl bg-accent text-accent-foreground font-bold hover:bg-cta-orange-light transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
@@ -777,7 +859,7 @@ We appreciate your business! 🙏
               </button>
               <button
                 onClick={downloadInvoicePDF}
-                disabled={!customerName.trim()}
+                disabled={!customerName.trim() || (paymentMethod === 'online' && !receiptFile)}
                 className="py-3 px-4 rounded-xl border border-blue-200 bg-blue-50 text-blue-700 font-medium hover:bg-blue-100 transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               >
                 <FileText className="w-5 h-5" /> Invoice PDF

@@ -15,11 +15,22 @@ import {
   ShoppingCart,
   ArrowUpRight,
   Lock,
+  ChevronRight,
+  BarChart3,
 } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { Card } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import PaginationControls from '@/components/PaginationControls';
 import {
   Dialog,
   DialogContent,
@@ -113,6 +124,58 @@ const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   );
   const recentProducts = useMemo(() => products.slice(0, 6), [products]);
 
+  const fetchTransactions = useTransactionStore((state) => state.fetchTransactions);
+  const transactions = useTransactionStore((state) => state.transactions);
+
+  const [salesPage, setSalesPage] = useState(1);
+  const salesPageSize = 20;
+  const [selectedSaleProduct, setSelectedSaleProduct] = useState<string | null>(null);
+  const [saleTransactionPage, setSaleTransactionPage] = useState(1);
+
+  const salesData = useMemo(() => {
+    const completed = transactions.filter(t => t.status === 'completed');
+    const productMap = new Map<string, { totalQty: number; lastSale: Date; productId: string; category: string }>();
+    completed.forEach(t => {
+      const existing = productMap.get(t.productName);
+      if (existing) {
+        existing.totalQty += t.quantity;
+        if (new Date(t.createdAt) > existing.lastSale) existing.lastSale = new Date(t.createdAt);
+      } else {
+        productMap.set(t.productName, {
+          totalQty: t.quantity,
+          lastSale: new Date(t.createdAt),
+          productId: t.productId,
+          category: t.category,
+        });
+      }
+    });
+    return Array.from(productMap.entries())
+      .map(([name, data]) => {
+        const prod = products.find(p => p.id === data.productId || p.name === name);
+        return {
+          name,
+          totalSold: data.totalQty,
+          stockLeft: prod?.inStock ?? 0,
+          lastSale: data.lastSale,
+          productId: data.productId,
+          category: data.category,
+        };
+      })
+      .sort((a, b) => b.totalSold - a.totalSold);
+  }, [transactions, products]);
+
+  const paginatedSales = useMemo(
+    () => salesData.slice((salesPage - 1) * salesPageSize, salesPage * salesPageSize),
+    [salesData, salesPage]
+  );
+
+  const selectedSaleTransactions = useMemo(() => {
+    if (!selectedSaleProduct) return [];
+    return transactions.filter(
+      t => t.status === 'completed' && (t.productName === selectedSaleProduct || t.productId === selectedSaleProduct)
+    );
+  }, [selectedSaleProduct, transactions]);
+
   useEffect(() => {
     const unsubscribe = subscribeToVisitorRealtime();
     return () => {
@@ -120,8 +183,6 @@ const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
     };
   }, [subscribeToVisitorRealtime]);
 
-  const fetchTransactions = useTransactionStore((state) => state.fetchTransactions);
-  const transactions = useTransactionStore((state) => state.transactions);
   const transactionSummary = useMemo(
     () => useTransactionStore.getState().getTransactionSummary(30),
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -602,6 +663,82 @@ const handleVerifyDeletePassword = async () => {
             </div>
           )}
         </Card>
+
+        {/* Sales Section */}
+        <Card className="overflow-hidden shadow-md">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 sm:p-8 border-b bg-gradient-to-r from-emerald-50/50 to-transparent">
+            <div>
+              <h2 className="text-xl font-bold flex items-center gap-3">
+                <div className="p-2.5 bg-emerald-100 rounded-lg">
+                  <BarChart3 className="w-5 h-5 text-emerald-600" />
+                </div>
+                Completed Sales
+              </h2>
+              <p className="text-sm text-muted-foreground mt-2">
+                Products ordered by total quantity sold. Click a product to see all its transactions.
+              </p>
+            </div>
+          </div>
+
+          {salesData.length === 0 ? (
+            <div className="p-12 text-center">
+              <BarChart3 className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
+              <p className="font-semibold text-muted-foreground">No sales data yet</p>
+              <p className="text-sm text-muted-foreground mt-2">Sales will appear here once orders are placed.</p>
+            </div>
+          ) : (
+            <>
+              <div className="overflow-x-auto">
+                <Table>
+                  <TableHeader>
+                    <TableRow className="bg-muted">
+                      <TableHead>Product</TableHead>
+                      <TableHead>Category</TableHead>
+                      <TableHead className="text-right">Qty Sold</TableHead>
+                      <TableHead className="text-right">Stock Left</TableHead>
+                      <TableHead className="text-right">Last Sale</TableHead>
+                      <TableHead className="w-12"></TableHead>
+                    </TableRow>
+                  </TableHeader>
+                  <TableBody>
+                    {paginatedSales.map((sale) => (
+                      <TableRow
+                        key={sale.name}
+                        className="hover:bg-muted/50 cursor-pointer"
+                        onClick={() => {
+                          setSelectedSaleProduct(sale.name);
+                          setSaleTransactionPage(1);
+                        }}
+                      >
+                        <TableCell className="font-medium break-words max-w-[300px]">{sale.name}</TableCell>
+                        <TableCell className="text-muted-foreground">{sale.category}</TableCell>
+                        <TableCell className="text-right font-semibold text-emerald-600">{sale.totalSold}</TableCell>
+                        <TableCell className="text-right">
+                          <span className={sale.stockLeft < 10 ? 'text-red-600 font-medium' : ''}>
+                            {sale.stockLeft}
+                          </span>
+                        </TableCell>
+                        <TableCell className="text-right text-sm text-muted-foreground whitespace-nowrap">
+                          {new Intl.DateTimeFormat('en-NG', { month: 'short', day: 'numeric' }).format(sale.lastSale)}
+                        </TableCell>
+                        <TableCell>
+                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
+                        </TableCell>
+                      </TableRow>
+                    ))}
+                  </TableBody>
+                </Table>
+              </div>
+              <PaginationControls
+                currentPage={salesPage}
+                totalPages={Math.max(1, Math.ceil(salesData.length / salesPageSize))}
+                onPageChange={setSalesPage}
+                totalItems={salesData.length}
+                pageSize={salesPageSize}
+              />
+            </>
+          )}
+        </Card>
       </div>
 
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
@@ -853,6 +990,69 @@ const handleVerifyDeletePassword = async () => {
           </div>
         </AlertDialogContent>
       </AlertDialog>
+
+      {/* Sale Transaction Detail Dialog */}
+      <Dialog open={!!selectedSaleProduct} onOpenChange={(open) => { if (!open) setSelectedSaleProduct(null); }}>
+        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2">
+              <BarChart3 className="w-5 h-5 text-emerald-600" />
+              Transactions for "{selectedSaleProduct}"
+            </DialogTitle>
+            <DialogDescription>
+              {selectedSaleTransactions.length} completed sale{selectedSaleTransactions.length !== 1 ? 's' : ''}
+            </DialogDescription>
+          </DialogHeader>
+
+          {selectedSaleTransactions.length > 0 ? (
+            <div className="overflow-x-auto">
+              <Table>
+                <TableHeader>
+                  <TableRow className="bg-muted">
+                    <TableHead>Order ID</TableHead>
+                    <TableHead>Customer</TableHead>
+                    <TableHead>Qty</TableHead>
+                    <TableHead>Amount</TableHead>
+                    <TableHead>Payment</TableHead>
+                    <TableHead>Date</TableHead>
+                  </TableRow>
+                </TableHeader>
+                <TableBody>
+                  {(() => {
+                    const pSize = 20;
+                    const start = (saleTransactionPage - 1) * pSize;
+                    const end = start + pSize;
+                    const paged = selectedSaleTransactions.slice(start, end);
+                    return paged.map((t) => (
+                      <TableRow key={t.id}>
+                        <TableCell className="font-mono text-sm max-w-[160px] truncate">{t.orderId}</TableCell>
+                        <TableCell className="max-w-[200px] truncate">{t.customerEmail}</TableCell>
+                        <TableCell className="text-center">{t.quantity}</TableCell>
+                        <TableCell className="font-semibold">
+                          {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(t.amount)}
+                        </TableCell>
+                        <TableCell>{t.paymentMethod}</TableCell>
+                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
+                          {new Intl.DateTimeFormat('en-NG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(t.createdAt))}
+                        </TableCell>
+                      </TableRow>
+                    ));
+                  })()}
+                </TableBody>
+              </Table>
+              <PaginationControls
+                currentPage={saleTransactionPage}
+                totalPages={Math.max(1, Math.ceil(selectedSaleTransactions.length / 20))}
+                onPageChange={setSaleTransactionPage}
+                totalItems={selectedSaleTransactions.length}
+                pageSize={20}
+              />
+            </div>
+          ) : (
+            <div className="py-8 text-center text-muted-foreground">No transactions found for this product.</div>
+          )}
+        </DialogContent>
+      </Dialog>
     </AdminLayout>
   );
 };

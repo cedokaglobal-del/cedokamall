@@ -1,3 +1,4 @@
+import { useState, useEffect } from 'react';
 import { Transaction } from '@/types/transaction';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -10,10 +11,13 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { CheckCircle2, Clock, XCircle, RotateCcw } from 'lucide-react';
+import PaginationControls from '@/components/PaginationControls';
 
 interface TransactionHistoryProps {
   transactions: Transaction[];
   limit?: number;
+  pageSize?: number;
+  showAll?: boolean;
 }
 
 const currencyFormatter = new Intl.NumberFormat('en-NG', {
@@ -30,7 +34,18 @@ const dateFormatter = new Intl.DateTimeFormat('en-NG', {
   minute: '2-digit',
 });
 
-const TransactionHistory = ({ transactions, limit = 10 }: TransactionHistoryProps) => {
+const TransactionHistory = ({ transactions, limit = 10, pageSize = 20, showAll = false }: TransactionHistoryProps) => {
+  const [page, setPage] = useState(1);
+  const displayLimit = showAll ? transactions.length : limit;
+  const totalPages = Math.max(1, Math.ceil(Math.min(transactions.length, displayLimit) / pageSize));
+  const startIdx = (page - 1) * pageSize;
+  const endIdx = Math.min(startIdx + pageSize, transactions.length, displayLimit);
+  const displayTransactions = transactions.slice(startIdx, endIdx);
+
+  useEffect(() => {
+    if (page > totalPages) setPage(1);
+  }, [transactions.length, totalPages, page]);
+
   const formatCurrency = (amount: number) => {
     return currencyFormatter.format(amount);
   };
@@ -64,8 +79,6 @@ const TransactionHistory = ({ transactions, limit = 10 }: TransactionHistoryProp
 
     return variants[status] || 'default';
   };
-
-  const displayTransactions = transactions.slice(0, limit);
 
   return (
     <Card className="overflow-hidden">
@@ -113,6 +126,16 @@ const TransactionHistory = ({ transactions, limit = 10 }: TransactionHistoryProp
           </TableBody>
         </Table>
       </div>
+
+      {showAll && (
+        <PaginationControls
+          currentPage={page}
+          totalPages={totalPages}
+          onPageChange={setPage}
+          totalItems={Math.min(transactions.length, displayLimit)}
+          pageSize={pageSize}
+        />
+      )}
     </Card>
   );
 };

@@ -26,6 +26,7 @@ const loadCachedTransactions = (): Transaction[] => {
     const parsed = JSON.parse(stored);
     return parsed.map((t: any) => ({
       ...t,
+      deliveryMethod: t.deliveryMethod || t.delivery_method || '',
       createdAt: new Date(t.createdAt),
       updatedAt: new Date(t.updatedAt),
     }));
@@ -75,6 +76,7 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
             status: row.status,
             type: row.type || 'sale',
             paymentMethod: row.payment_method,
+            deliveryMethod: row.delivery_method || '',
             category: String(row.category || 'General'),
             profit: Number(row.profit || row.amount * 0.3),
             createdAt: new Date(row.created_at),
@@ -112,6 +114,7 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
         status: transactionData.status,
         type: transactionData.type,
         payment_method: transactionData.paymentMethod,
+        delivery_method: transactionData.deliveryMethod || '',
         category: transactionData.category,
         profit: transactionData.profit || transactionData.amount * 0.3,
       };
@@ -145,6 +148,7 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
       const fallbackTxn: Transaction = {
         ...transactionData,
         id: `local-${Date.now()}`,
+        deliveryMethod: transactionData.deliveryMethod || '',
         createdAt: new Date(),
         updatedAt: new Date(),
       };

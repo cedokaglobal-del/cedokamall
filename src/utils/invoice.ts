@@ -219,8 +219,50 @@ export const generateInvoicePDF = (data: InvoiceData): jsPDF => {
   doc.setFontSize(9);
   doc.setTextColor(80, 80, 80);
   const paymentLines = data.paymentNote.split('\n');
+
+  let isCustomerSection = false;
   paymentLines.forEach((line) => {
-    doc.text(line.trim(), margin, y);
+    const trimmed = line.trim();
+    if (trimmed === '--- PAYMENT DETAILS FROM CUSTOMER ---') {
+      isCustomerSection = true;
+      y += 2;
+      doc.setDrawColor(220, 220, 220);
+      doc.setLineWidth(0.3);
+      doc.line(margin, y, pageWidth - margin, y);
+      y += 6;
+      doc.setFont('helvetica', 'bold');
+      doc.setFontSize(9);
+      doc.setTextColor(26, 26, 46);
+      doc.text('CUSTOMER PAYMENT DETAILS', margin, y);
+      doc.setFont('helvetica', 'normal');
+      doc.setFontSize(9);
+      doc.setTextColor(80, 80, 80);
+      y += 5;
+      return;
+    }
+    if (trimmed.startsWith('---') && trimmed.endsWith('---')) return;
+    if (isCustomerSection && trimmed) {
+      doc.setFont('helvetica', 'bold');
+      const colonIdx = trimmed.indexOf(':');
+      if (colonIdx > 0) {
+        const label = trimmed.substring(0, colonIdx + 1);
+        const value = trimmed.substring(colonIdx + 1).trim();
+        doc.setTextColor(60, 60, 60);
+        doc.text(label, margin, y);
+        const labelWidth = doc.getTextWidth(label);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(80, 80, 80);
+        doc.text(value, margin + labelWidth + 1, y);
+      } else {
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(80, 80, 80);
+        doc.text(trimmed, margin, y);
+      }
+    } else {
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(80, 80, 80);
+      doc.text(trimmed, margin, y);
+    }
     y += 5;
   });
 

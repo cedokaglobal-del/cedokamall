@@ -13,6 +13,7 @@ export interface Transaction {
   status: TransactionStatus;
   type: TransactionType;
   paymentMethod: string;
+  deliveryMethod: string;
   createdAt: Date;
   updatedAt: Date;
   category: string;
