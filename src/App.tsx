@@ -19,6 +19,8 @@ import { useVisitorStore } from "@/store/visitorStore";
 import { safeLazy } from "@/utils/lazy";
 import { addConnectionHints } from "@/utils/performance";
 
+import { seedHistoricalSales } from "@/utils/seedSales";
+
 // --- Route-level code splitting (each page loads on demand) ---
 const Index        = safeLazy(() => import("./pages/Index"));
 const ShopPage     = safeLazy(() => import("./pages/ShopPage"));
@@ -105,6 +107,9 @@ const App = () => {
     // Initialize visitor session
     const visitorStore = useVisitorStore.getState();
     void visitorStore.startSession();
+
+    // Seed historical sales (runs once)
+    void seedHistoricalSales();
 
     // Periodically update session duration (every 30 seconds)
     const sessionInterval = setInterval(() => {

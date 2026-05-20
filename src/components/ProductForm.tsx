@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductFormData, Product } from '@/types/product';
 import { useCategoryStore } from '@/store/categoryStore';
+import { DEFAULT_CATEGORY_NAMES } from '@/data/products';
 import { uploadProductImages } from '@/lib/productImages';
 import { 
   X, 
@@ -146,21 +147,17 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
   };
 
 const handleDeleteCategory = (cat: string, e: React.MouseEvent) => {
-     e.stopPropagation();
-     if (categories.length <= 1) {
-       toast.error('At least one category must exist');
-       return;
-     }
-     if (cat === 'Kitchen Accessories') {
-       toast.error('"Kitchen Accessories" cannot be deleted as it is the default category.');
-       return;
-     }
-     removeCategory(cat);
-     if (formData.category === cat) {
-       setFormData(prev => ({ ...prev, category: 'Kitchen Accessories' }));
-     }
-     toast.success(`Category "${cat}" removed`);
-   };
+    e.stopPropagation();
+    if (categories.length <= 1) {
+      toast.error('At least one category must exist');
+      return;
+    }
+    removeCategory(cat);
+    if (formData.category === cat) {
+      setFormData(prev => ({ ...prev, category: 'Kitchen Accessories' }));
+    }
+    toast.success(`Category "${cat}" removed`);
+  };
 
   const handleAddFeature = () => {
     const trimmed = featureInput.trim();
@@ -346,15 +343,17 @@ const handleDeleteCategory = (cat: string, e: React.MouseEvent) => {
                             <SelectItem value={cat} className="flex-1">
                               {cat}
                             </SelectItem>
-                            <Button
-                              type="button"
-                              variant="ghost"
-                              size="icon"
-                              className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive hover:bg-destructive/10 rounded-md transition-all"
-                              onClick={(e) => handleDeleteCategory(cat, e)}
-                            >
-                              <X className="w-3 h-3" />
-                            </Button>
+                            {!DEFAULT_CATEGORY_NAMES.includes(cat) && (
+                              <Button
+                                type="button"
+                                variant="ghost"
+                                size="icon"
+                                className="h-6 w-6 opacity-0 group-hover:opacity-100 text-destructive hover:bg-destructive/10 rounded-md transition-all"
+                                onClick={(e) => handleDeleteCategory(cat, e)}
+                              >
+                                <X className="w-3 h-3" />
+                              </Button>
+                            )}
                           </div>
                         ))}
                       </SelectContent>

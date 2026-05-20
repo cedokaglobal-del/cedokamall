@@ -20,7 +20,6 @@ import PaginationControls from '@/components/PaginationControls';
 import { useTransactionStore } from '@/store/transactionStore';
 import { ShoppingCart, MapPin, Home, ChevronRight } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
-import { seedHistoricalSales } from '@/utils/seedSales';
 
 const currencyFormatter = new Intl.NumberFormat('en-NG', {
   style: 'currency',
@@ -40,10 +39,6 @@ const AdminSales = () => {
   const transactions = useTransactionStore((s) => s.transactions);
 
   const [activeTab, setActiveTab] = useState<'transactions' | 'sales'>('transactions');
-
-  useEffect(() => {
-    void seedHistoricalSales();
-  }, []);
 
   // Pagination
   const [txPage, setTxPage] = useState(1);

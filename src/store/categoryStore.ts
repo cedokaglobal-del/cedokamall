@@ -20,13 +20,19 @@ export const useCategoryStore = create<CategoryState>()(
           return { categories: [...state.categories, trimmed].sort() };
         }),
       removeCategory: (category) =>
-        set((state) => ({
-          categories: state.categories.filter((c) => c !== category),
-        })),
+        set((state) => {
+          if (state.categories.length <= 1) return state;
+          if (DEFAULT_CATEGORY_NAMES.includes(category)) return state;
+          return { categories: state.categories.filter((c) => c !== category) };
+        }),
       resetCategories: () => set({ categories: [...DEFAULT_CATEGORY_NAMES] }),
     }),
     {
       name: 'cedokamall-categories',
+      merge: (persisted, current) => ({
+        ...current,
+        categories: [...new Set([...DEFAULT_CATEGORY_NAMES, ...(persisted as any)?.categories ?? []])].sort(),
+      }),
     }
   )
 );
