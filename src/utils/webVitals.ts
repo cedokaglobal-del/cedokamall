@@ -108,12 +108,14 @@ export const getMetrics = (): PerformanceMetrics => metrics;
 /**
  * Initialize Core Web Vitals monitoring
  */
-export const initWebVitals = () => {
-  if (typeof window === 'undefined') return;
+export const initWebVitals = (): (() => void) => {
+  if (typeof window === 'undefined') return () => {};
+
+  let observer: PerformanceObserver | null = null;
 
   // Use PerformanceObserver to track metrics
   try {
-    const observer = new PerformanceObserver((list) => {
+    observer = new PerformanceObserver((list) => {
       for (const entry of list.getEntries()) {
         const metric: PerformanceMetric = {
           name: entry.name,
@@ -128,6 +130,13 @@ export const initWebVitals = () => {
   } catch (err) {
     console.debug('Web Vitals observer setup failed:', err);
   }
+
+  return () => {
+    if (observer) {
+      observer.disconnect();
+      observer = null;
+    }
+  };
 };
 
 /**

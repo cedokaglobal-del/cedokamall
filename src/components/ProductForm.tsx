@@ -1,5 +1,5 @@
 // Product Management Form Component
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -10,6 +10,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductFormData, Product } from '@/types/product';
 import { useCategoryStore } from '@/store/categoryStore';
+import { useProductStore } from '@/store/productStore';
 import { DEFAULT_CATEGORY_NAMES } from '@/data/products';
 import { uploadProductImages } from '@/lib/productImages';
 import { 
@@ -85,6 +86,11 @@ const buildInitialFormData = (product?: Product): ProductFormData => ({
 
 const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: ProductFormProps) => {
   const categories = useCategoryStore((s) => s.categories);
+  const productStoreProducts = useProductStore((s) => s.products);
+  const allCategories = useMemo(() => {
+    const dynamicCats = productStoreProducts.map(p => p.category).filter(Boolean) as string[];
+    return [...new Set([...dynamicCats, ...categories])].sort((a, b) => a.localeCompare(b));
+  }, [productStoreProducts, categories]);
   const addCategory = useCategoryStore((s) => s.addCategory);
   const removeCategory = useCategoryStore((s) => s.removeCategory);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
@@ -134,7 +140,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
       return;
     }
 
-    if (categories.some((cat) => cat.toLowerCase() === trimmed.toLowerCase())) {
+    if (allCategories.some((cat) => cat.toLowerCase() === trimmed.toLowerCase())) {
       toast.error('This category already exists');
       return;
     }
@@ -338,12 +344,12 @@ const handleDeleteCategory = (cat: string, e: React.MouseEvent) => {
                         <SelectValue placeholder="Select category" />
                       </SelectTrigger>
                       <SelectContent>
-                        {categories.map((cat) => (
+                        {allCategories.map((cat) => (
                           <div key={cat} className="flex items-center justify-between group px-1">
                             <SelectItem value={cat} className="flex-1">
                               {cat}
                             </SelectItem>
-                            {!DEFAULT_CATEGORY_NAMES.includes(cat) && (
+                            {categories.includes(cat) && !DEFAULT_CATEGORY_NAMES.includes(cat) && (
                               <Button
                                 type="button"
                                 variant="ghost"

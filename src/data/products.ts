@@ -34,24 +34,24 @@ const CATEGORY_META: Record<string, { icon: LucideIcon; subcategory?: string }> 
 };
 
 export const DEFAULT_CATEGORY_NAMES = [
-  'Smartphones',
-  'Laptops',
-  'Tablets',
+  'Accessories',
+  'Air Conditioners',
   'Audio & Sound',
   'Cameras',
-  'Gaming',
-  'Accessories',
-  'TV',
-  'Refrigerators',
-  'Washing Machines',
-  'Air Conditioners',
   'Fans',
-  'Generators',
   'Freezers',
-  'Sound Systems',
-  'Smart Home',
-  'Solar',
+  'Gaming',
+  'Generators',
   'Kitchen Accessories',
+  'Laptops',
+  'Refrigerators',
+  'Smart Home',
+  'Smartphones',
+  'Solar',
+  'Sound Systems',
+  'Tablets',
+  'TV',
+  'Washing Machines',
 ];
 
 export const initialProducts: Product[] = [];
