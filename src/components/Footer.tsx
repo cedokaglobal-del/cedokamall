@@ -80,13 +80,19 @@ const Footer = () => (
       <div className="animate-slide-up" style={{ animationDelay: '200ms' }}>
         <h5 className="font-serif text-base sm:text-lg font-bold mb-4 sm:mb-6 text-gold">Concierge</h5>
         <ul className="space-y-2 sm:space-y-3 text-xs sm:text-sm opacity-70 font-sans">
-          {['Track My Order', 'Shipping Concierge', 'Returns Policy', 'Private FAQ', 'Contact Luxury Support'].map(l => (
-            <li key={l}>
+          {[
+            { label: 'Track My Order', to: '/track-order' },
+            { label: 'Shipping Concierge', to: '/shipping' },
+            { label: 'Returns Policy', to: '/returns' },
+            { label: 'Private FAQ', to: '/faq' },
+            { label: 'Contact Luxury Support', to: '/contact' },
+          ].map(({ label, to }) => (
+            <li key={label}>
               <Link 
-                to="/" 
+                to={to}
                 className="hover:text-gold hover:translate-x-1 transition-all duration-300 inline-block"
               >
-                {l}
+                {label}
               </Link>
             </li>
           ))}
@@ -108,6 +114,7 @@ const Footer = () => (
           />
           <button 
             type="button"
+            onClick={() => alert('Newsletter subscription coming soon!')}
             className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-gold text-navy text-xs sm:text-sm font-bold hover:bg-gold-antique hover:text-white transition-all duration-300 shadow-premium-sm active:scale-95"
           >
             Subscribe Now
@@ -119,7 +126,7 @@ const Footer = () => (
     {/* Bottom bar */}
     <div className="border-t border-gold-antique/10 py-4 sm:py-6">
       <div className="container flex flex-col sm:flex-row justify-between items-center gap-3 sm:gap-4 text-[11px] sm:text-xs opacity-50 font-sans uppercase tracking-widest">
-        <p>© 2026 Cedokamall. All rights reserved.</p>
+        <p>© {new Date().getFullYear()} Cedokamall. All rights reserved.</p>
         <p className="flex items-center gap-2">
           Built with Integrity 
           <span className="text-gold">|</span> 
