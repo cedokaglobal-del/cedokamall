@@ -18,10 +18,8 @@ import { subscribeToProductChanges, useProductStore } from "@/store/productStore
 import { useVisitorStore } from "@/store/visitorStore";
 import { safeLazy } from "@/utils/lazy";
 import { addConnectionHints } from "@/utils/performance";
+import { trackPageView, trackReferrer } from "@/utils/tracking";
 
-import { seedHistoricalSales } from "@/utils/seedSales";
-
-// --- Route-level code splitting (each page loads on demand) ---
 const Index        = safeLazy(() => import("./pages/Index"));
 const ShopPage     = safeLazy(() => import("./pages/ShopPage"));
 const ProductPage  = safeLazy(() => import("./pages/ProductPage"));
@@ -40,7 +38,6 @@ const AdminSales      = safeLazy(() => import("./pages/AdminSales"));
 const PageLoader = () => (
   <div style={{ display: "flex", alignItems: "center", justifyContent: "center", minHeight: "100vh", background: "#0f1117" }}>
     <div style={{ width: 48, height: 48, border: "4px solid #C9A84C", borderBottomColor: "transparent", borderRadius: "50%", animation: "spin 0.8s linear infinite" }} />
-    {/* <style dangerouslySetInnerHTML={{ __html: `@keyframes spin{to{transform:rotate(360deg)}}` }} /> */}
   </div>
 );
 
@@ -55,7 +52,14 @@ const ScrollToTop = () => {
   const location = useLocation();
   useEffect(() => {
     window.scrollTo(0, 0);
-  }, [location.pathname]);
+    trackPageView(location.pathname);
+    if (typeof (window as any).gtag !== 'undefined') {
+      (window as any).gtag('config', 'G-6KG0L3JXPM', { page_path: location.pathname + location.search });
+    }
+  }, [location.pathname, location.search]);
+
+  useEffect(() => { trackReferrer(); }, []);
+
   return null;
 };
 
@@ -107,9 +111,6 @@ const App = () => {
     // Initialize visitor session
     const visitorStore = useVisitorStore.getState();
     void visitorStore.startSession();
-
-    // Seed historical sales (runs once)
-    void seedHistoricalSales();
 
     // Periodically update session duration (every 30 seconds)
     const sessionInterval = setInterval(() => {

@@ -30,25 +30,17 @@ const findProduct = (itemName: string) => {
   });
 };
 
-const waitForProducts = async (): Promise<void> => {
-  for (let i = 0; i < 50; i++) {
-    if (useProductStore.getState().products.length > 0) return;
-    await new Promise(r => setTimeout(r, 200));
-  }
-};
-
 export const seedHistoricalSales = async () => {
   if (typeof window === 'undefined') return;
   try {
     if (localStorage.getItem(SEED_KEY)) return;
 
-    // Ensure products are loaded first
-    await Promise.all([
-      waitForProducts(),
-      useTransactionStore.getState().fetchTransactions(),
-    ]);
-
-    const existing = useTransactionStore.getState().transactions;
+    const products = useProductStore.getState().products;
+    let existing = useTransactionStore.getState().transactions;
+    if (existing.length === 0) {
+      await useTransactionStore.getState().fetchTransactions();
+      existing = useTransactionStore.getState().transactions;
+    }
     const allExist = HISTORICAL_ORDERS.every(o =>
       existing.some(tx => tx.orderId === o.orderId)
     );

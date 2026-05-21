@@ -13,6 +13,7 @@ import {
 } from '@/config/seo';
 import { useSEO, useStructuredData } from '@/hooks/useSEO';
 import { useProductStore } from '@/store/productStore';
+import { trackSearch } from '@/utils/tracking';
 
 const DEFAULT_PRICE_RANGE: [number, number] = [0, 0];
 
@@ -21,6 +22,8 @@ const ShopPage = () => {
   const categoryParam = searchParams.get('category');
   const searchTerm = searchParams.get('q') || searchParams.get('search');
   const dealsOnly = searchParams.get('deals') === 'true';
+
+  useEffect(() => { if (searchTerm) trackSearch(searchTerm); }, [searchTerm]);
 
   const products = useProductStore((state) => state.products);
   const isLoading = useProductStore((state) => state.isLoading);

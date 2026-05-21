@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { useTransactionStore } from '@/store/transactionStore';
 import { useVisitorStore } from '@/store/visitorStore';
 import { Calendar, Download, Users, Clock } from 'lucide-react';
+import TrackingPanel from '@/components/TrackingPanel';
 
 const currencyFormatter = new Intl.NumberFormat('en-NG', {
   style: 'currency',
@@ -128,6 +129,9 @@ const AdminAnalytics = () => {
 
         {/* Analytics Charts */}
         <AnalyticsCharts data={analyticsData} visitorDailyMetrics={visitorDailyMetrics} />
+
+        {/* On-Site Tracking */}
+        <TrackingPanel />
 
         {/* Transaction History */}
         <div>

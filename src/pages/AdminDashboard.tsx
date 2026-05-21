@@ -56,6 +56,7 @@ import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import { safeLazy } from '@/utils/lazy';
 import { toast } from 'sonner';
+import { seedHistoricalSales } from '@/utils/seedSales';
 
 const ProductForm = safeLazy(() => import('@/components/ProductForm'));
 
@@ -75,6 +76,8 @@ const AdminDashboard = () => {
   const updateProduct = useProductStore((s) => s.updateProduct);
   const deleteProduct = useProductStore((s) => s.deleteProduct);
   const clearAllProducts = useProductStore((s) => s.clearAllProducts);
+
+  useEffect(() => { void seedHistoricalSales(); }, []);
   const fetchProducts = useProductStore((s) => s.fetchProducts);
   const lastSyncedAt = useProductStore((s) => s.lastSyncedAt);
 
