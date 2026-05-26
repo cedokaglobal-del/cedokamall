@@ -323,7 +323,7 @@ const Index = () => {
       <Header />
 
       {/* Hero Section */}
-      <section className="relative flex min-h-[460px] sm:min-h-[560px] items-center overflow-hidden bg-navy text-champagne">
+      <section className="relative flex min-h-[320px] sm:min-h-[560px] items-center overflow-hidden bg-navy text-champagne">
         <div
           className="absolute inset-0 opacity-10"
           style={{
@@ -331,42 +331,42 @@ const Index = () => {
               "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C9A84C' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
           }}
         />
-        <div className="container relative z-10 py-14 sm:py-20 md:py-32">
+        <div className="container relative z-10 py-8 sm:py-20 md:py-32">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
             className="max-w-4xl"
           >
-            <div className="mb-8 flex items-center gap-3">
+            <div className="mb-4 sm:mb-8 flex items-center gap-3">
               <motion.span
                 initial={{ scale: 0.9, opacity: 0 }}
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ duration: 0.8, ease: 'easeOut' }}
-                className="rounded-md bg-gold px-5 py-2 text-xs font-bold uppercase tracking-[0.2em] text-navy shadow-lg will-change-transform"
+                className="rounded-md bg-gold px-5 py-2 text-xs font-bold uppercase tracking-[0.2em] text-navy shadow-lg"
               >
                 The Elite Marketplace
               </motion.span>
             </div>
-            <h1 className="mb-8 font-serif text-4xl font-bold leading-[1.1] sm:text-6xl md:text-8xl text-white">
-              Everything You Need.
+            <h1 className="mb-4 sm:mb-8 font-serif text-3xl font-bold leading-[1.1] sm:text-6xl md:text-8xl text-white">
+              Everything Gadgets.
               <br />
               <span className="text-gradient-gold drop-shadow-xl italic">Delivered Nationwide.</span>
             </h1>
-            <p className="mb-10 sm:mb-12 max-w-2xl text-base sm:text-lg leading-relaxed text-champagne/80 md:text-2xl font-sans font-light">
+            <p className="mb-6 sm:mb-12 max-w-2xl text-sm sm:text-lg leading-relaxed text-champagne/80 md:text-2xl font-sans font-light hidden sm:block">
               The most Affordable, Reliable &amp; Original Electrical Equipment and Gadgets with Warranties - LG, Hisense, MeWe, Maxi etc
             </p>
             <div className="flex flex-col gap-6 sm:flex-row">
               <Link
                 to="/shop"
-                className="inline-flex items-center justify-center gap-3 rounded-md bg-gold px-8 sm:px-12 py-4 sm:py-5 text-lg sm:text-xl font-bold text-navy shadow-2xl transition-all duration-300 hover:bg-gold-antique hover:text-white transform hover:-translate-y-1 active:scale-95 will-change-transform"
+                className="inline-flex items-center justify-center gap-3 rounded-md bg-gold px-8 sm:px-12 py-4 sm:py-5 text-lg sm:text-xl font-bold text-navy shadow-2xl transition-all duration-300 hover:bg-gold-antique hover:text-white transform hover:-translate-y-1 active:scale-95"
               >
                 Explore Shop
                 <ArrowRight className="h-6 w-6 transition-transform group-hover:translate-x-1" />
               </Link>
               <Link
                 to="/shop?deals=true"
-                className="inline-flex items-center justify-center gap-3 rounded-md border border-gold/30 bg-white/5 px-8 sm:px-12 py-4 sm:py-5 text-lg sm:text-xl font-bold text-champagne backdrop-blur-md transition-all duration-300 hover:bg-white/10 hover:border-gold will-change-transform"
+                className="inline-flex items-center justify-center gap-3 rounded-md border border-gold/30 bg-white/5 px-8 sm:px-12 py-4 sm:py-5 text-lg sm:text-xl font-bold text-champagne transition-all duration-300 hover:bg-white/10 hover:border-gold"
               >
                 Flash Deals
               </Link>
@@ -374,8 +374,8 @@ const Index = () => {
           </motion.div>
         </div>
 
-        <div className="absolute -bottom-48 -right-48 h-[600px] w-[600px] rounded-full bg-gold/5 blur-[120px]" />
-        <div className="absolute top-20 right-20 h-96 w-96 rounded-full bg-navy-deep/40 blur-3xl" />
+        <div className="absolute -bottom-48 -right-48 h-[600px] w-[600px] rounded-full bg-gold/5 blur-[60px] hidden sm:block" />
+        <div className="absolute top-20 right-20 h-96 w-96 rounded-full bg-navy-deep/40 blur-3xl hidden sm:block" />
       </section>
 
       {/* Trust Bar */}
@@ -408,18 +408,18 @@ const Index = () => {
 
       {/* Categories */}
       {categories.length > 0 && (
-        <section className="container py-12">
-          <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
+        <section className="container py-6 sm:py-12">
+          <div className="mb-6 sm:mb-12 flex flex-col sm:flex-row sm:items-end justify-between gap-2 sm:gap-4">
             <div>
-              <h2 className="font-serif text-4xl font-bold text-navy">Categories</h2>
-              <div className="h-1 w-20 bg-gold mt-4" />
+              <h2 className="font-serif text-2xl sm:text-4xl font-bold text-navy">Categories</h2>
+              <div className="h-0.5 sm:h-1 w-12 sm:w-20 bg-gold mt-2 sm:mt-4" />
             </div>
-            <Link to="/shop" className="group flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-gold hover:text-gold-antique transition-colors">
+            <Link to="/shop" className="group flex items-center gap-2 text-xs sm:text-sm font-bold uppercase tracking-widest text-gold hover:text-gold-antique transition-colors">
               View All Categories
-              <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+              <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
-          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-4">
+          <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-4">
             {topCategories.map((category, index) => (
                 <Link 
                   key={category.slug} 
@@ -429,13 +429,13 @@ const Index = () => {
                   <motion.div
                     whileHover={{ y: -6, shadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)" }}
                     whileTap={{ scale: 0.98 }}
-                    className="rounded-md border border-gold-antique/10 bg-white p-6 text-center transition-all group hover:border-gold/30 h-full will-change-transform"
+                    className="rounded-md border border-gold-antique/10 bg-white p-3 sm:p-6 text-center transition-all group hover:border-gold/30 h-full will-change-transform"
                   >
-                    <div className="mb-4 flex h-12 w-12 items-center justify-center rounded-full bg-ivory mx-auto group-hover:bg-gold/10 transition-colors">
-                      <category.icon className="h-6 w-6 text-navy group-hover:text-gold transition-colors" />
+                    <div className="mb-2 sm:mb-4 flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-ivory mx-auto group-hover:bg-gold/10 transition-colors">
+                      <category.icon className="h-4 w-4 sm:h-6 sm:w-6 text-navy group-hover:text-gold transition-colors" />
                     </div>
-                    <p className="text-[10px] font-bold uppercase tracking-widest text-navy line-clamp-1">{category.name}</p>
-                    <p className="text-[9px] text-navy/40 mt-1">Explore Collection</p>
+                    <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-navy line-clamp-1">{category.name}</p>
+                    <p className="hidden sm:block text-[9px] text-navy/40 mt-1">Explore Collection</p>
                   </motion.div>
                 </Link>
               ))}
@@ -443,39 +443,16 @@ const Index = () => {
         </section>
       )}
 
-      <section className="container pb-6">
-        <div className="rounded-md border border-gold-antique/10 bg-white p-8 shadow-sm">
-          <h2 className="font-serif text-3xl font-bold text-navy">Shop Original Electricals by Category</h2>
-          <p className="mt-4 max-w-4xl text-sm leading-7 text-navy/70">
-            Original Electricals : home appliances and gadgets with warranties. Browse televisions, refrigerators,
-            air conditioners, smartphones, laptops, sound systems, kitchen accessories and more
-          </p>
-          {categories.length > 0 && (
-            <div className="mt-6 flex flex-wrap gap-3">
-              {categories.slice(0, 12).map((category) => (
-                <Link
-                  key={category.slug}
-                  to={`/shop?category=${category.slug}`}
-                  className="rounded-full border border-gold-antique/20 bg-ivory px-4 py-2 text-xs font-bold uppercase tracking-widest text-navy transition-colors hover:border-gold hover:text-gold"
-                >
-                  {category.name}
-                </Link>
-              ))}
-            </div>
-          )}
-        </div>
-      </section>
-
       {/* Main Product List */}
-      <section className="container py-16">
-        <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
+      <section className="container py-8 sm:py-16">
+        <div className="mb-6 sm:mb-12 flex flex-col sm:flex-row sm:items-end justify-between gap-2 sm:gap-4">
           <div>
-            <h2 className="font-serif text-4xl font-bold text-navy">Product List</h2>
-            <p className="text-navy/60 font-sans tracking-wide text-sm mt-2">Explore our latest premium arrivals</p>
+            <h2 className="font-serif text-2xl sm:text-4xl font-bold text-navy">Product List</h2>
+            <p className="text-navy/60 font-sans tracking-wide text-xs sm:text-sm mt-1 sm:mt-2">Explore our latest premium arrivals</p>
           </div>
-          <Link to="/shop" className="group flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-gold hover:text-gold-antique transition-colors">
+          <Link to="/shop" className="group flex items-center gap-2 text-xs sm:text-sm font-bold uppercase tracking-widest text-gold hover:text-gold-antique transition-colors">
             See All Products
-            <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
+            <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
         {isLoading && products.length === 0 ? (
@@ -516,6 +493,30 @@ const Index = () => {
             ))}
           </div>
         )}
+      </section>
+
+      {/* SEO Category Links */}
+      <section className="container pb-6">
+        <div className="rounded-md border border-gold-antique/10 bg-white p-6 sm:p-8 shadow-sm">
+          <h2 className="font-serif text-xl sm:text-3xl font-bold text-navy">Shop Original Electricals by Category</h2>
+          <p className="mt-4 max-w-4xl text-xs sm:text-sm leading-7 text-navy/70">
+            Original Electricals : home appliances and gadgets with warranties. Browse televisions, refrigerators,
+            air conditioners, smartphones, laptops, sound systems, kitchen accessories and more
+          </p>
+          {categories.length > 0 && (
+            <div className="mt-6 flex flex-wrap gap-3">
+              {categories.slice(0, 12).map((category) => (
+                <Link
+                  key={category.slug}
+                  to={`/shop?category=${category.slug}`}
+                  className="rounded-full border border-gold-antique/20 bg-ivory px-4 py-2 text-xs font-bold uppercase tracking-widest text-navy transition-colors hover:border-gold hover:text-gold"
+                >
+                  {category.name}
+                </Link>
+              ))}
+            </div>
+          )}
+        </div>
       </section>
 
       {/* Recommended Section - Premium Highlight */}

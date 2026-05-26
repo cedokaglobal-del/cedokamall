@@ -91,8 +91,8 @@ const Header = () => {
             <img
               src="/header_logo.png"
               alt="Cedokamall"
-              className="object-contain brightness-125 contrast-200 drop-shadow-lg font-bold will-change-transform transition-all duration-300"
-              style={{ height: 'clamp(40px, 8vw, 56px)', width: 'auto', maxWidth: '200px' }}
+              className="object-contain brightness-150 contrast-200"
+              style={{ height: 'clamp(40px, 8vw, 56px)', width: 'auto', maxWidth: '200px', filter: 'drop-shadow(0 0 8px rgba(201, 168, 76, 0.5))' }}
               loading="eager"
               fetchpriority="high"
               decoding="async"

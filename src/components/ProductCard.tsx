@@ -17,7 +17,7 @@ const ProductCard = ({ product, priority = false }: { product: Product, priority
     : 0;
 
   return (
-    <article className="group overflow-hidden rounded-lg border border-gold-antique/10 bg-white transition-all duration-300 hover:-translate-y-2 hover:shadow-premium-lg card-hover animate-fade-in">
+    <article className="group overflow-hidden rounded-lg border border-gold-antique/10 bg-white transition-all duration-300 hover:-translate-y-2 hover:shadow-premium-lg card-hover">
       {/* Image Container */}
       <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-ivory to-muted">
         <Link to={`/product/${product.id}`} className="absolute inset-0 z-0">
