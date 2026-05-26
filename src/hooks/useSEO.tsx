@@ -84,6 +84,11 @@ export const useSEO = (meta?: PageMeta) => {
       document.head.appendChild(canonical);
     }
     canonical.setAttribute('href', pageMeta.url || getCanonicalUrl(location.pathname));
+
+    const currentUrl = pageMeta.url || getCanonicalUrl(location.pathname);
+    document.querySelectorAll('link[rel="alternate"][hreflang]').forEach(link => {
+      link.setAttribute('href', currentUrl);
+    });
   }, [pageMetaStr, location.pathname]);
 };
 

@@ -293,6 +293,13 @@ export const PAGE_METAS: Record<string, PageMeta> = {
     type: "website",
     robots: "noindex, nofollow",
   },
+  admin: {
+    title: "Admin Dashboard - Cedokamall",
+    description: "Admin dashboard for Cedokamall management.",
+    keywords: [],
+    type: "website",
+    robots: "noindex, nofollow",
+  },
 };
 
 export const getCanonicalUrl = (pathname: string): string => `${SEO_CONFIG.siteUrl}${pathname}`;

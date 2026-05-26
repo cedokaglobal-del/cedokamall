@@ -19,7 +19,7 @@ const DEFAULT_PRICE_RANGE: [number, number] = [0, 0];
 
 const ShopPage = () => {
   const [searchParams] = useSearchParams();
-  const categoryParam = searchParams.get('category');
+  const categoryParam = searchParams.get('category')?.toLowerCase();
   const searchTerm = searchParams.get('q') || searchParams.get('search');
   const dealsOnly = searchParams.get('deals') === 'true';
 
