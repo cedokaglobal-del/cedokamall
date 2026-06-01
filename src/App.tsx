@@ -19,11 +19,14 @@ import { useVisitorStore } from "@/store/visitorStore";
 import { safeLazy } from "@/utils/lazy";
 import { addConnectionHints } from "@/utils/performance";
 import { trackPageView, trackReferrer } from "@/utils/tracking";
+import MobileBottomNav from "@/components/MobileBottomNav";
 
 const Index        = safeLazy(() => import("./pages/Index"));
 const ShopPage     = safeLazy(() => import("./pages/ShopPage"));
 const ProductPage  = safeLazy(() => import("./pages/ProductPage"));
 const CartPage     = safeLazy(() => import("./pages/CartPage"));
+const SolarPage    = safeLazy(() => import("./pages/SolarPage"));
+const BrandsPage   = safeLazy(() => import("./pages/BrandsPage"));
 const NotFound     = safeLazy(() => import("./pages/NotFound"));
 
 // Admin pages (heavy, only loaded when admin visits)
@@ -184,6 +187,8 @@ const App = () => {
                   <Route path="/shop" element={<ShopPage />} />
                   <Route path="/product/:id" element={<ProductPage />} />
                   <Route path="/cart" element={<CartPage />} />
+                  <Route path="/solar" element={<SolarPage />} />
+                  <Route path="/brands" element={<BrandsPage />} />
 
                   {/* Admin Routes - Login (no protection needed) */}
                   <Route path="/admin/login" element={<AdminLogin />} />
@@ -233,6 +238,7 @@ const App = () => {
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
+              <MobileBottomNav />
             </BrowserRouter>
           </ErrorBoundary>
         </TooltipProvider>

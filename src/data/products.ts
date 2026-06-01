@@ -95,6 +95,19 @@ export const buildCategories = (products: Product[]): Category[] => {
     });
 };
 
+export const SOLAR_SUBCATEGORIES = [
+  'All Solar',
+  'Solar Panels',
+  'Inverters',
+  'Batteries & Storage',
+  'Charge Controllers',
+  'Solar Lights',
+  'Solar Pumps & Fans',
+  'Cables & Wiring',
+  'Mounting & Frames',
+  'Accessories & Kits',
+];
+
 export const getCategoryOptions = (products: Product[], extraCategories: string[] = []) => {
   const dynamicCategories = products
     .map((product) => product.category?.trim())

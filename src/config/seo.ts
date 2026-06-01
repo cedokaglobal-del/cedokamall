@@ -300,6 +300,18 @@ export const PAGE_METAS: Record<string, PageMeta> = {
     type: "website",
     robots: "noindex, nofollow",
   },
+  solar: {
+    title: "Solar Energy Solutions - Solar Panels, Inverters & Batteries | Cedokamall",
+    description: "Shop premium solar panels, inverters, batteries, charge controllers and accessories in Nigeria. Use our Energy Calculator to find the right solar system for your home or office.",
+    keywords: ['solar panels Nigeria', 'solar inverters', 'solar batteries', 'solar energy Nigeria', 'off-grid solar', 'solar installation Nigeria'],
+    type: "website",
+  },
+  brands: {
+    title: "All Brands - Shop Original Electrical & Gadget Brands | Cedokamall",
+    description: "Browse all original brands available at Cedokamall. Shop LG, Hisense, Samsung and more trusted brands with warranties and nationwide delivery.",
+    keywords: ['electrical brands Nigeria', 'gadget brands', 'LG Nigeria', 'Hisense Nigeria', 'Cedokamall brands'],
+    type: "website",
+  },
 };
 
 export const getCanonicalUrl = (pathname: string): string => `${SEO_CONFIG.siteUrl}${pathname}`;

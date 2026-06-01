@@ -11,7 +11,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductFormData, Product } from '@/types/product';
 import { useCategoryStore } from '@/store/categoryStore';
 import { useProductStore } from '@/store/productStore';
-import { DEFAULT_CATEGORY_NAMES } from '@/data/products';
+import { DEFAULT_CATEGORY_NAMES, SOLAR_SUBCATEGORIES } from '@/data/products';
 import { uploadProductImages } from '@/lib/productImages';
 import { 
   X, 
@@ -394,6 +394,35 @@ const handleDeleteCategory = (cat: string, e: React.MouseEvent) => {
                   </div>
                   {errors.category && <p className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.category}</p>}
                 </div>
+
+                {/* Solar Subcategory - always visible when Solar is selected or a solar subcategory is chosen */}
+                {(formData.category === 'Solar' || SOLAR_SUBCATEGORIES.slice(1).includes(formData.category)) && (
+                  <div className="space-y-2">
+                    <Label className="text-sm font-semibold flex items-center gap-1.5">
+                      Solar Subcategory <span className="text-destructive">*</span>
+                    </Label>
+                    <Select
+                      value={SOLAR_SUBCATEGORIES.slice(1).includes(formData.category) ? formData.category : ''}
+                      onValueChange={(value) => {
+                        handleChange('category', value);
+                      }}
+                    >
+                      <SelectTrigger className="bg-muted/30 h-11 transition-all focus:bg-background">
+                        <SelectValue placeholder="Select solar subcategory" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SOLAR_SUBCATEGORIES.filter((s) => s !== 'All Solar').map((sub) => (
+                          <SelectItem key={sub} value={sub}>
+                            {sub}
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-[10px] text-muted-foreground italic">
+                      Select the specific solar category. This sets the product's actual category (e.g., "Solar Panels", "Inverters").
+                    </p>
+                  </div>
+                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="seller" className="text-sm font-semibold flex items-center gap-1.5">

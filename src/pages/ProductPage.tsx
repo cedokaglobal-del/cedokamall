@@ -262,8 +262,8 @@ const ProductPage = () => {
     <div className="min-h-screen bg-ivory">
       <Header />
 
-      <div className="container py-6">
-        <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="container py-6">
+          <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
           <nav className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-navy/40">
             <Link to="/" className="transition-colors hover:text-gold">
               Home
@@ -273,11 +273,11 @@ const ProductPage = () => {
               Collections
             </Link>
             <ChevronRight className="h-3 w-3" />
-            <span className="max-w-[200px] truncate text-navy">{product.name}</span>
+            <span className="max-w-[100px] sm:max-w-[200px] truncate text-navy">{product.name}</span>
           </nav>
           <Link
-            to="/shop"
-            className="flex items-center gap-2 rounded-md border border-gold-antique/20 bg-white px-5 py-2 text-xs font-bold uppercase tracking-widest text-navy shadow-sm transition-all hover:bg-navy hover:text-gold"
+            to={`/shop?category=${product?.category?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || '/shop'}`}
+            className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-md border border-gold-antique/20 bg-white px-5 py-2 text-xs font-bold uppercase tracking-widest text-navy shadow-sm transition-all hover:bg-navy hover:text-gold"
           >
             <ArrowLeft className="h-4 w-4" />
             Back to Catalog
@@ -350,7 +350,14 @@ const ProductPage = () => {
                 <div className="mb-4 flex flex-wrap items-center gap-3 text-[11px] font-bold uppercase tracking-[0.22em] text-navy/55">
                   <span className="break-words">{product.category}</span>
                   <span className="h-1 w-1 shrink-0 rounded-full bg-gold" />
-                  <span className="break-words">Sold by {product.seller}</span>
+                  <span className="break-words">Sold by{' '}
+                    <Link
+                      to={`/shop?brand=${encodeURIComponent(product.seller.toLowerCase())}`}
+                      className="text-gold hover:text-navy hover:underline"
+                    >
+                      {product.seller}
+                    </Link>
+                  </span>
                   {product.sku && (
                     <>
                       <span className="h-1 w-1 shrink-0 rounded-full bg-gold" />
@@ -382,7 +389,7 @@ const ProductPage = () => {
 
               <div className="space-y-6 px-6 py-6 md:px-8">
                 <div className="grid gap-6 xl:grid-cols-[minmax(0,1fr)_19rem] xl:items-start">
-                  <div className="space-y-6">
+                  <div className="space-y-6 order-2 xl:order-1">
                     {product.features && product.features.length > 0 && (
                       <div className="overflow-hidden rounded-[1.5rem] border border-gold-antique/10 bg-white p-5 md:p-6">
                         <div className="mb-5 flex items-center gap-2">
@@ -596,7 +603,7 @@ const ProductPage = () => {
                   </div>
                   </div>
 
-                  <aside className="space-y-4">
+                  <aside className="space-y-4 order-1 xl:order-2">
                   <div className="overflow-hidden rounded-[1.5rem] border border-gold-antique/10 bg-navy p-5 text-champagne shadow-xl md:p-6">
                     <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-champagne/70">
                       Today&apos;s Price

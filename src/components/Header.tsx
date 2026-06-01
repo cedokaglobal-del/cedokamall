@@ -1,9 +1,10 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { Search, ShoppingCart, Menu, X, MapPin, Phone, ChevronDown } from 'lucide-react';
+import { Search, ShoppingCart, Menu, X, MapPin, Phone, ChevronDown, Sun, LayoutGrid } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
-import { buildCategories, slugifyCategory } from '@/data/products';
+import { buildCategories, slugifyCategory, SOLAR_SUBCATEGORIES } from '@/data/products';
 import { useProductStore } from '@/store/productStore';
+import { cn } from '@/lib/utils';
 import { lazy, Suspense } from 'react';
 const MiniCart = lazy(() => import('./MiniCart'));
 
@@ -22,6 +23,16 @@ const Header = () => {
   const toggleCart = useCartStore((s) => s.toggleCart);
   const isCartOpen = useCartStore((s) => s.isOpen);
   const categories = useMemo(() => buildCategories(products), [products]);
+
+  const isSolarPage = location.pathname === '/solar';
+
+  // Solar subcategory links for the dropdown when on /solar
+  const solarCategoryLinks = useMemo(() => {
+    return SOLAR_SUBCATEGORIES.slice(1).map((name) => {
+      const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+      return { name, slug };
+    });
+  }, []);
 
   // Sync state with URL q param whenever it changes
   useEffect(() => {
@@ -45,7 +56,6 @@ const Header = () => {
       }
       navigate(`/shop?${search.toString()}`);
     } else {
-      // If empty and searched, clear the filter
       navigate('/shop');
     }
   };
@@ -53,8 +63,6 @@ const Header = () => {
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const val = e.target.value;
     setSearchQuery(val);
-    
-    // If user clears the input while on the shop page, automatically reset the search filter
     if (val === '' && location.pathname === '/shop') {
       navigate('/shop');
     }
@@ -99,43 +107,14 @@ const Header = () => {
             />
           </Link>
 
-          {/* Categories dropdown - desktop only */}
-          {categories.length > 0 && (
-            <div className="relative hidden lg:block">
-              <button
-                type="button"
-                onClick={() => setCatMenuOpen(!catMenuOpen)}
-                className="flex items-center gap-2 bg-gold text-navy px-3 sm:px-5 py-2 sm:py-2.5 rounded-md text-xs sm:text-sm font-semibold hover:bg-gold-antique hover:text-white transition-all duration-300 whitespace-nowrap shadow-premium-sm will-change-transform"
-              >
-                <Menu className="w-4 h-4" /> Categories <ChevronDown className="w-3 h-3 transition-transform duration-300" />
-              </button>
-              {catMenuOpen && (
-                <div className="absolute top-full left-0 mt-2 bg-navy-deep rounded-lg shadow-premium-lg border border-gold-antique/30 p-2 w-64 z-50 animate-slide-down duration-250 will-change-transform max-h-96 overflow-y-auto">
-                  {categories.map((cat, idx) => (
-                    <Link
-                      key={cat.slug}
-                      to={`/shop?category=${cat.slug}`}
-                      className="flex items-center gap-3 px-4 py-3 rounded-md hover:bg-gold-antique/20 hover:text-white transition-all duration-250 text-sm font-medium"
-                      style={{ animationDelay: `${idx * 50}ms` }}
-                      onClick={() => setCatMenuOpen(false)}
-                    >
-                      <cat.icon className="w-4 h-4 text-gold flex-shrink-0" />
-                      <span>{cat.name}</span>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Search */}
+          {/* Search - moved to the left */}
           <form onSubmit={handleSearch} className="flex-1 min-w-0 w-full md:max-w-md relative order-3 md:order-none">
             <input
               type="text"
               value={searchQuery}
               onChange={handleInputChange}
               placeholder="Search products..."
-              className="w-full pl-4 sm:pl-5 pr-10 sm:pr-12 py-2 sm:py-2.5 rounded-lg border border-gold-antique/30 bg-navy-deep/50 text-champagne text-xs sm:text-base focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all duration-300 placeholder:text-champagne/50 will-change-contents"
+              className="w-full pl-4 sm:pl-5 pr-10 sm:pr-12 py-2 sm:py-2.5 rounded-lg border border-gold-antique/30 bg-navy-deep/50 text-champagne text-xs sm:text-base focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all duration-300 placeholder:text-champagne/50"
               aria-label="Search products"
             />
             <button 
@@ -146,6 +125,66 @@ const Header = () => {
               <Search className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </form>
+
+          {/* General Tab - Desktop */}
+          <Link
+            to="/shop"
+            className={cn(
+              'hidden lg:flex items-center gap-1.5 px-3 py-2 text-xs font-bold uppercase tracking-wider transition-colors whitespace-nowrap',
+              !isSolarPage ? 'text-gold' : 'text-champagne/70 hover:text-gold'
+            )}
+          >
+            <LayoutGrid className="w-4 h-4" />
+            General
+          </Link>
+
+          {/* Categories dropdown - desktop only */}
+          {categories.length > 0 && (
+            <div className="relative hidden lg:block">
+              <button
+                type="button"
+                onClick={() => setCatMenuOpen(!catMenuOpen)}
+                className="flex items-center gap-2 bg-gold text-navy px-3 sm:px-5 py-2 sm:py-2.5 rounded-md text-xs sm:text-sm font-semibold hover:bg-gold-antique hover:text-white transition-all duration-300 whitespace-nowrap shadow-premium-sm"
+              >
+                <Menu className="w-4 h-4" /> Categories <ChevronDown className="w-3 h-3 transition-transform duration-300" />
+              </button>
+              {catMenuOpen && (
+                <div className="absolute top-full left-0 mt-2 bg-navy-deep rounded-lg shadow-premium-lg border border-gold-antique/30 p-2 w-64 z-50 animate-slide-down duration-250 max-h-96 overflow-y-auto">
+                  {(isSolarPage ? solarCategoryLinks : categories).map((item, idx) => {
+                    const slug = 'slug' in item ? item.slug : (item as { name: string; slug: string }).slug;
+                    const name = item.name;
+                    const href = isSolarPage
+                      ? `/solar?category=${slug}`
+                      : `/shop?category=${slug}`;
+                    return (
+                      <Link
+                        key={slug}
+                        to={href}
+                        className="flex items-center gap-3 px-4 py-3 rounded-md hover:bg-gold-antique/20 hover:text-white transition-all duration-250 text-sm font-medium"
+                        style={{ animationDelay: `${idx * 50}ms` }}
+                        onClick={() => setCatMenuOpen(false)}
+                      >
+                        <Sun className="w-4 h-4 text-gold flex-shrink-0" />
+                        <span>{name}</span>
+                      </Link>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Solar Nav Link - Desktop */}
+          <Link
+            to="/solar"
+            className={cn(
+              'hidden lg:flex items-center gap-1.5 px-3 py-2 text-xs font-bold uppercase tracking-wider transition-colors whitespace-nowrap',
+              isSolarPage ? 'text-gold' : 'text-champagne/70 hover:text-gold'
+            )}
+          >
+            <Sun className="w-4 h-4" />
+            Solar
+          </Link>
 
           {/* Actions */}
           <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
@@ -179,19 +218,61 @@ const Header = () => {
         {/* Mobile menu */}
         {mobileMenuOpen && categories.length > 0 && (
           <div className="md:hidden border-t border-gold-antique/20 bg-navy-deep p-3 sm:p-4 animate-slide-down duration-300 max-h-[60vh] overflow-y-auto">
+            <div className="flex items-center gap-2 mb-3 pb-3 border-b border-gold-antique/10">
+              <Link
+                to="/solar"
+                className={cn(
+                  'flex items-center gap-2 rounded-lg border px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all',
+                  isSolarPage
+                    ? 'bg-gold text-navy border-gold'
+                    : 'bg-navy-deep/50 border-gold-antique/10 text-champagne hover:border-gold/50'
+                )}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Sun className="w-4 h-4 text-gold" />
+                Solar Store
+              </Link>
+              <Link
+                to="/shop"
+                className={cn(
+                  'flex items-center gap-2 rounded-lg border px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all',
+                  !isSolarPage
+                    ? 'bg-gold text-navy border-gold'
+                    : 'bg-navy-deep/50 border-gold-antique/10 text-champagne hover:border-gold/50'
+                )}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <LayoutGrid className="w-4 h-4 text-gold" />
+                General Store
+              </Link>
+              <Link
+                to="/brands"
+                className="flex items-center gap-2 rounded-lg bg-navy-deep/50 border border-gold-antique/10 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-champagne hover:border-gold/50 transition-all"
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Brands
+              </Link>
+            </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 text-xs sm:text-sm">
-              {categories.map((cat, idx) => (
-                <Link
-                  key={cat.slug}
-                  to={`/shop?category=${cat.slug}`}
-                  className="flex items-center gap-2 px-2 sm:px-3 py-2.5 sm:py-3 rounded-lg bg-navy-deep/50 border border-gold-antique/10 hover:border-gold/50 hover:bg-gold-antique/10 transition-all duration-300 overflow-hidden"
-                  style={{ animationDelay: `${idx * 30}ms` }}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <cat.icon className="w-4 h-4 flex-shrink-0 text-gold" />
-                  <span className="truncate font-medium">{cat.name}</span>
-                </Link>
-              ))}
+              {(isSolarPage ? solarCategoryLinks : categories).map((item, idx) => {
+                const slug = 'slug' in item ? item.slug : (item as { name: string; slug: string }).slug;
+                const name = item.name;
+                const href = isSolarPage
+                  ? `/solar?category=${slug}`
+                  : `/shop?category=${slug}`;
+                return (
+                  <Link
+                    key={slug}
+                    to={href}
+                    className="flex items-center gap-2 px-2 sm:px-3 py-2.5 sm:py-3 rounded-lg bg-navy-deep/50 border border-gold-antique/10 hover:border-gold/50 hover:bg-gold-antique/10 transition-all duration-300 overflow-hidden"
+                    style={{ animationDelay: `${idx * 30}ms` }}
+                    onClick={() => setMobileMenuOpen(false)}
+                  >
+                    <Sun className="w-4 h-4 flex-shrink-0 text-gold" />
+                    <span className="truncate font-medium">{name}</span>
+                  </Link>
+                );
+              })}
             </div>
           </div>
         )}

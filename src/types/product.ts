@@ -43,6 +43,8 @@ export interface ProductFormData {
 
 export interface ProductFilter {
   category?: string;
+  brands?: string[];
+  solarType?: string;
   minPrice?: number;
   maxPrice?: number;
   inStock?: boolean;

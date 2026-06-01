@@ -63,13 +63,19 @@ const Footer = () => (
       <div className="animate-slide-up" style={{ animationDelay: '100ms' }}>
         <h5 className="font-serif text-base sm:text-lg font-bold mb-4 sm:mb-6 text-gold">Shop Collection</h5>
         <ul className="space-y-2 sm:space-y-3 text-xs sm:text-sm opacity-70 font-sans">
-          {['Shop All Products', 'Luxury Deals', 'New Arrivals', 'Premium Picks', 'Our Legacy'].map(l => (
-            <li key={l}>
+          {[
+            { label: 'Shop All Products', to: '/shop' },
+            { label: 'Solar Energy', to: '/solar' },
+            { label: 'All Brands', to: '/brands' },
+            { label: 'New Arrivals', to: '/shop' },
+            { label: 'Premium Picks', to: '/shop' },
+          ].map(({ label, to }) => (
+            <li key={label}>
               <Link 
-                to="/shop" 
+                to={to}
                 className="hover:text-gold hover:translate-x-1 transition-all duration-300 inline-block"
               >
-                {l}
+                {label}
               </Link>
             </li>
           ))}

@@ -254,7 +254,7 @@ Payment: ${invoiceData.paymentMethod}
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="container py-20 text-center">
+        <div className="container py-10 sm:py-20 text-center">
           <p className="text-6xl mb-4">🛒</p>
           <h1 className="font-display text-2xl font-bold mb-2">Your cart is empty</h1>
           <p className="text-muted-foreground mb-6">Discover amazing electronics and gadgets</p>
@@ -290,7 +290,7 @@ Payment: ${invoiceData.paymentMethod}
             <div className="lg:col-span-2 space-y-4">
               {items.map((item) => (
                 <div key={item.id} className="flex gap-4 overflow-hidden bg-card rounded-xl border p-4">
-                  <img src={item.image} alt={item.name} className="w-24 h-24 shrink-0 object-cover rounded-lg" />
+                  <img src={item.image} alt={item.name} className="w-20 h-20 sm:w-24 sm:h-24 shrink-0 object-cover rounded-lg" />
                   <div className="min-w-0 flex-1">
                     <h3 className="truncate font-medium">{item.name}</h3>
                     <p className="text-lg font-bold text-primary mt-1">{formatPrice(item.price)}</p>

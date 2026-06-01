@@ -537,6 +537,12 @@ export const useProductStore = create<ProductState>((set, get) => ({
       if (filter.category && product.category !== filter.category) {
         return false;
       }
+      if (filter.brands && filter.brands.length > 0 && !filter.brands.some((b) => b.toLowerCase() === product.seller.toLowerCase())) {
+        return false;
+      }
+      if (filter.solarType && product.specs?.solarType !== filter.solarType && product.specs?.solar_type !== filter.solarType) {
+        return false;
+      }
       if (filter.minPrice !== undefined && product.price < filter.minPrice) {
         return false;
       }
