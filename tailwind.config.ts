@@ -73,6 +73,7 @@ export default {
           DEFAULT: "hsl(var(--gold-aged))",
           antique: "hsl(var(--gold-antique))",
         },
+        "cta-orange-light": "hsl(33 100% 63%)",
         champagne: "hsl(var(--champagne))",
         ivory: "hsl(var(--ivory))",
         charcoal: "hsl(var(--charcoal))",

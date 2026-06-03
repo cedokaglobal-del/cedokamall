@@ -5,11 +5,19 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { validateEmail } from '@/config/security';
 import { useAuth } from '@/contexts/useAuth';
+import { useSEO } from '@/hooks/useSEO';
 import { Mail, Lock, ShieldCheck, ArrowRight, Star } from 'lucide-react';
 
 const AdminLogin = () => {
   const navigate = useNavigate();
   const { login, loginWithMagicLink } = useAuth();
+  useSEO({
+    title: 'Admin Login - Cedokamall',
+    description: '',
+    keywords: [],
+    robots: 'noindex, nofollow',
+    type: 'website',
+  });
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');

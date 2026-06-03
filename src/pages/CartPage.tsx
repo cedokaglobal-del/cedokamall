@@ -272,14 +272,22 @@ Payment: ${invoiceData.paymentMethod}
       <Header />
       <div className="container py-6">
         {/* Steps indicator */}
-        <div className="flex items-center justify-center gap-2 mb-8 flex-wrap">
+        <div className="hidden sm:flex items-center justify-center gap-2 mb-8">
           {steps.map((s, i) => (
             <div key={s} className="flex items-center gap-2">
               <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${i <= step ? 'bg-primary text-primary-foreground' : 'bg-muted text-muted-foreground'}`}>
                 {i + 1}
               </div>
-              <span className={`text-sm hidden sm:inline ${i <= step ? 'font-medium' : 'text-muted-foreground'}`}>{s}</span>
+              <span className={`text-sm ${i <= step ? 'font-medium' : 'text-muted-foreground'}`}>{s}</span>
               {i < steps.length - 1 && <div className={`w-8 h-0.5 ${i < step ? 'bg-primary' : 'bg-border'}`} />}
+            </div>
+          ))}
+        </div>
+        {/* Mobile steps: simple circles only */}
+        <div className="flex sm:hidden items-center justify-center gap-6 mb-6">
+          {steps.map((s, i) => (
+            <div key={s} className={`w-9 h-9 rounded-full flex items-center justify-center text-sm font-bold ${i <= step ? 'bg-primary text-primary-foreground ring-2 ring-offset-2 ring-primary/30' : 'bg-muted text-muted-foreground'}`}>
+              {i + 1}
             </div>
           ))}
         </div>
@@ -295,7 +303,7 @@ Payment: ${invoiceData.paymentMethod}
                     <h3 className="truncate font-medium">{item.name}</h3>
                     <p className="text-lg font-bold text-primary mt-1">{formatPrice(item.price)}</p>
                     <div className="flex items-center gap-2 mt-2">
-                      <span className="text-sm text-muted-foreground">Quantity: 1</span>
+                      <span className="text-sm text-muted-foreground">Quantity: {item.quantity}</span>
                       <button onClick={() => removeItem(item.id)} className="ml-auto text-destructive hover:text-destructive/80">
                         <Trash2 className="w-4 h-4" />
                       </button>

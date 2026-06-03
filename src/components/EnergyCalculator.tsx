@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback, useMemo } from 'react';
+import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
 import { Calculator, Plus, Trash2, Sun, Zap, Battery, BarChart3, ShoppingCart, MessageSquare, Check, ToggleLeft, ToggleRight, Edit3, Info, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
@@ -14,15 +14,20 @@ interface ApplianceRow {
   quantity: number;
   minutes: number;
   enabled: boolean;
+  night: boolean;
 }
 
 interface CalculatorResults {
   totalWh: number;
   totalKwh: number;
+  dayWh: number;
+  nightWh: number;
   batteryCapacityAh: number;
   solarPanelW: number;
   inverterW: number;
   systemVoltage: number;
+  inverterEff: number;
+  batteryEff: number;
 }
 
 interface SystemComponent {
@@ -33,6 +38,8 @@ interface SystemComponent {
   quantity: number;
   unitPrice: number;
 }
+
+interface StorageData { appliances: ApplianceRow[]; autonomy: number; dod: number; peakSunHours: number; inverterEff: number; batteryEff: number; batteryType: string; mode?: string; tempDerating?: number; systemLosses?: number; }
 
 const QUICK_ADD_PRESETS = [
   { name: 'LED Bulb', watts: 9 },
@@ -68,47 +75,63 @@ const loadFromStorage = () => {
   try {
     const raw = sessionStorage.getItem(STORAGE_KEY);
     if (raw) {
-      const parsed = JSON.parse(raw) as { appliances: any[]; autonomy: number; dod: number; peakSunHours: number };
+      const parsed = JSON.parse(raw) as StorageData;
       if (parsed.appliances?.length) {
         parsed.appliances = parsed.appliances.map((a) => ({
           ...a,
+          night: a.night ?? !(a as any).night,
           minutes: typeof a.minutes === 'number' ? a.minutes : Math.round((a.hours || 0) * 60),
           hours: undefined,
         }));
       }
-      return parsed as { appliances: ApplianceRow[]; autonomy: number; dod: number; peakSunHours: number };
+      return parsed;
     }
   } catch { }
   return null;
 };
 
-const saveToStorage = (data: { appliances: ApplianceRow[]; autonomy: number; dod: number; peakSunHours: number }) => {
+const saveToStorage = (data: StorageData) => {
   try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch { }
 };
 
-const computeResults = (appliances: ApplianceRow[], autonomy: number, dod: number, peakSunHours: number): CalculatorResults => {
-  const totalWh = appliances
-    .filter((a) => a.enabled)
-    .reduce((sum, a) => sum + a.watts * a.quantity * (a.minutes / 60), 0);
+const computeResults = (appliances: ApplianceRow[], autonomy: number, dod: number, peakSunHours: number, inverterEff: number = 0.9, batteryEff: number = 0.85, tempDerating: number = 0.9, systemLosses: number = 0.8): CalculatorResults => {
+  const enabled = appliances.filter((a) => a.enabled);
 
-  const effectiveDod = dod / 100;
+  let totalWh = 0;
+  let dayWh = 0;
+  let nightWh = 0;
+  for (const a of enabled) {
+    const wh = a.watts * a.quantity * (a.minutes / 60);
+    totalWh += wh;
+    if (a.night) nightWh += wh;
+    else dayWh += wh;
+  }
+
   const systemVoltage = totalWh <= 1000 ? 12 : totalWh <= 3000 ? 24 : 48;
-  const batteryCapacityAh = ((totalWh * autonomy) / effectiveDod) / systemVoltage;
-  const solarPanelW = totalWh / Math.max(peakSunHours, 1);
-  const inverterW = appliances
-    .filter((a) => a.enabled)
-    .reduce((peak, a) => {
-      const surge = a.watts * a.quantity * 1.25;
-      return surge > peak ? surge : peak;
-    }, 0);
+
+  const nightWhWithLoss = nightWh / inverterEff;
+  const effectiveDod = (dod / 100) * tempDerating;
+  const batteryCapacityAh = ((nightWhWithLoss * autonomy) / effectiveDod) / systemVoltage;
+
+  const adjustedTotalWh = dayWh + (nightWh / (inverterEff * batteryEff));
+  const solarPanelW = (adjustedTotalWh / Math.max(peakSunHours, 1)) / systemLosses;
+
+  const inverterW = enabled.reduce((peak, a) => {
+    const surge = a.watts * a.quantity * 1.25;
+    return surge > peak ? surge : peak;
+  }, 0);
 
   return {
     totalWh: Math.round(totalWh),
     totalKwh: Math.round((totalWh / 1000) * 100) / 100,
+    dayWh: Math.round(dayWh),
+    nightWh: Math.round(nightWh),
     batteryCapacityAh: Math.round(batteryCapacityAh * 10) / 10,
     solarPanelW: Math.round(solarPanelW / 10) * 10,
     inverterW: Math.round(inverterW / 10) * 10,
     systemVoltage,
+    inverterEff,
+    batteryEff,
   };
 };
 
@@ -168,20 +191,28 @@ const EnergyCalculator = () => {
   const [autonomy, setAutonomy] = useState(saved?.autonomy ?? 1);
   const [dod, setDoD] = useState(saved?.dod ?? 50);
   const [peakSunHours, setPeakSunHours] = useState(saved?.peakSunHours ?? 5);
+  const [inverterEff, setInverterEff] = useState(saved?.inverterEff ?? 0.9);
+  const [batteryEff, setBatteryEff] = useState(saved?.batteryEff ?? 0.85);
+  const [batteryType, setBatteryType] = useState(saved?.batteryType ?? 'not-sure');
+  const [tempDerating, setTempDerating] = useState(saved?.tempDerating ?? 0.9);
+  const [systemLosses, setSystemLosses] = useState(saved?.systemLosses ?? 0.8);
+  const [mode, setMode] = useState<'basic' | 'advanced'>((saved?.mode as 'basic' | 'advanced') ?? 'basic');
   const [customSunHours, setCustomSunHours] = useState(false);
   const [calculated, setCalculated] = useState(false);
+  const [showSettings, setShowSettings] = useState(false);
   const [customizing, setCustomizing] = useState(false);
   const [systemComponents, setSystemComponents] = useState<SystemComponent[]>([]);
   const [infoApplianceId, setInfoApplianceId] = useState<string | null>(null);
+  const detailsRef = useRef<HTMLDetailsElement>(null);
 
   const addItem = useCartStore((s) => s.addItem);
   const toggleCart = useCartStore((s) => s.toggleCart);
 
   useEffect(() => {
-    saveToStorage({ appliances, autonomy, dod, peakSunHours });
-  }, [appliances, autonomy, dod, peakSunHours]);
+    saveToStorage({ appliances, autonomy, dod, peakSunHours, inverterEff, batteryEff, batteryType, mode, tempDerating, systemLosses });
+  }, [appliances, autonomy, dod, peakSunHours, inverterEff, batteryEff, batteryType, mode, tempDerating, systemLosses]);
 
-  const results = useMemo(() => computeResults(appliances, autonomy, dod, peakSunHours), [appliances, autonomy, dod, peakSunHours]);
+  const results = useMemo(() => computeResults(appliances, autonomy, dod, peakSunHours, inverterEff, batteryEff, tempDerating, systemLosses), [appliances, autonomy, dod, peakSunHours, inverterEff, batteryEff, tempDerating, systemLosses]);
 
   const enabledCount = useMemo(() => appliances.filter((a) => a.enabled).length, [appliances]);
 
@@ -194,6 +225,7 @@ const EnergyCalculator = () => {
       quantity: 1,
       minutes: 60,
       enabled: true,
+      night: true,
     }]);
   }, []);
 
@@ -288,13 +320,35 @@ const EnergyCalculator = () => {
 
       {/* Header */}
       <div className="px-6 py-5 md:px-8 md:py-6 bg-gradient-to-r from-navy to-navy-deep">
-        <div className="flex items-center gap-3">
-          <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gold/20">
-            <Calculator className="h-5 w-5 text-gold" />
+        <div className="flex items-center justify-between gap-3">
+          <div className="flex items-center gap-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gold/20">
+              <Calculator className="h-5 w-5 text-gold" />
+            </div>
+            <div>
+              <h2 className="font-serif text-xl sm:text-2xl font-bold text-champagne">Solar System Calculator</h2>
+              <p className="text-xs text-champagne/60 mt-0.5 hidden sm:block">Tap appliances to add them, then calculate your solar needs.</p>
+            </div>
           </div>
-          <div>
-            <h2 className="font-serif text-xl sm:text-2xl font-bold text-champagne">Solar System Calculator</h2>
-            <p className="text-xs text-champagne/60 mt-0.5">Tap appliances to add them, then calculate your solar needs.</p>
+          <div className="flex items-center gap-1 bg-white/10 rounded-lg p-0.5">
+            <button
+              type="button"
+              onClick={() => setMode('basic')}
+              className={`px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-md transition-all ${
+                mode === 'basic' ? 'bg-gold text-navy shadow-sm' : 'text-champagne/60 hover:text-champagne'
+              }`}
+            >
+              Basic
+            </button>
+            <button
+              type="button"
+              onClick={() => setMode('advanced')}
+              className={`px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-md transition-all ${
+                mode === 'advanced' ? 'bg-gold text-navy shadow-sm' : 'text-champagne/60 hover:text-champagne'
+              }`}
+            >
+              Advanced
+            </button>
           </div>
         </div>
       </div>
@@ -373,6 +427,19 @@ const EnergyCalculator = () => {
                         className="min-w-0 flex-1 bg-transparent text-sm font-bold text-navy placeholder:text-navy/30 focus:outline-none truncate"
                         placeholder="Appliance"
                       />
+                      <button
+                        type="button"
+                        onClick={() => updateAppliance(appliance.id, 'night', !appliance.night)}
+                        className={`shrink-0 text-xs font-bold uppercase tracking-wider px-2 py-1 rounded-md border transition-all ${
+                          appliance.night
+                            ? 'bg-indigo-100 text-indigo-700 border-indigo-300 hover:bg-amber-100 hover:text-amber-700 hover:border-amber-300'
+                            : 'bg-amber-100 text-amber-700 border-amber-300 hover:bg-indigo-100 hover:text-indigo-700 hover:border-indigo-300'
+                        }`}
+                        aria-label={appliance.night ? 'Switch to day use' : 'Switch to night use'}
+                        title={appliance.night ? 'Night use (battery powered)' : 'Day use (direct solar)'}
+                      >
+                        {appliance.night ? '\u{1F319}' : '\u{2600}\u{FE0F}'}
+                      </button>
                       <button type="button" onClick={() => setInfoApplianceId(appliance.id)} className="shrink-0 text-navy/30 hover:text-gold transition-colors" aria-label="Energy details">
                         <Info className="h-4 w-4" />
                       </button>
@@ -381,6 +448,82 @@ const EnergyCalculator = () => {
                       <Trash2 className="h-4 w-4" />
                     </button>
                   </div>
+                  {mode === 'basic' && (
+                  <>
+                  <div className="flex flex-wrap items-end gap-3">
+                    <div className="flex-1 min-w-[140px]">
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-navy/40 block mb-1">
+                        Hours per day
+                      </label>
+                      <div className="flex items-center gap-2">
+                        <input type="range" min={0.25} max={24} step={0.5}
+                          value={Math.round((appliance.minutes / 60) * 2) / 2}
+                          onChange={(e) => updateAppliance(appliance.id, 'minutes', Math.round(Number(e.target.value) * 60))}
+                          className="flex-1 accent-gold h-1.5" />
+                        <span className="text-sm font-bold text-navy w-10 text-right">
+                          {appliance.minutes >= 60
+                            ? `${Math.round(appliance.minutes / 60)}h`
+                            : `${appliance.minutes}min`}
+                        </span>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-navy/40 block mb-1">Qty</label>
+                      <div className="flex items-center gap-1">
+                        <button
+                          type="button"
+                          onClick={() => updateAppliance(appliance.id, 'quantity', Math.max(1, appliance.quantity - 1))}
+                          className="flex h-8 w-8 items-center justify-center rounded-md border border-gold-antique/20 bg-white text-navy hover:bg-gold hover:text-navy transition-colors text-sm font-bold"
+                        >-</button>
+                        <span className="w-8 text-center text-sm font-bold text-navy">{appliance.quantity}</span>
+                        <button
+                          type="button"
+                          onClick={() => updateAppliance(appliance.id, 'quantity', Math.min(99, appliance.quantity + 1))}
+                          className="flex h-8 w-8 items-center justify-center rounded-md border border-gold-antique/20 bg-white text-navy hover:bg-gold hover:text-navy transition-colors text-sm font-bold"
+                        >+</button>
+                      </div>
+                    </div>
+                    <div>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-navy/40 block mb-1">Device size</label>
+                      <select
+                        value={
+                          appliance.watts <= 30 ? 10 :
+                          appliance.watts <= 150 ? 100 :
+                          appliance.watts <= 750 ? 500 : 1500
+                        }
+                        onChange={(e) => updateAppliance(appliance.id, 'watts', Number(e.target.value))}
+                        className="w-full bg-ivory rounded-md border border-gold-antique/10 px-2 py-1.5 text-sm text-navy focus:border-gold focus:outline-none"
+                      >
+                        <option value={10}>Small &mdash; bulb, charger, router</option>
+                        <option value={100}>Medium &mdash; fan, TV, laptop</option>
+                        <option value={500}>Large &mdash; fridge, freezer, pump</option>
+                        <option value={1500}>Extra Large &mdash; AC, iron, microwave</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="flex flex-wrap items-end gap-3 mt-2.5 pt-2.5 border-t border-gold-antique/10">
+                    <div className="w-24">
+                      <label className="text-[9px] font-bold uppercase tracking-wider text-navy/30 block mb-0.5">Exact watts (opt.)</label>
+                      <input type="number" min={1} value={appliance.watts || ''}
+                        onChange={(e) => updateAppliance(appliance.id, 'watts', Math.max(1, Number(e.target.value) || 1))}
+                        className="w-full bg-white rounded-md border border-gold-antique/10 px-2 py-1 text-xs text-navy focus:border-gold focus:outline-none placeholder:text-navy/20"
+                        placeholder="e.g. 110" />
+                    </div>
+                    <div className="w-24">
+                      <label className="text-[9px] font-bold uppercase tracking-wider text-navy/30 block mb-0.5">Exact volts (opt.)</label>
+                      <input type="number" min={1} step={0.1} value={appliance.volts || ''}
+                        onChange={(e) => updateAppliance(appliance.id, 'volts', Math.max(1, Number(e.target.value) || 1))}
+                        className="w-full bg-white rounded-md border border-gold-antique/10 px-2 py-1 text-xs text-navy focus:border-gold focus:outline-none placeholder:text-navy/20"
+                        placeholder="e.g. 220" />
+                    </div>
+                    <p className="text-[10px] text-navy/30 italic leading-tight pt-1">
+                      Know the exact watts/volts? Enter them here for a more accurate sizing.
+                    </p>
+                  </div>
+                  </>
+                  )}
+
+                  {mode === 'advanced' && (
                   <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                     <div>
                       <label className="text-[10px] font-bold uppercase tracking-wider text-navy/40">Watts</label>
@@ -404,10 +547,11 @@ const EnergyCalculator = () => {
                         className="w-full bg-ivory rounded-md border border-gold-antique/10 px-2 py-1.5 text-sm text-navy focus:border-gold focus:outline-none" />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-navy/40">Mins</label>
-                      <input type="number" min={1} max={1440} step={1} value={appliance.minutes || ''}
-                        onChange={(e) => updateAppliance(appliance.id, 'minutes', Number(e.target.value))}
-                        onBlur={(e) => { const v = Number(e.target.value); if (!v || v < 1) updateAppliance(appliance.id, 'minutes', 60); if (v > 1440) updateAppliance(appliance.id, 'minutes', 1440); }}
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-navy/40">Hours</label>
+                      <input type="number" min={0.25} max={24} step={0.5}
+                        value={Math.round((appliance.minutes / 60) * 2) / 2 || ''}
+                        onChange={(e) => updateAppliance(appliance.id, 'minutes', Math.round(Number(e.target.value) * 60))}
+                        onBlur={(e) => { const v = Number(e.target.value); if (!v || v < 0.25) updateAppliance(appliance.id, 'minutes', 60); if (v > 24) updateAppliance(appliance.id, 'minutes', 1440); }}
                         className="w-full bg-ivory rounded-md border border-gold-antique/10 px-2 py-1.5 text-sm text-navy focus:border-gold focus:outline-none" />
                     </div>
                     <div>
@@ -417,6 +561,7 @@ const EnergyCalculator = () => {
                       </p>
                     </div>
                   </div>
+                  )}
                 </div>
               ))}
             </div>
@@ -450,49 +595,167 @@ const EnergyCalculator = () => {
           </button>
         )}
 
-        {/* Parameters */}
+        {/* Parameters — hidden by default for beginners */}
         <div className="rounded-xl border border-gold-antique/10 bg-ivory/50 p-4 md:p-5">
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-navy/50 mb-4">System Settings</p>
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            <div>
-              <label className="text-xs font-bold text-navy/60 block mb-1.5">Battery Backup (days)</label>
-              <input type="number" min={1} max={7} value={autonomy}
-                onChange={(e) => setAutonomy(clampNum(Number(e.target.value), 1, 7))}
-                onBlur={(e) => { if (!e.target.value || Number(e.target.value) < 1) setAutonomy(1); }}
-                className="w-full bg-white rounded-lg border border-gold-antique/20 px-3 py-2 text-sm text-navy focus:border-gold focus:outline-none" />
-            </div>
-            <div>
-              <label className="text-xs font-bold text-navy/60 block mb-1.5">Battery Discharge Limit</label>
-              <div className="flex items-center gap-2">
-                <input type="range" min={20} max={80} value={dod}
-                  onChange={(e) => setDoD(Number(e.target.value))}
-                  className="flex-1 accent-gold h-1.5" />
-                <span className="text-sm font-bold text-navy w-12 text-right">{dod}%</span>
+          <button
+            type="button"
+            onClick={() => setShowSettings(!showSettings)}
+            className="flex w-full items-center justify-between text-left"
+          >
+            <p className="text-xs font-bold uppercase tracking-[0.2em] text-navy/50">
+              {showSettings ? 'System Settings' : 'Adjust Settings (optional)'}
+            </p>
+            <span className={`text-navy/30 text-sm transition-transform ${showSettings ? 'rotate-180' : ''}`}>&#9660;</span>
+          </button>
+
+          {showSettings && (
+          <div className="mt-4 space-y-4">
+            <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+              <div>
+                <label className="text-xs font-bold text-navy/60 block mb-1.5">What battery type?</label>
+                <select value={batteryType}
+                  onChange={(e) => {
+                    const val = e.target.value;
+                    setBatteryType(val);
+                    if (val === 'lead-acid') { setDoD(50); setBatteryEff(0.8); }
+                    else if (val === 'lithium') { setDoD(80); setBatteryEff(0.95); }
+                    else { setDoD(50); setBatteryEff(0.85); }
+                  }}
+                  className="w-full bg-white rounded-lg border border-gold-antique/20 px-3 py-2 text-sm text-navy focus:border-gold focus:outline-none">
+                  <option value="not-sure">I'm not sure</option>
+                  <option value="lead-acid">Lead-Acid</option>
+                  <option value="lithium">Lithium</option>
+                </select>
+              </div>
+              <div>
+                <label className="text-xs font-bold text-navy/60 block mb-1.5">Where are you located?</label>
+                <select value={customSunHours ? -1 : peakSunHours}
+                  onChange={(e) => {
+                    const val = Number(e.target.value);
+                    if (val === -1) { setCustomSunHours(true); return; }
+                    setCustomSunHours(false);
+                    setPeakSunHours(val);
+                  }}
+                  className="w-full bg-white rounded-lg border border-gold-antique/20 px-3 py-2 text-sm text-navy focus:border-gold focus:outline-none">
+                  {PEAK_SUN_HOURS_OPTIONS.map((opt) => (
+                    <option key={opt.value} value={opt.value}>{opt.label}</option>
+                  ))}
+                </select>
+                {customSunHours && (
+                  <input type="number" min={1} max={12} step={0.5} value={peakSunHours}
+                    onChange={(e) => setPeakSunHours(clampNum(Number(e.target.value), 1, 12))}
+                    onBlur={(e) => { if (!e.target.value || Number(e.target.value) < 1) setPeakSunHours(5); }}
+                    className="w-full bg-white rounded-lg border border-gold-antique/20 px-3 py-2 text-sm text-navy focus:border-gold focus:outline-none mt-2"
+                    placeholder="Enter custom sun hours" />
+                )}
+              </div>
+              <div>
+                <label className="text-xs font-bold text-navy/60 block mb-1.5">Backup days (cloudy)</label>
+                <div className="flex gap-1.5">
+                  {[1, 2, 3].map((d) => (
+                    <button key={d} type="button"
+                      onClick={() => setAutonomy(d)}
+                      className={`flex-1 rounded-lg border py-2 text-xs font-bold uppercase tracking-wider transition-all ${
+                        autonomy === d
+                          ? 'bg-navy text-gold border-navy'
+                          : 'bg-white text-navy/50 border-gold-antique/20 hover:border-gold hover:text-gold'
+                      }`}
+                    >{d} {d === 1 ? 'day' : 'days'}</button>
+                  ))}
+                </div>
               </div>
             </div>
-            <div>
-              <label className="text-xs font-bold text-navy/60 block mb-1.5">Sunlight (peak hours)</label>
-              <select value={customSunHours ? -1 : peakSunHours}
-                onChange={(e) => {
-                  const val = Number(e.target.value);
-                  if (val === -1) { setCustomSunHours(true); return; }
-                  setCustomSunHours(false);
-                  setPeakSunHours(val);
-                }}
-                className="w-full bg-white rounded-lg border border-gold-antique/20 px-3 py-2 text-sm text-navy focus:border-gold focus:outline-none">
-                {PEAK_SUN_HOURS_OPTIONS.map((opt) => (
-                  <option key={opt.value} value={opt.value}>{opt.label}</option>
-                ))}
-              </select>
-              {customSunHours && (
-                <input type="number" min={1} max={12} step={0.5} value={peakSunHours}
-                  onChange={(e) => setPeakSunHours(clampNum(Number(e.target.value), 1, 12))}
-                  onBlur={(e) => { if (!e.target.value || Number(e.target.value) < 1) setPeakSunHours(5); }}
-                  className="w-full bg-white rounded-lg border border-gold-antique/20 px-3 py-2 text-sm text-navy focus:border-gold focus:outline-none mt-2"
-                  placeholder="Enter custom sun hours" />
-              )}
-            </div>
+
+            {/* Advanced Settings (for experts) */}
+            <details className="group" ref={detailsRef}>
+              <summary className="text-[10px] font-bold uppercase tracking-[0.2em] text-navy/40 hover:text-navy/70 cursor-pointer transition-colors select-none list-none flex items-center gap-1.5">
+                <span className="inline-block transition-transform group-open:rotate-90">&#9654;</span>
+                Advanced Settings (for experts)
+              </summary>
+              <div className="mt-3 grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div>
+                  <label className="text-xs font-bold text-navy/60 block mb-1.5 flex items-center gap-1.5">
+                    Inverter Efficiency
+                    <span className="relative group">
+                      <Info className="h-3 w-3 text-navy/30 hover:text-gold cursor-pointer transition-colors" />
+                      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-56 p-3 rounded-xl bg-navy text-champagne text-[11px] leading-relaxed shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none">
+                        How efficiently your inverter converts DC battery power to AC for your appliances. Typical values: 85-95%. Lower = more energy lost as heat.
+                      </span>
+                    </span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input type="range" min={75} max={98} value={Math.round(inverterEff * 100)}
+                      onChange={(e) => setInverterEff(Number(e.target.value) / 100)}
+                      className="flex-1 accent-gold h-1.5" />
+                    <span className="text-sm font-bold text-navy w-12 text-right">{Math.round(inverterEff * 100)}%</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-navy/60 block mb-1.5 flex items-center gap-1.5">
+                    Battery Discharge Limit
+                    <span className="relative group">
+                      <Info className="h-3 w-3 text-navy/30 hover:text-gold cursor-pointer transition-colors" />
+                      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 rounded-xl bg-navy text-champagne text-[11px] leading-relaxed shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none">
+                        <strong className="text-gold block mb-1.5">Depth of Discharge (DoD)</strong>
+                        The maximum percentage of battery capacity you can safely use before recharging. Exceeding this damages the battery and shortens its lifespan.<br /><br />
+                        <strong className="text-champagne">Recommended:</strong><br />
+                        &bull; Lead-Acid: 50% max<br />
+                        &bull; Lithium: 80% max
+                      </span>
+                    </span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input type="range" min={20} max={80} value={dod}
+                      onChange={(e) => { setDoD(Number(e.target.value)); setBatteryType('custom'); }}
+                      className="flex-1 accent-gold h-1.5" />
+                    <span className="text-sm font-bold text-navy w-12 text-right">{dod}%</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-navy/60 block mb-1.5 flex items-center gap-1.5">
+                    Battery Temp. Derating
+                    <span className="relative group">
+                      <Info className="h-3 w-3 text-navy/30 hover:text-gold cursor-pointer transition-colors" />
+                      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 rounded-xl bg-navy text-champagne text-[11px] leading-relaxed shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none">
+                        Nigerian heat (30°C+) reduces battery effective capacity. 0.9 = battery holds 90% of rated capacity. Lower for outdoor/unventilated battery banks.
+                      </span>
+                    </span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input type="range" min={70} max={100} value={Math.round(tempDerating * 100)}
+                      onChange={(e) => setTempDerating(Number(e.target.value) / 100)}
+                      className="flex-1 accent-gold h-1.5" />
+                    <span className="text-sm font-bold text-navy w-12 text-right">{Math.round(tempDerating * 100)}%</span>
+                  </div>
+                </div>
+                <div>
+                  <label className="text-xs font-bold text-navy/60 block mb-1.5 flex items-center gap-1.5">
+                    System Losses Factor
+                    <span className="relative group">
+                      <Info className="h-3 w-3 text-navy/30 hover:text-gold cursor-pointer transition-colors" />
+                      <span className="absolute bottom-full left-1/2 -translate-x-1/2 mb-2 w-64 p-3 rounded-xl bg-navy text-champagne text-[11px] leading-relaxed shadow-xl opacity-0 invisible group-hover:opacity-100 group-hover:visible transition-all z-50 pointer-events-none">
+                        Accounts for wiring losses, dust/dirt on panels, panel heating (Nigeria 30°C+), and shading. 0.80 = 80% of rated panel output reaches your system. Typical range: 0.75&ndash;0.90.
+                      </span>
+                    </span>
+                  </label>
+                  <div className="flex items-center gap-2">
+                    <input type="range" min={70} max={95} value={Math.round(systemLosses * 100)}
+                      onChange={(e) => setSystemLosses(Number(e.target.value) / 100)}
+                      className="flex-1 accent-gold h-1.5" />
+                    <span className="text-sm font-bold text-navy w-12 text-right">{Math.round(systemLosses * 100)}%</span>
+                  </div>
+                </div>
+                <div className="sm:col-span-2 rounded-lg bg-white/60 border border-gold-antique/10 p-3">
+                  <p className="text-[11px] text-navy/60">
+                    <strong className="text-navy">Combined system efficiency:</strong> {Math.round(inverterEff * batteryEff * 100)}% &mdash;
+                    Night appliances need {Math.round(100 / (inverterEff * batteryEff) - 100)}% more panels than day appliances
+                    due to inverter &amp; battery losses.
+                  </p>
+                </div>
+              </div>
+            </details>
           </div>
+          )}
         </div>
 
         {/* Calculate Button */}
@@ -525,6 +788,10 @@ const EnergyCalculator = () => {
               </div>
               <p className="text-xl md:text-2xl font-bold text-gold">{results.totalKwh} <span className="text-sm font-normal text-champagne/60">kWh</span></p>
               <p className="text-[11px] text-champagne/40 mt-1">{results.totalWh.toLocaleString()} Wh</p>
+              <div className="flex gap-2 mt-1.5 text-[10px]">
+                <span className="text-amber-400/80">{results.dayWh.toLocaleString()} Wh day</span>
+                <span className="text-indigo-400/80">{results.nightWh.toLocaleString()} Wh night</span>
+              </div>
             </div>
             <div className="rounded-xl bg-white/5 border border-white/10 p-3 md:p-4">
               <div className="flex items-center gap-2 text-champagne/60 text-[11px] font-bold uppercase tracking-wider mb-2">
@@ -770,6 +1037,12 @@ const EnergyCalculator = () => {
                   <span className="text-xs font-semibold text-navy/60">Monthly Energy</span>
                   <span className="text-sm font-bold text-navy">{info.monthlyKwh.toFixed(2)} kWh</span>
                 </div>
+                <div className="flex items-center justify-between px-4 py-2.5">
+                  <span className="text-xs font-semibold text-navy/60">Time of Use</span>
+                  <span className={`text-sm font-bold ${app.night ? 'text-indigo-600' : 'text-amber-600'}`}>
+                    {app.night ? '\u{1F319} Night (battery)' : '\u{2600}\u{FE0F} Day (direct solar)'}
+                  </span>
+                </div>
               </div>
             </div>
 
@@ -794,6 +1067,10 @@ const EnergyCalculator = () => {
                 <strong className="text-champagne">{info.dailyWh.toLocaleString()} Wh</strong>{' '}({info.monthlyKwh.toFixed(2)} kWh/month).
                 {' '}This draws <strong className="text-champagne">{info.dailyAh.toFixed(2)} Ah</strong> from your battery bank daily.
                 {' '}{info.dailyAh > 0 && (Math.round(200 / info.dailyAh) > 0) ? `A standard 200Ah battery could power it for about ${Math.round(200 / info.dailyAh)} days alone.` : ''}
+                {' '}<strong className="text-champagne">Time of use:</strong> Marked as <strong className="text-champagne">{app.night ? 'night' : 'day'}</strong> &mdash;
+                {app.night
+                  ? ' runs through the battery (includes inverter &amp; battery losses).'
+                  : ' runs directly from solar panels when the sun is shining.'}
               </p>
             </div>
           </div>
