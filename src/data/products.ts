@@ -20,7 +20,7 @@ const CATEGORY_META: Record<string, { icon: LucideIcon; subcategory?: string }> 
   'Audio & Sound': { icon: Package, subcategory: 'Electronics' },
   Cameras: { icon: Package, subcategory: 'Electronics' },
   Gaming: { icon: Package, subcategory: 'Electronics' },
-  Accessories: { icon: Package, subcategory: 'Electronics' },
+  Accessories: { icon: Sun, subcategory: 'Energy' },
   TV: { icon: Package, subcategory: 'Home Appliances' },
   Refrigerators: { icon: Package, subcategory: 'Home Appliances' },
   'Washing Machines': { icon: Package, subcategory: 'Home Appliances' },

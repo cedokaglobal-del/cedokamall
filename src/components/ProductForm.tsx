@@ -89,6 +89,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
   const categories = useCategoryStore((s) => s.categories);
   const solarCategories = useSolarCategoryStore((s) => s.categories);
   const addSolarCategory = useSolarCategoryStore((s) => s.addCategory);
+  const removeSolarCategory = useSolarCategoryStore((s) => s.removeCategory);
   const productStoreProducts = useProductStore((s) => s.products);
   const allCategories = useMemo(() => {
     const dynamicCats = productStoreProducts.map(p => p.category).filter(Boolean) as string[];
@@ -170,7 +171,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
     toast.success(`Solar category "${trimmed}" added successfully`);
   };
 
-const handleDeleteCategory = (cat: string, e: React.MouseEvent) => {
+  const handleDeleteCategory = (cat: string, e: React.MouseEvent) => {
     e.stopPropagation();
     if (categories.length <= 1) {
       toast.error('At least one category must exist');
@@ -181,6 +182,19 @@ const handleDeleteCategory = (cat: string, e: React.MouseEvent) => {
       setFormData(prev => ({ ...prev, category: 'Kitchen Accessories' }));
     }
     toast.success(`Category "${cat}" removed`);
+  };
+
+  const handleDeleteSolarCategory = (cat: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    if (solarCategories.length <= 1) {
+      toast.error('At least one solar subcategory must exist');
+      return;
+    }
+    removeSolarCategory(cat);
+    if (formData.category === cat) {
+      setFormData(prev => ({ ...prev, category: 'Solar' }));
+    }
+    toast.success(`Solar subcategory "${cat}" removed`);
   };
 
   const handleAddFeature = () => {
@@ -411,14 +425,14 @@ const handleDeleteCategory = (cat: string, e: React.MouseEvent) => {
                   {errors.category && <p className="text-xs text-destructive flex items-center gap-1"><AlertCircle className="w-3 h-3" /> {errors.category}</p>}
                 </div>
 
-                {/* Solar Subcategory - always visible when Solar is selected or a solar subcategory is chosen */}
-                {(formData.category === 'Solar' || solarCategories.includes(formData.category)) && (
+                {/* Solar Subcategory - always visible, disabled until Solar is selected */}
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold flex items-center gap-1.5">
-                      Solar Subcategory <span className="text-destructive">*</span>
+                      Solar Subcategory
                     </Label>
                     <div className="flex items-center gap-2">
                       <Select
+                        disabled={formData.category !== 'Solar'}
                         value={solarCategories.includes(formData.category) ? formData.category : ''}
                         onValueChange={(value) => {
                           handleChange('category', value);
@@ -462,12 +476,25 @@ const handleDeleteCategory = (cat: string, e: React.MouseEvent) => {
                           </div>
                         </DialogContent>
                       </Dialog>
+                      {solarCategories.includes(formData.category) && (
+                        <Button
+                          type="button"
+                          variant="outline"
+                          size="icon"
+                          className="shrink-0 h-11 w-11 rounded-lg hover:bg-destructive hover:text-destructive-foreground transition-all"
+                          onClick={(e) => handleDeleteSolarCategory(formData.category, e)}
+                          title="Remove this solar subcategory"
+                        >
+                          <X className="w-5 h-5" />
+                        </Button>
+                      )}
                     </div>
                     <p className="text-[10px] text-muted-foreground italic">
-                      Select the specific solar category. This sets the product's actual category (e.g., "Solar Panels", "Inverters").
+                      {formData.category === 'Solar'
+                        ? 'Select the specific solar subcategory. This sets the product\'s actual category.'
+                        : 'Select "Solar" as the main category first to choose a subcategory.'}
                     </p>
                   </div>
-                )}
 
                 <div className="space-y-2">
                   <Label htmlFor="seller" className="text-sm font-semibold flex items-center gap-1.5">

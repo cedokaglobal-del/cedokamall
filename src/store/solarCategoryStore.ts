@@ -11,6 +11,7 @@ const DEFAULT_SOLAR_CATEGORIES = [
   'Cables & Wiring',
   'Mounting & Frames',
   'Accessories & Kits',
+  'Accessories',
 ];
 
 interface SolarCategoryState {
@@ -33,7 +34,6 @@ export const useSolarCategoryStore = create<SolarCategoryState>()(
       removeCategory: (category) =>
         set((state) => {
           if (state.categories.length <= 1) return state;
-          if (DEFAULT_SOLAR_CATEGORIES.includes(category)) return state;
           return { categories: state.categories.filter((c) => c !== category) };
         }),
       resetCategories: () => set({ categories: [...DEFAULT_SOLAR_CATEGORIES] }),
