@@ -59,7 +59,7 @@ const ScrollToTop = () => {
     if (typeof (window as any).gtag !== 'undefined') {
       (window as any).gtag('config', 'G-6KG0L3JXPM', { page_path: location.pathname + location.search });
     }
-  }, [location.pathname, location.search]);
+  }, [location.pathname]);
 
   useEffect(() => { trackReferrer(); }, []);
 

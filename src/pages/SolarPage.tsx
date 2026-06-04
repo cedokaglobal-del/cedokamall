@@ -6,34 +6,29 @@ import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import EnergyCalculator from '@/components/EnergyCalculator';
 import { useProductStore } from '@/store/productStore';
+import { useSolarCategoryStore } from '@/store/solarCategoryStore';
 import { useSEO, useStructuredData } from '@/hooks/useSEO';
 import { getBreadcrumbSchema, getCollectionPageSchema, SEO_CONFIG } from '@/config/seo';
 import { cn } from '@/lib/utils';
 
-const SOLAR_TABS = [
-  { slug: 'all', label: 'All Solar' },
-  { slug: 'solar-panels', label: 'Solar Panels' },
-  { slug: 'inverters', label: 'Inverters' },
-  { slug: 'batteries-storage', label: 'Batteries & Storage' },
-  { slug: 'charge-controllers', label: 'Charge Controllers' },
-  { slug: 'solar-lights', label: 'Solar Lights' },
-  { slug: 'solar-pumps-fans', label: 'Solar Pumps & Fans' },
-  { slug: 'cables-wiring', label: 'Cables & Wiring' },
-  { slug: 'mounting-frames', label: 'Mounting & Frames' },
-  { slug: 'accessories-kits', label: 'Accessories & Kits' },
-];
-
-const SOLAR_CATEGORY_NAMES = SOLAR_TABS.slice(1).map((t) =>
-  t.label
-);
-
-const getCategoryFromSlug = (slug: string): string | null => {
-  const tab = SOLAR_TABS.find((t) => t.slug === slug);
-  return tab && tab.slug !== 'all' ? tab.label : null;
-};
-
 const slugify = (value: string) =>
   value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
+
+const SolarPage = () => {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const products = useProductStore((s) => s.products);
+  const isLoading = useProductStore((s) => s.isLoading);
+  const hasLoaded = useProductStore((s) => s.hasLoaded);
+  const solarCategories = useSolarCategoryStore((s) => s.categories);
+
+  const SOLAR_TABS = useMemo(() => [
+    { slug: 'all', label: 'All Solar' },
+    ...solarCategories.map((cat) => ({ slug: slugify(cat), label: cat })),
+  ], [solarCategories]);
+
+  const SOLAR_CATEGORY_NAMES = useMemo(() =>
+    SOLAR_TABS.slice(1).map((t) => t.label),
+  [SOLAR_TABS]);
 
 // Brand color mapping for animated backgrounds
 const BRAND_COLORS: Record<string, string> = {
@@ -95,7 +90,11 @@ const SolarPage = () => {
     setSearchParams(params, { replace: true });
   }, [searchParams, setSearchParams]);
 
-  const activeCategory = getCategoryFromSlug(urlCategory);
+  const activeCategory = useMemo(() => {
+    if (urlCategory === 'all') return null;
+    const tab = SOLAR_TABS.find((t) => t.slug === urlCategory);
+    return tab?.label ?? null;
+  }, [urlCategory, SOLAR_TABS]);
 
   const solarProducts = useMemo(() => {
     return products.filter((p) => SOLAR_CATEGORY_NAMES.includes(p.category));

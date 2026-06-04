@@ -11,7 +11,8 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ProductFormData, Product } from '@/types/product';
 import { useCategoryStore } from '@/store/categoryStore';
 import { useProductStore } from '@/store/productStore';
-import { DEFAULT_CATEGORY_NAMES, SOLAR_SUBCATEGORIES } from '@/data/products';
+import { DEFAULT_CATEGORY_NAMES } from '@/data/products';
+import { useSolarCategoryStore } from '@/store/solarCategoryStore';
 import { uploadProductImages } from '@/lib/productImages';
 import { 
   X, 
@@ -86,6 +87,8 @@ const buildInitialFormData = (product?: Product): ProductFormData => ({
 
 const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: ProductFormProps) => {
   const categories = useCategoryStore((s) => s.categories);
+  const solarCategories = useSolarCategoryStore((s) => s.categories);
+  const addSolarCategory = useSolarCategoryStore((s) => s.addCategory);
   const productStoreProducts = useProductStore((s) => s.products);
   const allCategories = useMemo(() => {
     const dynamicCats = productStoreProducts.map(p => p.category).filter(Boolean) as string[];
@@ -95,6 +98,8 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
   const removeCategory = useCategoryStore((s) => s.removeCategory);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
   const [newCategory, setNewCategory] = useState('');
+  const [isAddingSolarCategory, setIsAddingSolarCategory] = useState(false);
+  const [newSolarCategory, setNewSolarCategory] = useState('');
   const [isUploadingImages, setIsUploadingImages] = useState(false);
   const [activeTab, setActiveTab] = useState('general');
   const [featureInput, setFeatureInput] = useState('');
@@ -150,6 +155,19 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
     setNewCategory('');
     setIsAddingCategory(false);
     toast.success(`Category "${trimmed}" added successfully`);
+  };
+
+  const handleAddSolarCategory = () => {
+    const trimmed = newSolarCategory.trim();
+    if (!trimmed) {
+      toast.error('Category name cannot be empty');
+      return;
+    }
+    addSolarCategory(trimmed);
+    setFormData((prev) => ({ ...prev, category: trimmed }));
+    setNewSolarCategory('');
+    setIsAddingSolarCategory(false);
+    toast.success(`Solar category "${trimmed}" added successfully`);
   };
 
 const handleDeleteCategory = (cat: string, e: React.MouseEvent) => {
@@ -396,28 +414,57 @@ const handleDeleteCategory = (cat: string, e: React.MouseEvent) => {
                 </div>
 
                 {/* Solar Subcategory - always visible when Solar is selected or a solar subcategory is chosen */}
-                {(formData.category === 'Solar' || SOLAR_SUBCATEGORIES.slice(1).includes(formData.category)) && (
+                {(formData.category === 'Solar' || solarCategories.includes(formData.category)) && (
                   <div className="space-y-2">
                     <Label className="text-sm font-semibold flex items-center gap-1.5">
                       Solar Subcategory <span className="text-destructive">*</span>
                     </Label>
-                    <Select
-                      value={SOLAR_SUBCATEGORIES.slice(1).includes(formData.category) ? formData.category : ''}
-                      onValueChange={(value) => {
-                        handleChange('category', value);
-                      }}
-                    >
-                      <SelectTrigger className="bg-muted/30 h-11 transition-all focus:bg-background">
-                        <SelectValue placeholder="Select solar subcategory" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {SOLAR_SUBCATEGORIES.filter((s) => s !== 'All Solar').map((sub) => (
-                          <SelectItem key={sub} value={sub}>
-                            {sub}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
+                    <div className="flex items-center gap-2">
+                      <Select
+                        value={solarCategories.includes(formData.category) ? formData.category : ''}
+                        onValueChange={(value) => {
+                          handleChange('category', value);
+                        }}
+                      >
+                        <SelectTrigger className="bg-muted/30 h-11 transition-all focus:bg-background flex-1">
+                          <SelectValue placeholder="Select solar subcategory" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {solarCategories.map((sub) => (
+                            <SelectItem key={sub} value={sub}>
+                              {sub}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                      <Dialog open={isAddingSolarCategory} onOpenChange={setIsAddingSolarCategory}>
+                        <DialogTrigger asChild>
+                          <Button type="button" variant="outline" size="icon" className="shrink-0 h-11 w-11 rounded-lg hover:bg-primary hover:text-primary-foreground transition-all">
+                            <Plus className="w-5 h-5" />
+                          </Button>
+                        </DialogTrigger>
+                        <DialogContent className="sm:max-w-md rounded-2xl">
+                          <DialogHeader>
+                            <DialogTitle className="text-xl">Add New Solar Category</DialogTitle>
+                            <DialogDescription>Enter a unique name for the new solar subcategory.</DialogDescription>
+                          </DialogHeader>
+                          <div className="py-4">
+                            <Input
+                              value={newSolarCategory}
+                              onChange={(e) => setNewSolarCategory(e.target.value)}
+                              placeholder="e.g. Solar Water Heaters"
+                              className="h-11"
+                              autoFocus
+                              onKeyDown={(e) => e.key === 'Enter' && handleAddSolarCategory()}
+                            />
+                          </div>
+                          <div className="flex flex-wrap justify-end gap-3">
+                            <Button variant="ghost" onClick={() => setIsAddingSolarCategory(false)}>Cancel</Button>
+                            <Button onClick={handleAddSolarCategory} className="px-6">Add Category</Button>
+                          </div>
+                        </DialogContent>
+                      </Dialog>
+                    </div>
                     <p className="text-[10px] text-muted-foreground italic">
                       Select the specific solar category. This sets the product's actual category (e.g., "Solar Panels", "Inverters").
                     </p>

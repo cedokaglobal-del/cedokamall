@@ -2,8 +2,9 @@ import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Search, ShoppingCart, Menu, X, MapPin, Phone, ChevronDown, Sun, LayoutGrid } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
-import { buildCategories, slugifyCategory, SOLAR_SUBCATEGORIES } from '@/data/products';
+import { buildCategories, slugifyCategory } from '@/data/products';
 import { useProductStore } from '@/store/productStore';
+import { useSolarCategoryStore } from '@/store/solarCategoryStore';
 import { cn } from '@/lib/utils';
 import { lazy, Suspense } from 'react';
 const MiniCart = lazy(() => import('./MiniCart'));
@@ -25,14 +26,15 @@ const Header = () => {
   const categories = useMemo(() => buildCategories(products), [products]);
 
   const isSolarPage = location.pathname === '/solar';
+  const solarCategories = useSolarCategoryStore((s) => s.categories);
 
   // Solar subcategory links for the dropdown when on /solar
   const solarCategoryLinks = useMemo(() => {
-    return SOLAR_SUBCATEGORIES.slice(1).map((name) => {
+    return solarCategories.map((name) => {
       const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
       return { name, slug };
     });
-  }, []);
+  }, [solarCategories]);
 
   // Sync state with URL q param whenever it changes
   useEffect(() => {

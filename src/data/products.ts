@@ -95,8 +95,7 @@ export const buildCategories = (products: Product[]): Category[] => {
     });
 };
 
-export const SOLAR_SUBCATEGORIES = [
-  'All Solar',
+export const DEFAULT_SOLAR_CATEGORIES = [
   'Solar Panels',
   'Inverters',
   'Batteries & Storage',
