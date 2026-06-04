@@ -107,6 +107,12 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
   const [formData, setFormData] = useState<ProductFormData>(() => buildInitialFormData(product));
   const [loadedImages, setLoadedImages] = useState<Record<string, boolean>>({});
 
+  const isSolarSubcategory = useMemo(() => solarCategories.includes(formData.category), [solarCategories, formData.category]);
+  const [solarSubcategory, setSolarSubcategory] = useState(() => {
+    if (product && solarCategories.includes(product.category)) return product.category;
+    return '';
+  });
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
@@ -115,6 +121,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
     setFeatureInput('');
     setActiveTab('general');
     setLoadedImages({});
+    setSolarSubcategory(product && solarCategories.includes(product.category) ? product.category : '');
   }, [product]);
 
   useEffect(() => {
@@ -165,7 +172,8 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
       return;
     }
     addSolarCategory(trimmed);
-    setFormData((prev) => ({ ...prev, category: trimmed }));
+    setSolarSubcategory(trimmed);
+    handleChange('category', trimmed);
     setNewSolarCategory('');
     setIsAddingSolarCategory(false);
     toast.success(`Solar category "${trimmed}" added successfully`);
@@ -191,7 +199,8 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
       return;
     }
     removeSolarCategory(cat);
-    if (formData.category === cat) {
+    setSolarSubcategory('');
+    if (formData.category === cat || isSolarSubcategory) {
       setFormData(prev => ({ ...prev, category: 'Solar' }));
     }
     toast.success(`Solar subcategory "${cat}" removed`);
@@ -291,7 +300,11 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
     if (!validateForm() || isUploadingImages) return;
 
     try {
-      await onSubmit(formData);
+      const finalData = { ...formData };
+      if (finalData.category === 'Solar' && solarSubcategory) {
+        finalData.category = solarSubcategory;
+      }
+      await onSubmit(finalData);
       toast.success(product ? 'Product updated successfully' : 'Product created successfully');
     } catch (error: any) {
       console.error('Error saving product form:', error);
@@ -366,8 +379,11 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
                   </Label>
                   <div className="flex gap-2">
                     <Select
-                      value={formData.category}
-                      onValueChange={(value) => handleChange('category', value)}
+                      value={isSolarSubcategory ? 'Solar' : formData.category}
+                      onValueChange={(value) => {
+                        handleChange('category', value);
+                        if (value !== 'Solar') setSolarSubcategory('');
+                      }}
                       disabled={isLoading}
                     >
                       <SelectTrigger className={cn("bg-muted/30 h-11 transition-all focus:bg-background", errors.category && "border-destructive")}>
@@ -432,9 +448,10 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
                     </Label>
                     <div className="flex items-center gap-2">
                       <Select
-                        disabled={formData.category !== 'Solar'}
-                        value={solarCategories.includes(formData.category) ? formData.category : ''}
+                        disabled={formData.category !== 'Solar' && !isSolarSubcategory}
+                        value={solarSubcategory}
                         onValueChange={(value) => {
+                          setSolarSubcategory(value);
                           handleChange('category', value);
                         }}
                       >
@@ -476,13 +493,13 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
                           </div>
                         </DialogContent>
                       </Dialog>
-                      {solarCategories.includes(formData.category) && (
+                      {solarSubcategory && (
                         <Button
                           type="button"
                           variant="outline"
                           size="icon"
                           className="shrink-0 h-11 w-11 rounded-lg hover:bg-destructive hover:text-destructive-foreground transition-all"
-                          onClick={(e) => handleDeleteSolarCategory(formData.category, e)}
+                          onClick={(e) => handleDeleteSolarCategory(solarSubcategory, e)}
                           title="Remove this solar subcategory"
                         >
                           <X className="w-5 h-5" />
@@ -490,7 +507,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
                       )}
                     </div>
                     <p className="text-[10px] text-muted-foreground italic">
-                      {formData.category === 'Solar'
+                      {formData.category === 'Solar' || isSolarSubcategory
                         ? 'Select the specific solar subcategory. This sets the product\'s actual category.'
                         : 'Select "Solar" as the main category first to choose a subcategory.'}
                     </p>
