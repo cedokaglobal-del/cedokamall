@@ -252,13 +252,11 @@ const handleDeleteCategory = (cat: string, e: React.MouseEvent) => {
     if (!formData.seller.trim()) newErrors.seller = 'Brand name is required';
     if (!formData.images || formData.images.length === 0) newErrors.images = 'At least 1 product image is required';
     if (!formData.features || formData.features.length === 0) newErrors.features = 'At least 1 product feature is required';
-    if (!formData.warranty?.trim()) newErrors.warranty = 'Warranty is required';
-    if (!formData.color?.trim()) newErrors.color = 'Color is required';
 
     setErrors(newErrors);
     
     if (Object.keys(newErrors).length > 0) {
-      const priorityFields = ['name', 'category', 'seller', 'description', 'price', 'inStock', 'images', 'features', 'warranty', 'color'];
+      const priorityFields = ['name', 'category', 'seller', 'description', 'price', 'inStock', 'images', 'features'];
       const missingPriority = Object.keys(newErrors).filter(key => priorityFields.includes(key));
       
       if (missingPriority.length > 0) {
@@ -266,8 +264,8 @@ const handleDeleteCategory = (cat: string, e: React.MouseEvent) => {
       }
       
       if (newErrors.name || newErrors.category || newErrors.seller || newErrors.description) setActiveTab('general');
-      else if (newErrors.price || newErrors.inStock || newErrors.warranty) setActiveTab('pricing');
-      else if (newErrors.features || newErrors.color) setActiveTab('features');
+      else if (newErrors.price || newErrors.inStock) setActiveTab('pricing');
+      else if (newErrors.features) setActiveTab('features');
       else if (newErrors.images) setActiveTab('media');
     }
 
@@ -577,7 +575,7 @@ const handleDeleteCategory = (cat: string, e: React.MouseEvent) => {
 
                 <div className="space-y-2">
                   <Label htmlFor="warranty" className="text-sm font-semibold flex items-center gap-1.5">
-                    Warranty Period <span className="text-destructive">*</span>
+                    Warranty Period
                   </Label>
                   <Input
                     id="warranty"
@@ -660,7 +658,7 @@ const handleDeleteCategory = (cat: string, e: React.MouseEvent) => {
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4">
                 <div className="space-y-2">
                   <Label htmlFor="color" className="text-sm font-semibold flex items-center gap-1.5">
-                    Color / Variant <span className="text-destructive">*</span>
+                    Color / Variant
                   </Label>
                   <Input
                     id="color"

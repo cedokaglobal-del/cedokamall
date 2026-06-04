@@ -38,7 +38,8 @@ export const useCartStore = create<CartState>((set, get) => ({
   couponCode: '',
   discount: 0,
   addItem: (item) => set((state) => {
-    const desiredQuantity = Math.max(1, Math.min(item.quantity ?? 1, item.inStock));
+    if (item.inStock <= 0) return state;
+    const desiredQuantity = Math.min(item.quantity ?? 1, item.inStock);
     const existing = state.items.find((i) => i.id === item.id);
     if (existing) {
       return {
@@ -58,9 +59,9 @@ export const useCartStore = create<CartState>((set, get) => ({
   clearCart: () => set({ items: [] }),
   updateQuantity: (id, quantity) => set((state) => {
     const item = state.items.find(i => i.id === id);
-    if (!item) return { items: state.items };
+    if (!item || quantity < 1) return { items: state.items.filter((i) => i.id !== id) };
     
-    const validQuantity = Math.min(Math.max(0, quantity), item.inStock);
+    const validQuantity = Math.min(quantity, item.inStock);
     
     return {
       items: validQuantity <= 0 

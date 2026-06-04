@@ -1,6 +1,7 @@
 import type { LucideIcon } from 'lucide-react';
 import {
   Package,
+  Sun,
 } from 'lucide-react';
 import { Product } from '@/types/product';
 
@@ -31,6 +32,15 @@ const CATEGORY_META: Record<string, { icon: LucideIcon; subcategory?: string }> 
   'Smart Home': { icon: Package, subcategory: 'Smart Living' },
   Solar: { icon: Package, subcategory: 'Energy' },
   'Kitchen Accessories': { icon: Package, subcategory: 'Kitchen' },
+  'Solar Panels': { icon: Sun, subcategory: 'Energy' },
+  Inverters: { icon: Sun, subcategory: 'Energy' },
+  'Batteries & Storage': { icon: Sun, subcategory: 'Energy' },
+  'Charge Controllers': { icon: Sun, subcategory: 'Energy' },
+  'Solar Lights': { icon: Sun, subcategory: 'Energy' },
+  'Solar Pumps & Fans': { icon: Sun, subcategory: 'Energy' },
+  'Cables & Wiring': { icon: Sun, subcategory: 'Energy' },
+  'Mounting & Frames': { icon: Sun, subcategory: 'Energy' },
+  'Accessories & Kits': { icon: Sun, subcategory: 'Energy' },
 };
 
 export const DEFAULT_CATEGORY_NAMES = [

@@ -432,34 +432,42 @@ export const useProductStore = create<ProductState>((set, get) => ({
     }
   },
 
-  decrementStock: async (id: string, quantity: number) => {
+   decrementStock: async (id: string, quantity: number) => {
      try {
        const current = get().products.find((p) => p.id === id);
        if (!current) return;
+       if (current.inStock < quantity) {
+         console.warn('Stock decrement failed: insufficient stock');
+         return;
+       }
 
-       const newStock = Math.max(0, current.inStock - quantity);
+       const newStock = current.inStock - quantity;
 
        const { data, error } = await supabase
          .from('products')
          .update({ stock: newStock })
          .eq('id', id)
+         .gte('stock', quantity)
          .select();
 
        if (error) throw error;
 
-       const row = data?.[0];
-       if (row) {
-         set((state) => {
-           const products = state.products.map((product) =>
-             product.id === id ? mapSupabaseToProduct(row) : product
-           );
-           persistProducts(products);
-           return {
-             products,
-             lastSyncedAt: new Date().toISOString(),
-           };
-         });
+       if (!data?.length) {
+         console.warn('Stock decrement failed: concurrent update detected');
+         return;
        }
+
+       const row = data[0];
+       set((state) => {
+         const products = state.products.map((product) =>
+           product.id === id ? mapSupabaseToProduct(row) : product
+         );
+         persistProducts(products);
+         return {
+           products,
+           lastSyncedAt: new Date().toISOString(),
+         };
+       });
      } catch (error) {
        console.error('Error decrementing stock:', error);
        throw error;

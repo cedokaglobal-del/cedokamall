@@ -29,10 +29,14 @@ export const useCategoryStore = create<CategoryState>()(
     }),
     {
       name: 'cedokamall-categories',
-      merge: (persisted, current) => ({
-        ...current,
-        categories: [...new Set([...DEFAULT_CATEGORY_NAMES, ...(persisted as any)?.categories ?? []])].sort(),
-      }),
+      merge: (persisted, current) => {
+        const raw = (persisted as any)?.categories;
+        const saved = Array.isArray(raw) ? raw.filter((c: any) => typeof c === 'string') : [];
+        return {
+          ...current,
+          categories: [...new Set([...DEFAULT_CATEGORY_NAMES, ...saved])].sort(),
+        };
+      },
     }
   )
 );

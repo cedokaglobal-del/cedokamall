@@ -14,23 +14,6 @@ import { cn } from '@/lib/utils';
 const slugify = (value: string) =>
   value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
 
-const SolarPage = () => {
-  const [searchParams, setSearchParams] = useSearchParams();
-  const products = useProductStore((s) => s.products);
-  const isLoading = useProductStore((s) => s.isLoading);
-  const hasLoaded = useProductStore((s) => s.hasLoaded);
-  const solarCategories = useSolarCategoryStore((s) => s.categories);
-
-  const SOLAR_TABS = useMemo(() => [
-    { slug: 'all', label: 'All Solar' },
-    ...solarCategories.map((cat) => ({ slug: slugify(cat), label: cat })),
-  ], [solarCategories]);
-
-  const SOLAR_CATEGORY_NAMES = useMemo(() =>
-    SOLAR_TABS.slice(1).map((t) => t.label),
-  [SOLAR_TABS]);
-
-// Brand color mapping for animated backgrounds
 const BRAND_COLORS: Record<string, string> = {
   'MeWe': 'from-yellow-400 via-yellow-300 to-white',
   'Samsung': 'from-blue-600 via-blue-500 to-white',
@@ -59,6 +42,16 @@ const SolarPage = () => {
   const products = useProductStore((s) => s.products);
   const isLoading = useProductStore((s) => s.isLoading);
   const hasLoaded = useProductStore((s) => s.hasLoaded);
+  const solarCategories = useSolarCategoryStore((s) => s.categories);
+
+  const SOLAR_TABS = useMemo(() => [
+    { slug: 'all', label: 'All Solar' },
+    ...solarCategories.map((cat) => ({ slug: slugify(cat), label: cat })),
+  ], [solarCategories]);
+
+  const SOLAR_CATEGORY_NAMES = useMemo(() =>
+    SOLAR_TABS.slice(1).map((t) => t.label),
+  [SOLAR_TABS]);
 
   const urlCategory = searchParams.get('category') || 'all';
   const urlBrand = searchParams.get('brand') || '';

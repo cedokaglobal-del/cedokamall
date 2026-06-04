@@ -40,10 +40,14 @@ export const useSolarCategoryStore = create<SolarCategoryState>()(
     }),
     {
       name: 'cedokamall-solar-categories',
-      merge: (persisted, current) => ({
-        ...current,
-        categories: [...new Set([...DEFAULT_SOLAR_CATEGORIES, ...(persisted as any)?.categories ?? []])].sort(),
-      }),
+      merge: (persisted, current) => {
+        const raw = (persisted as any)?.categories;
+        const saved = Array.isArray(raw) ? raw.filter((c: any) => typeof c === 'string') : [];
+        return {
+          ...current,
+          categories: [...new Set([...DEFAULT_SOLAR_CATEGORIES, ...saved])].sort(),
+        };
+      },
     }
   )
 );
