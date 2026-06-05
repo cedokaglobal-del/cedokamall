@@ -91,7 +91,7 @@ const SolarPage = () => {
 
   const solarProducts = useMemo(() => {
     return products.filter((p) => SOLAR_CATEGORY_NAMES.includes(p.category));
-  }, [products]);
+  }, [products, SOLAR_CATEGORY_NAMES]);
 
   const availableBrands = useMemo(() => {
     const seen = new Set<string>();

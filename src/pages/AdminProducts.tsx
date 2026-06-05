@@ -29,6 +29,7 @@ const AdminProducts = () => {
   const deleteProduct = useProductStore((s) => s.deleteProduct);
   const clearAllProducts = useProductStore((s) => s.clearAllProducts);
   const getFilteredProducts = useProductStore((s) => s.getFilteredProducts);
+  const fetchProducts = useProductStore((s) => s.fetchProducts);
   
 const [isFormOpen, setIsFormOpen] = useState(false);
    const [editingProduct, setEditingProduct] = useState<Product | undefined>();
@@ -113,7 +114,21 @@ const handleDeleteProduct = async (productId: string) => {
      } finally {
        setIsLoading(false);
      }
-   };
+    };
+
+  const [isRefreshing, setIsRefreshing] = useState(false);
+
+  const handleRefresh = async () => {
+    setIsRefreshing(true);
+    try {
+      await fetchProducts(true);
+      toast.success('Product catalog refreshed from database');
+    } catch {
+      toast.error('Failed to refresh products');
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
 
   const handleFilterChange = <K extends keyof ProductFilter>(
     key: K,
@@ -212,6 +227,10 @@ const handleDeleteProduct = async (productId: string) => {
             </p>
           </div>
           <div className="flex gap-2">
+            <Button onClick={handleRefresh} size="lg" variant="outline" className="gap-2" disabled={isRefreshing}>
+              <svg className={'w-4 h-4' + (isRefreshing ? ' animate-spin' : '')} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+              {isRefreshing ? 'Refreshing...' : 'Refresh'}
+            </Button>
             <Button onClick={handleAddProduct} size="lg" className="gap-2">
               <Plus className="w-4 h-4" />
               Add Product

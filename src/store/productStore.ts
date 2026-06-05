@@ -379,6 +379,8 @@ export const useProductStore = create<ProductState>((set, get) => ({
         warranty: updates.warranty ?? current?.warranty,
         specs: updates.specs ?? current?.specs,
         color: updates.color ?? current?.color,
+        features: updates.features ?? current?.features,
+        badge: updates.badge ?? current?.badge,
       });
 
       const { data, error } = await supabase
