@@ -272,12 +272,17 @@ const SolarPage = () => {
           </aside>
 
           {/* Main Content */}
-          <div className="flex-1 min-w-0">
-            {/* Mobile Filter + Results Count */}
-            <div className="flex items-center justify-between mb-5 lg:hidden">
-              <p className="text-xs font-bold uppercase tracking-[0.2em] text-navy/50">
-                {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''}
-              </p>
+          <div className="flex-1 min-w-0 relative">
+            {selectedBrand && (
+              <div className={cn(
+                'absolute inset-0 pointer-events-none transition-all duration-700 rounded-2xl',
+                BRAND_COLORS[selectedBrand]
+                  ? 'opacity-[0.04] bg-gradient-to-br ' + BRAND_COLORS[selectedBrand]
+                  : 'opacity-[0.02] bg-navy'
+              )} />
+            )}
+            {/* Mobile Filter */}
+            <div className="flex items-center justify-end mb-5 lg:hidden">
               <button
                 type="button"
                 onClick={() => setMobileFilterOpen(true)}
@@ -323,16 +328,14 @@ const SolarPage = () => {
                   </button>
                 </div>
               ) : filteredProducts.length > 0 ? (
-                <>
-                  <p className="text-xs font-bold uppercase tracking-[0.2em] text-navy/50 mb-4 hidden lg:block">
-                    {filteredProducts.length} product{filteredProducts.length !== 1 ? 's' : ''}
-                  </p>
-                  <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3">
-                    {filteredProducts.map((product) => (
-                      <ProductCard key={product.id} product={product} />
-                    ))}
-                  </div>
-                </>
+                <div
+                  key={selectedBrand || 'all'}
+                  className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3 animate-fade-in"
+                >
+                  {filteredProducts.map((product) => (
+                    <ProductCard key={product.id} product={product} />
+                  ))}
+                </div>
               ) : null}
             </div>
           </div>

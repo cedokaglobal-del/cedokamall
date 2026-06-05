@@ -20,7 +20,7 @@ const CATEGORY_META: Record<string, { icon: LucideIcon; subcategory?: string }> 
   'Audio & Sound': { icon: Package, subcategory: 'Electronics' },
   Cameras: { icon: Package, subcategory: 'Electronics' },
   Gaming: { icon: Package, subcategory: 'Electronics' },
-  Accessories: { icon: Sun, subcategory: 'Energy' },
+  'Accessories Electronic Accessories': { icon: Package, subcategory: 'Electronics' },
   TV: { icon: Package, subcategory: 'Home Appliances' },
   Refrigerators: { icon: Package, subcategory: 'Home Appliances' },
   'Washing Machines': { icon: Package, subcategory: 'Home Appliances' },
@@ -40,11 +40,11 @@ const CATEGORY_META: Record<string, { icon: LucideIcon; subcategory?: string }> 
   'Solar Pumps & Fans': { icon: Sun, subcategory: 'Energy' },
   'Cables & Wiring': { icon: Sun, subcategory: 'Energy' },
   'Mounting & Frames': { icon: Sun, subcategory: 'Energy' },
-  'Accessories & Kits': { icon: Sun, subcategory: 'Energy' },
+  'Solar Accessories': { icon: Sun, subcategory: 'Energy' },
 };
 
 export const DEFAULT_CATEGORY_NAMES = [
-  'Accessories',
+  'Accessories Electronic Accessories',
   'Air Conditioners',
   'Audio & Sound',
   'Cameras',
@@ -114,7 +114,7 @@ export const DEFAULT_SOLAR_CATEGORIES = [
   'Solar Pumps & Fans',
   'Cables & Wiring',
   'Mounting & Frames',
-  'Accessories & Kits',
+  'Solar Accessories',
 ];
 
 export const getCategoryOptions = (products: Product[], extraCategories: string[] = []) => {

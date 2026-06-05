@@ -128,27 +128,18 @@ const Header = () => {
             </button>
           </form>
 
-          {/* General Tab - Desktop */}
-          <Link
-            to="/shop"
-            className={cn(
-              'hidden lg:flex items-center gap-1.5 px-3 py-2 text-xs font-bold uppercase tracking-wider transition-colors whitespace-nowrap',
-              !isSolarPage ? 'text-gold' : 'text-champagne/70 hover:text-gold'
-            )}
-          >
-            <LayoutGrid className="w-4 h-4" />
-            General
-          </Link>
-
           {/* Categories dropdown - desktop only */}
           {categories.length > 0 && (
             <div className="relative hidden lg:block">
               <button
                 type="button"
                 onClick={() => setCatMenuOpen(!catMenuOpen)}
-                className="flex items-center gap-2 bg-gold text-navy px-3 sm:px-5 py-2 sm:py-2.5 rounded-md text-xs sm:text-sm font-semibold hover:bg-gold-antique hover:text-white transition-all duration-300 whitespace-nowrap shadow-premium-sm"
+                className={cn(
+                  'flex items-center gap-2 px-3 py-2 text-xs font-bold uppercase tracking-wider transition-all rounded-md whitespace-nowrap',
+                  catMenuOpen || location.pathname === '/shop' ? 'text-gold' : 'text-champagne/70 hover:text-gold'
+                )}
               >
-                <Menu className="w-4 h-4" /> Categories <ChevronDown className="w-3 h-3 transition-transform duration-300" />
+                <Menu className="w-4 h-4" /> Categories <ChevronDown className={cn('w-3 h-3 transition-transform duration-300', catMenuOpen && 'rotate-180')} />
               </button>
               {catMenuOpen && (
                 <div className="absolute top-full left-0 mt-2 bg-navy-deep rounded-lg shadow-premium-lg border border-gold-antique/30 p-2 w-64 z-50 animate-slide-down duration-250 max-h-96 overflow-y-auto">
@@ -175,6 +166,18 @@ const Header = () => {
               )}
             </div>
           )}
+
+          {/* General Tab - Desktop */}
+          <Link
+            to="/shop"
+            className={cn(
+              'hidden lg:flex items-center gap-1.5 px-3 py-2 text-xs font-bold uppercase tracking-wider transition-colors whitespace-nowrap',
+              location.pathname === '/shop' ? 'text-gold' : 'text-champagne/70 hover:text-gold'
+            )}
+          >
+            <LayoutGrid className="w-4 h-4" />
+            General
+          </Link>
 
           {/* Solar Nav Link - Desktop */}
           <Link

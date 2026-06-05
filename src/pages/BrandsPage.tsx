@@ -13,20 +13,12 @@ const BrandsPage = () => {
   const hasLoaded = useProductStore((s) => s.hasLoaded);
 
   const brands = useMemo(() => {
-    const brandMap = new Map<string, { name: string; count: number }>();
+    const seen = new Set<string>();
     products.forEach((p) => {
       const seller = p.seller?.trim();
-      if (!seller) return;
-      const key = seller.toLowerCase();
-      const existing = brandMap.get(key);
-      if (existing) {
-        existing.count += 1;
-      } else {
-        brandMap.set(key, { name: seller, count: 1 });
-      }
+      if (seller) seen.add(seller);
     });
-    return Array.from(brandMap.values())
-      .sort((a, b) => a.name.localeCompare(b.name));
+    return Array.from(seen).sort((a, b) => a.localeCompare(b));
   }, [products]);
 
   useSEO({
@@ -85,17 +77,16 @@ const BrandsPage = () => {
             <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
               {brands.map((brand) => (
                 <Link
-                  key={brand.name}
-                  to={`/shop?brand=${encodeURIComponent(brand.name)}`}
+                  key={brand}
+                  to={`/shop?brand=${encodeURIComponent(brand)}`}
                   className="group rounded-xl border border-gold-antique/10 bg-white p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-premium-lg"
                 >
                   <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-ivory to-gold/10 transition-transform group-hover:scale-110">
-                    <span className="text-2xl font-bold text-gold">{brand.name.charAt(0).toUpperCase()}</span>
+                    <span className="text-2xl font-bold text-gold">{brand.charAt(0).toUpperCase()}</span>
                   </div>
                   <h3 className="mt-4 font-serif text-base font-bold text-navy group-hover:text-gold transition-colors line-clamp-2">
-                    {brand.name}
+                    {brand}
                   </h3>
-                  <p className="mt-1 text-xs text-navy/40">{brand.count} product{brand.count !== 1 ? 's' : ''}</p>
                 </Link>
               ))}
             </div>

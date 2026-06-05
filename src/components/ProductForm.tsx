@@ -93,8 +93,10 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
   const productStoreProducts = useProductStore((s) => s.products);
   const allCategories = useMemo(() => {
     const dynamicCats = productStoreProducts.map(p => p.category).filter(Boolean) as string[];
-    return [...new Set([...dynamicCats, ...categories])].sort((a, b) => a.localeCompare(b));
-  }, [productStoreProducts, categories]);
+    return [...new Set([...dynamicCats, ...categories])]
+      .filter((cat) => !solarCategories.includes(cat))
+      .sort((a, b) => a.localeCompare(b));
+  }, [productStoreProducts, categories, solarCategories]);
   const addCategory = useCategoryStore((s) => s.addCategory);
   const removeCategory = useCategoryStore((s) => s.removeCategory);
   const [isAddingCategory, setIsAddingCategory] = useState(false);
@@ -187,19 +189,25 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
     }
     removeCategory(cat);
     if (formData.category === cat) {
-      setFormData(prev => ({ ...prev, category: 'Kitchen Accessories' }));
+      setFormData(prev => ({ ...prev, category: 'Accessories Electronic Accessories' }));
     }
     toast.success(`Category "${cat}" removed`);
   };
 
   const handleDeleteSolarCategory = (cat: string, e: React.MouseEvent) => {
     e.stopPropagation();
+    if (cat === 'Solar Accessories') {
+      toast.error('Solar Accessories is the default subcategory and cannot be removed');
+      return;
+    }
     if (solarCategories.length <= 1) {
       toast.error('At least one solar subcategory must exist');
       return;
     }
     removeSolarCategory(cat);
-    setSolarSubcategory('');
+    if (solarSubcategory === cat) {
+      setSolarSubcategory('');
+    }
     if (formData.category === cat || isSolarSubcategory) {
       setFormData(prev => ({ ...prev, category: 'Solar' }));
     }
