@@ -214,34 +214,29 @@ const SolarPage = () => {
           </div>
         </div>
 
-        <div className="flex gap-8">
+        <div className="flex flex-col lg:flex-row gap-8">
           {/* Brand Filter Sidebar (Desktop) */}
-          <aside className="hidden lg:block w-60 shrink-0 space-y-6">
-            <div className="rounded-[1.25rem] border border-gold-antique/10 bg-white p-5 shadow-sm">
-              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-navy mb-4">Filter by Brand</h3>
+          <aside className="hidden lg:block w-64 shrink-0">
+            <div className="rounded-xl border border-gold-antique/10 bg-white p-5 shadow-sm">
+              <h3 className="mb-4 font-serif text-lg font-bold text-navy">Brands</h3>
               {availableBrands.length === 0 ? (
                 <p className="text-xs text-navy/40">No brands available</p>
               ) : (
-                <div className="space-y-2">
+                <div className="space-y-1.5 max-h-64 overflow-y-auto">
                   {availableBrands.map((brand) => {
                     const isSelected = selectedBrand === brand;
-                    const brandColors = BRAND_COLORS[brand];
-                    const bgClass = isSelected
-                      ? brandColors
-                        ? 'bg-gradient-to-r ' + brandColors + ' text-navy shadow-md scale-[1.02]'
-                        : 'bg-navy text-gold shadow-md'
-                      : 'bg-white text-navy/60 hover:bg-ivory hover:text-navy border border-gold-antique/10';
                     return (
                       <button
                         key={brand}
                         type="button"
                         onClick={() => handleBrandToggle(brand)}
-                        className={'relative w-full flex items-center gap-3 rounded-xl px-4 py-3 text-left text-sm font-bold uppercase tracking-wider transition-all duration-300 overflow-hidden ' + bgClass}
+                        className={`w-full rounded-md px-4 py-2.5 text-left text-xs font-bold uppercase tracking-[0.1em] transition-all ${
+                          isSelected
+                            ? 'bg-navy text-gold shadow-md translate-x-2'
+                            : 'text-navy/60 hover:bg-white hover:text-navy'
+                        }`}
                       >
-                        <span className="relative z-10">{brand}</span>
-                        {isSelected && brandColors && (
-                          <span className="absolute inset-0 bg-white/20 rounded-xl animate-pulse" />
-                        )}
+                        {brand}
                       </button>
                     );
                   })}
@@ -251,23 +246,11 @@ const SolarPage = () => {
                 <button
                   type="button"
                   onClick={clearFilters}
-                  className="mt-4 w-full rounded-lg border border-gold-antique/20 py-2 text-[11px] font-bold uppercase tracking-wider text-navy/50 transition-colors hover:border-red-300 hover:text-red-500"
+                  className="mt-3 text-[10px] font-bold uppercase tracking-wider text-gold hover:text-navy"
                 >
-                  Clear Filter
+                  Clear brand
                 </button>
               )}
-            </div>
-            <div className="rounded-[1.25rem] border border-gold-antique/10 bg-white p-5 shadow-sm">
-              <h3 className="text-xs font-bold uppercase tracking-[0.2em] text-navy mb-2">Need Help?</h3>
-              <p className="text-xs text-navy/50 leading-relaxed mb-3">
-                Not sure what you need? Use our Energy Calculator to find the right system size.
-              </p>
-              <a
-                href="#solar-calculator"
-                className="block rounded-lg bg-navy px-4 py-2.5 text-center text-[11px] font-bold uppercase tracking-wider text-gold transition-all hover:bg-gold hover:text-navy"
-              >
-                Open Calculator
-              </a>
             </div>
           </aside>
 
@@ -352,36 +335,31 @@ const SolarPage = () => {
         <div className="fixed inset-0 z-50 lg:hidden">
           <div className="absolute inset-0 bg-black/40" onClick={() => setMobileFilterOpen(false)} />
           <div className="absolute bottom-0 left-0 right-0 max-h-[70vh] overflow-y-auto rounded-t-2xl bg-white p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-2">
-              <h3 className="text-sm font-bold uppercase tracking-[0.2em] text-navy">Filter by Brand</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-serif text-lg font-bold text-navy">Brands</h3>
               <button type="button" onClick={() => setMobileFilterOpen(false)} className="text-navy/40 hover:text-navy" aria-label="Close filters">
                 <X className="h-5 w-5" />
               </button>
             </div>
-            <p className="text-xs text-navy/40 mb-4">Tap a brand to show only its products. Tap again to clear.</p>
+            <p className="text-xs text-navy/40 mb-4">Tap a brand to filter. Tap again to clear.</p>
             {availableBrands.length === 0 ? (
               <p className="text-sm text-navy/40">No brands available</p>
             ) : (
-              <div className="space-y-3">
+              <div className="space-y-1.5 max-h-48 overflow-y-auto">
                 {availableBrands.map((brand) => {
                   const isSelected = selectedBrand === brand;
-                  const brandColors = BRAND_COLORS[brand];
-                  const bgClass = isSelected
-                    ? brandColors
-                      ? 'bg-gradient-to-r ' + brandColors + ' text-navy shadow-md scale-[1.02]'
-                      : 'bg-navy text-gold shadow-md'
-                    : 'bg-ivory/50 text-navy/60 hover:bg-ivory hover:text-navy border border-gold-antique/10';
                   return (
                     <button
                       key={brand}
                       type="button"
                       onClick={() => { handleBrandToggle(brand); setMobileFilterOpen(false); }}
-                      className={'relative w-full flex items-center gap-3 rounded-xl px-4 py-3.5 text-left text-sm font-bold uppercase tracking-wider transition-all duration-300 overflow-hidden ' + bgClass}
+                      className={`w-full rounded-md px-4 py-2.5 text-left text-xs font-bold uppercase tracking-[0.1em] transition-all ${
+                        isSelected
+                          ? 'bg-navy text-gold shadow-md translate-x-2'
+                          : 'text-navy/60 hover:bg-ivory hover:text-navy'
+                      }`}
                     >
-                      <span className="relative z-10">{brand}</span>
-                      {isSelected && brandColors && (
-                        <span className="absolute inset-0 bg-white/20 rounded-xl animate-pulse" />
-                      )}
+                      {brand}
                     </button>
                   );
                 })}
@@ -389,8 +367,8 @@ const SolarPage = () => {
             )}
           {selectedBrand && (
               <button type="button" onClick={() => { clearFilters(); setMobileFilterOpen(false); }}
-                className="w-full rounded-xl border border-gold-antique/20 py-3 text-xs font-bold uppercase tracking-wider text-navy/60 transition-colors hover:border-red-300 hover:text-red-500">
-                Clear Filter
+                className="mt-3 text-[10px] font-bold uppercase tracking-wider text-gold hover:text-navy">
+                Clear brand
               </button>
             )}
           </div>
