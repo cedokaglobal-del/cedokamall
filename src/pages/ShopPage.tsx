@@ -22,7 +22,6 @@ const ShopPage = () => {
   const categoryParam = searchParams.get('category')?.toLowerCase();
   const searchTerm = searchParams.get('q') || searchParams.get('search');
   const dealsOnly = searchParams.get('deals') === 'true';
-  const brandParam = searchParams.get('brand');
 
   useEffect(() => { if (searchTerm) trackSearch(searchTerm); }, [searchTerm]);
 
@@ -33,27 +32,9 @@ const ShopPage = () => {
   const categories = useMemo(() => buildCategories(products), [products]);
 
   const [selectedCategory, setSelectedCategory] = useState(categoryParam || 'all');
-  const [selectedBrand, setSelectedBrand] = useState<string>(brandParam || '');
   const [sortBy, setSortBy] = useState('popular');
   const [priceRange, setPriceRange] = useState<[number, number]>(DEFAULT_PRICE_RANGE);
   const hasInitializedPriceRange = useRef(false);
-
-  const uniqueBrands = useMemo(
-    () => {
-      const seen = new Set<string>();
-      return products
-        .map((p) => p.seller?.trim())
-        .filter(Boolean)
-        .filter((s) => {
-          const key = s!.toLowerCase();
-          if (seen.has(key)) return false;
-          seen.add(key);
-          return true;
-        })
-        .sort() as string[];
-    },
-    [products]
-  );
 
   const maxProductPrice = useMemo(
     () => products.reduce((highest, product) => Math.max(highest, product.price), 0),
@@ -105,12 +86,6 @@ const ShopPage = () => {
       next = next.filter((product) => slugifyCategory(product.category) === selectedCategory);
     }
 
-    if (selectedBrand) {
-      next = next.filter((product) =>
-        product.seller.toLowerCase() === selectedBrand.toLowerCase()
-      );
-    }
-
     if (searchTerm) {
       const normalizedTerm = searchTerm.toLowerCase();
       next = next.filter(
@@ -146,7 +121,7 @@ const ShopPage = () => {
           return scoreB - scoreA;
         });
     }
-  }, [dealsOnly, priceRange, products, searchTerm, selectedCategory, sortBy, selectedBrand]);
+  }, [dealsOnly, priceRange, products, searchTerm, selectedCategory, sortBy]);
 
   const pageTitle = activeCategory
     ? `${activeCategory.name} in Nigeria - Cedokamall`
@@ -348,36 +323,6 @@ const ShopPage = () => {
               </div>
             </div>
 
-            <div>
-              <h3 className="mb-4 font-serif text-lg font-bold text-navy">Brands</h3>
-              <div className="space-y-1.5 max-h-64 overflow-y-auto">
-                {uniqueBrands.map((brand) => {
-                  const isSelected = selectedBrand.toLowerCase() === brand.toLowerCase();
-                  return (
-                    <button
-                      key={brand}
-                      type="button"
-                      onClick={() => setSelectedBrand(isSelected ? '' : brand)}
-                      className={`w-full rounded-md px-4 py-2.5 text-left text-xs font-bold uppercase tracking-[0.1em] transition-all ${
-                        isSelected
-                          ? 'bg-navy text-gold shadow-md translate-x-2'
-                          : 'text-navy/60 hover:bg-white hover:text-navy'
-                      }`}
-                    >
-                      {brand}
-                    </button>
-                  );
-                })}
-              </div>
-              {selectedBrand && (
-                <button
-                  onClick={() => setSelectedBrand('')}
-                  className="mt-3 text-[10px] font-bold uppercase tracking-wider text-gold hover:text-navy"
-                >
-                  Clear brand
-                </button>
-              )}
-            </div>
           </aside>
 
           <div className="w-full flex-1">
@@ -408,7 +353,6 @@ const ShopPage = () => {
                     <button
                       onClick={() => {
                         setSelectedCategory('all');
-                        setSelectedBrand('');
                         setPriceRange([0, sliderMax]);
                       }}
                       className="mt-6 rounded-md bg-navy px-8 py-3 text-xs font-bold uppercase tracking-widest text-gold transition-all hover:bg-gold hover:text-navy"

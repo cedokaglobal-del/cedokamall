@@ -1,6 +1,6 @@
-import { useState, useMemo, useEffect, useCallback } from 'react';
+import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Sun, ChevronRight, Filter, X, SlidersHorizontal } from 'lucide-react';
+import { Sun, ChevronRight, SlidersHorizontal, ArrowLeft } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
@@ -9,38 +9,15 @@ import { useProductStore } from '@/store/productStore';
 import { useSolarCategoryStore } from '@/store/solarCategoryStore';
 import { useSEO, useStructuredData } from '@/hooks/useSEO';
 import { getBreadcrumbSchema, getCollectionPageSchema, SEO_CONFIG } from '@/config/seo';
-import { cn } from '@/lib/utils';
 
 const slugify = (value: string) =>
   value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
-
-const BRAND_COLORS: Record<string, string> = {
-  'MeWe': 'from-yellow-400 via-yellow-300 to-white',
-  'Samsung': 'from-blue-600 via-blue-500 to-white',
-  'Apple': 'from-gray-600 via-gray-400 to-white',
-  'LG': 'from-red-600 via-red-400 to-white',
-  'Sony': 'from-black via-gray-700 to-white',
-  'Hisense': 'from-green-700 via-green-500 to-white',
-  'Nexus': 'from-purple-700 via-purple-500 to-white',
-  'Maxme': 'from-orange-500 via-orange-400 to-white',
-  'Sunpower': 'from-yellow-500 via-amber-400 to-white',
-  'Fermax': 'from-rose-600 via-rose-400 to-white',
-  'Goldstar': 'from-amber-600 via-yellow-500 to-white',
-  'Apower': 'from-cyan-600 via-cyan-400 to-white',
-  'Hisea': 'from-blue-500 via-sky-400 to-white',
-  'Midea': 'from-sky-700 via-sky-500 to-white',
-  'Thermocool': 'from-teal-600 via-teal-400 to-white',
-  'Scanfrost': 'from-indigo-600 via-indigo-400 to-white',
-  'Haier Thermocool': 'from-blue-700 via-blue-500 to-white',
-  'Qasa': 'from-emerald-600 via-emerald-400 to-white',
-  'Binatone': 'from-red-500 via-red-300 to-white',
-  'Tesla': 'from-red-700 via-red-500 to-white',
-};
 
 const SolarPage = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const products = useProductStore((s) => s.products);
   const isLoading = useProductStore((s) => s.isLoading);
+  const error = useProductStore((s) => s.error);
   const hasLoaded = useProductStore((s) => s.hasLoaded);
   const solarCategories = useSolarCategoryStore((s) => s.categories);
 
@@ -54,34 +31,28 @@ const SolarPage = () => {
   [SOLAR_TABS]);
 
   const urlCategory = searchParams.get('category') || 'all';
-  const urlBrand = searchParams.get('brand') || '';
-  const [selectedBrand, setSelectedBrand] = useState<string>(urlBrand);
-  const [mobileFilterOpen, setMobileFilterOpen] = useState(false);
+  const [sortBy, setSortBy] = useState('popular');
+  const [priceRange, setPriceRange] = useState<[number, number]>([0, 0]);
+  const hasInitializedPriceRange = useRef(false);
+
+  const maxProductPrice = useMemo(
+    () => products.reduce((highest, product) => Math.max(highest, product.price), 0),
+    [products]
+  );
+  const sliderMax = maxProductPrice > 0 ? maxProductPrice : 100000;
+  const sliderStep = Math.max(1000, Math.ceil(sliderMax / 100));
 
   useEffect(() => {
-    setSelectedBrand(urlBrand);
-  }, [urlBrand]);
-
-  const handleBrandToggle = useCallback((brand: string) => {
-    setSelectedBrand((prev) => {
-      const next = prev === brand ? '' : brand;
-      const params = new URLSearchParams(searchParams);
-      if (next) {
-        params.set('brand', next);
-      } else {
-        params.delete('brand');
+    if (sliderMax <= 0) return;
+    setPriceRange((current) => {
+      if (!hasInitializedPriceRange.current) {
+        hasInitializedPriceRange.current = true;
+        return [0, sliderMax];
       }
-      setSearchParams(params, { replace: true });
-      return next;
+      if (current[1] > sliderMax) return [0, sliderMax];
+      return current;
     });
-  }, [searchParams, setSearchParams]);
-
-  const clearFilters = useCallback(() => {
-    setSelectedBrand('');
-    const params = new URLSearchParams(searchParams);
-    params.delete('brand');
-    setSearchParams(params, { replace: true });
-  }, [searchParams, setSearchParams]);
+  }, [sliderMax]);
 
   const activeCategory = useMemo(() => {
     if (urlCategory === 'all') return null;
@@ -93,27 +64,33 @@ const SolarPage = () => {
     return products.filter((p) => SOLAR_CATEGORY_NAMES.includes(p.category));
   }, [products, SOLAR_CATEGORY_NAMES]);
 
-  const availableBrands = useMemo(() => {
-    const seen = new Set<string>();
-    return solarProducts
-      .map((p) => p.seller?.trim())
-      .filter(Boolean)
-      .filter((s) => {
-        const key = s!.toLowerCase();
-        if (seen.has(key)) return false;
-        seen.add(key);
-        return true;
-      })
-      .sort() as string[];
-  }, [solarProducts]);
-
   const filteredProducts = useMemo(() => {
-    return solarProducts.filter((p) => {
-      if (activeCategory && p.category !== activeCategory) return false;
-      if (selectedBrand && p.seller !== selectedBrand) return false;
-      return true;
-    });
-  }, [solarProducts, activeCategory, selectedBrand]);
+    let next = [...solarProducts];
+
+    if (activeCategory) {
+      next = next.filter((p) => p.category === activeCategory);
+    }
+
+    next = next.filter((p) => p.price >= priceRange[0] && p.price <= priceRange[1]);
+
+    switch (sortBy) {
+      case 'price-low':
+        return next.sort((a, b) => a.price - b.price);
+      case 'price-high':
+        return next.sort((a, b) => b.price - a.price);
+      case 'newest':
+        return next.sort((a, b) => b.updatedAt.getTime() - a.updatedAt.getTime());
+      case 'rating':
+        return next.sort((a, b) => (b.rating || 0) - (a.rating || 0));
+      default:
+        return next.sort((a, b) => {
+          const scoreA = (a.salesCount || 0) + (a.searchCount || 0);
+          const scoreB = (b.salesCount || 0) + (b.searchCount || 0);
+          if (scoreA === scoreB) return (b.reviews || 0) - (a.reviews || 0);
+          return scoreB - scoreA;
+        });
+    }
+  }, [solarProducts, activeCategory, priceRange, sortBy]);
 
   const handleTabChange = useCallback((slug: string) => {
     const params = new URLSearchParams(searchParams);
@@ -193,133 +170,155 @@ const SolarPage = () => {
       </section>
 
       <div className="container py-8">
-        {/* Category Navigation */}
-        <div className="overflow-x-auto no-scrollbar mb-6 -mx-4 px-4 sm:mx-0 sm:px-0">
-          <div className="flex gap-2 sm:gap-3 min-w-max sm:min-w-0">
-            {SOLAR_TABS.map((tab) => (
-              <button
-                key={tab.slug}
-                type="button"
-                onClick={() => handleTabChange(tab.slug)}
-                className={cn(
-                  'whitespace-nowrap rounded-full border px-4 py-2 text-xs font-bold uppercase tracking-wider transition-all',
-                  urlCategory === tab.slug
-                    ? 'bg-gold border-gold text-navy shadow-md'
-                    : 'border-gold-antique/20 bg-white text-navy/60 hover:border-gold hover:text-gold'
-                )}
-              >
-                {tab.label}
-              </button>
-            ))}
+        {/* Title + Sort Bar */}
+        <div className="mb-10 flex flex-col items-center justify-between gap-6 md:flex-row">
+          <div>
+            <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-navy">
+              Solar Energy Collection
+            </h2>
+            <div className="mt-2 h-1 w-16 bg-gold" />
+            <p className="mt-4 max-w-2xl text-sm leading-6 text-navy/60">
+              Premium solar panels, inverters, batteries and accessories at the best prices in Nigeria.
+            </p>
+          </div>
+          <div className="flex items-center gap-4">
+            <select
+              value={sortBy}
+              onChange={(event) => setSortBy(event.target.value)}
+              className="rounded-md border border-gold-antique/20 bg-white px-4 py-2.5 text-sm font-medium text-navy focus:outline-none focus:ring-1 focus:ring-gold"
+            >
+              <option value="popular">Most Popular</option>
+              <option value="price-low">Price: Low to High</option>
+              <option value="price-high">Price: High to Low</option>
+              <option value="newest">Newest Collections</option>
+              <option value="rating">Top Rated</option>
+            </select>
+            <Link
+              to="/"
+              className="flex items-center gap-2 rounded-md bg-navy px-5 py-2.5 text-sm font-bold text-gold shadow-md transition-all hover:bg-gold hover:text-navy"
+            >
+              <ArrowLeft className="h-4 w-4" />
+              Home
+            </Link>
           </div>
         </div>
 
-        <div className="flex flex-col lg:flex-row gap-8">
-          {/* Brand Filter Sidebar (Desktop) */}
-          <aside className="hidden lg:block w-64 shrink-0">
-            <div className="rounded-xl border border-gold-antique/10 bg-white p-5 shadow-sm">
-              <h3 className="mb-4 font-serif text-lg font-bold text-navy">Brands</h3>
-              {availableBrands.length === 0 ? (
-                <p className="text-xs text-navy/40">No brands available</p>
-              ) : (
-                <div className="space-y-1.5 max-h-64 overflow-y-auto">
-                  {availableBrands.map((brand) => {
-                    const isSelected = selectedBrand === brand;
-                    return (
-                      <button
-                        key={brand}
-                        type="button"
-                        onClick={() => handleBrandToggle(brand)}
-                        className={`w-full rounded-md px-4 py-2.5 text-left text-xs font-bold uppercase tracking-[0.1em] transition-all ${
-                          isSelected
-                            ? 'bg-navy text-gold shadow-md translate-x-2'
-                            : 'text-navy/60 hover:bg-white hover:text-navy'
-                        }`}
-                      >
-                        {brand}
-                      </button>
-                    );
-                  })}
-                </div>
-              )}
-              {selectedBrand && (
+        {/* Mobile Category Strip */}
+        <div className="mb-10 lg:hidden">
+          <div className="relative">
+            <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar">
+              {SOLAR_TABS.map((tab) => (
                 <button
+                  key={tab.slug}
                   type="button"
-                  onClick={clearFilters}
-                  className="mt-3 text-[10px] font-bold uppercase tracking-wider text-gold hover:text-navy"
+                  onClick={() => handleTabChange(tab.slug)}
+                  className={`flex-shrink-0 whitespace-nowrap rounded-md px-6 py-3 text-sm font-bold uppercase tracking-widest transition-all ${
+                    urlCategory === tab.slug
+                      ? 'bg-gold text-navy shadow-lg'
+                      : 'bg-white text-navy/60 hover:text-navy'
+                  }`}
                 >
-                  Clear brand
+                  {tab.label}
                 </button>
-              )}
+              ))}
+            </div>
+          </div>
+        </div>
+
+        <div className="flex gap-10">
+          {/* Sidebar (Desktop) */}
+          <aside className="hidden w-64 flex-shrink-0 space-y-10 lg:block">
+            {/* Category Filter */}
+            <div>
+              <h3 className="mb-6 flex items-center gap-3 font-serif text-xl font-bold text-navy">
+                <SlidersHorizontal className="h-5 w-5 text-gold" />
+                Collections
+              </h3>
+              <div className="space-y-2">
+                {SOLAR_TABS.map((tab) => (
+                  <button
+                    key={tab.slug}
+                    type="button"
+                    onClick={() => handleTabChange(tab.slug)}
+                    className={`block w-full rounded-md px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] transition-all ${
+                      urlCategory === tab.slug
+                        ? 'bg-navy text-gold shadow-md translate-x-2'
+                        : 'text-navy/60 hover:bg-white hover:text-navy'
+                    }`}
+                  >
+                    <span className="inline-flex items-center gap-3">
+                      <Sun className={`h-4 w-4 ${urlCategory === tab.slug ? 'text-gold' : 'text-navy/40'}`} />
+                      {tab.label}
+                    </span>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Price Range */}
+            <div className="rounded-md border border-gold-antique/10 bg-white p-6">
+              <h3 className="mb-4 font-serif text-lg font-bold text-navy">Price range</h3>
+              <input
+                type="range"
+                min={0}
+                max={sliderMax}
+                step={sliderStep}
+                value={priceRange[1]}
+                onChange={(event) => setPriceRange([0, Number(event.target.value)])}
+                className="w-full cursor-pointer appearance-none rounded-full bg-ivory accent-gold"
+              />
+              <div className="mt-4 flex justify-between">
+                <span className="text-[10px] font-bold uppercase tracking-tighter text-navy/40">
+                  Budget
+                </span>
+                <span className="text-sm font-bold text-navy">{`₦${priceRange[1].toLocaleString()}`}</span>
+              </div>
             </div>
           </aside>
 
           {/* Main Content */}
-          <div className="flex-1 min-w-0 relative">
-            {selectedBrand && (
-              <div className={cn(
-                'absolute inset-0 pointer-events-none transition-all duration-700 rounded-2xl',
-                BRAND_COLORS[selectedBrand]
-                  ? 'opacity-[0.04] bg-gradient-to-br ' + BRAND_COLORS[selectedBrand]
-                  : 'opacity-[0.02] bg-navy'
-              )} />
-            )}
-            {/* Mobile Filter */}
-            <div className="flex items-center justify-end mb-5 lg:hidden">
-              <button
-                type="button"
-                onClick={() => setMobileFilterOpen(true)}
-                className="flex items-center gap-2 rounded-lg border border-gold-antique/20 bg-white px-4 py-2 text-xs font-bold uppercase tracking-wider text-navy transition-colors hover:border-gold"
-                aria-label="Open filters"
-              >
-                <SlidersHorizontal className="h-4 w-4" />
-                Filter
-                {selectedBrand && (
-                  <span className="flex h-5 w-5 items-center justify-center rounded-full bg-gold text-[10px] font-bold text-navy">
-                    <X className="h-3 w-3" />
-                  </span>
-                )}
-              </button>
-            </div>
-
-            {/* Product Grid */}
+          <div className="w-full flex-1">
             <div id="solar-products">
-              {isLoading && products.length === 0 ? (
-                <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3">
-                  {Array.from({ length: 6 }).map((_, i) => (
-                    <div key={i} className="rounded-lg border border-gold-antique/10 bg-white overflow-hidden">
-                      <div className="aspect-[4/5] bg-gradient-to-br from-ivory to-muted animate-pulse" />
-                      <div className="p-4 space-y-3">
-                        <div className="h-3 w-16 bg-ivory rounded animate-pulse" />
-                        <div className="h-4 w-3/4 bg-ivory rounded animate-pulse" />
-                        <div className="h-5 w-1/2 bg-ivory rounded animate-pulse" />
-                      </div>
+              {isLoading && solarProducts.length === 0 ? (
+                <div className="flex min-h-[400px] items-center justify-center">
+                  <div className="h-12 w-12 animate-spin rounded-full border-4 border-gold/10 border-t-gold" />
+                </div>
+              ) : error ? (
+                <div className="rounded-md border border-gold-antique/20 bg-white p-12 text-center shadow-premium">
+                  <p className="text-xl font-serif font-bold text-navy">Experience Interrupted</p>
+                  <p className="mt-2 text-sm text-navy/60">
+                    We are unable to present our catalog at this moment. Please return shortly.
+                  </p>
+                </div>
+              ) : (
+                <>
+                  <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-3">
+                    {filteredProducts.map((product) => (
+                      <ProductCard key={product.id} product={product} />
+                    ))}
+                  </div>
+                  {filteredProducts.length === 0 && hasLoaded && (
+                    <div className="rounded-md border border-gold-antique/10 bg-white py-16 sm:py-32 text-center">
+                      <Sun className="mx-auto h-12 w-12 text-gold/30" />
+                      <p className="mt-4 font-serif text-2xl font-bold text-navy">No Solar Products Found</p>
+                      <p className="mt-2 text-sm text-navy/40">
+                        Try adjusting your filters or explore other categories
+                      </p>
+                      <button
+                        onClick={() => {
+                          const params = new URLSearchParams(searchParams);
+                          params.delete('category');
+                          setSearchParams(params, { replace: true });
+                          setPriceRange([0, sliderMax]);
+                        }}
+                        className="mt-6 rounded-md bg-navy px-8 py-3 text-xs font-bold uppercase tracking-widest text-gold transition-all hover:bg-gold hover:text-navy"
+                      >
+                        Reset Filters
+                      </button>
                     </div>
-                  ))}
-                </div>
-              ) : filteredProducts.length === 0 && hasLoaded ? (
-                <div className="rounded-[1.5rem] border border-gold-antique/10 bg-white p-12 text-center">
-                  <Sun className="mx-auto h-12 w-12 text-gold/30" />
-                  <p className="mt-4 font-serif text-xl font-bold text-navy">No Solar Products Found</p>
-                  <p className="mt-2 text-sm text-navy/50">Try adjusting your filters or check back later.</p>
-                  <button
-                    type="button"
-                    onClick={clearFilters}
-                    className="mt-6 rounded-md bg-navy px-8 py-3 text-xs font-bold uppercase tracking-widest text-gold transition-all hover:bg-gold hover:text-navy"
-                  >
-                    Clear Filters
-                  </button>
-                </div>
-              ) : filteredProducts.length > 0 ? (
-                <div
-                  key={selectedBrand || 'all'}
-                  className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-2 xl:grid-cols-3 animate-fade-in"
-                >
-                  {filteredProducts.map((product) => (
-                    <ProductCard key={product.id} product={product} />
-                  ))}
-                </div>
-              ) : null}
+                  )}
+                </>
+              )}
             </div>
           </div>
         </div>
@@ -329,51 +328,6 @@ const SolarPage = () => {
           <EnergyCalculator />
         </div>
       </div>
-
-      {/* Mobile Brand Filter Drawer */}
-      {mobileFilterOpen && (
-        <div className="fixed inset-0 z-50 lg:hidden">
-          <div className="absolute inset-0 bg-black/40" onClick={() => setMobileFilterOpen(false)} />
-          <div className="absolute bottom-0 left-0 right-0 max-h-[70vh] overflow-y-auto rounded-t-2xl bg-white p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="font-serif text-lg font-bold text-navy">Brands</h3>
-              <button type="button" onClick={() => setMobileFilterOpen(false)} className="text-navy/40 hover:text-navy" aria-label="Close filters">
-                <X className="h-5 w-5" />
-              </button>
-            </div>
-            <p className="text-xs text-navy/40 mb-4">Tap a brand to filter. Tap again to clear.</p>
-            {availableBrands.length === 0 ? (
-              <p className="text-sm text-navy/40">No brands available</p>
-            ) : (
-              <div className="space-y-1.5 max-h-48 overflow-y-auto">
-                {availableBrands.map((brand) => {
-                  const isSelected = selectedBrand === brand;
-                  return (
-                    <button
-                      key={brand}
-                      type="button"
-                      onClick={() => { handleBrandToggle(brand); setMobileFilterOpen(false); }}
-                      className={`w-full rounded-md px-4 py-2.5 text-left text-xs font-bold uppercase tracking-[0.1em] transition-all ${
-                        isSelected
-                          ? 'bg-navy text-gold shadow-md translate-x-2'
-                          : 'text-navy/60 hover:bg-ivory hover:text-navy'
-                      }`}
-                    >
-                      {brand}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
-          {selectedBrand && (
-              <button type="button" onClick={() => { clearFilters(); setMobileFilterOpen(false); }}
-                className="mt-3 text-[10px] font-bold uppercase tracking-wider text-gold hover:text-navy">
-                Clear brand
-              </button>
-            )}
-          </div>
-        </div>
-      )}
 
       <Footer />
     </div>
