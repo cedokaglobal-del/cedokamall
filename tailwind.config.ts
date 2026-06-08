@@ -14,22 +14,21 @@ export default {
     },
     extend: {
       fontFamily: {
-        sans: ['system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', '"Noto Sans"', 'sans-serif', '"Apple Color Emoji"', '"Segoe UI Emoji"', '"Segoe UI Symbol"', '"Noto Color Emoji"'],
-        serif: ['Georgia', 'Cambria', '"Times New Roman"', 'Times', 'serif'],
-        display: ['Georgia', 'Cambria', '"Times New Roman"', 'Times', 'serif'],
+        sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', '"Segoe UI"', 'Roboto', '"Helvetica Neue"', 'Arial', '"Noto Sans"', 'sans-serif', '"Apple Color Emoji"', '"Segoe UI Emoji"', '"Segoe UI Symbol"', '"Noto Color Emoji"'],
+        serif: ['"Playfair Display"', 'Georgia', 'Cambria', '"Times New Roman"', 'Times', 'serif'],
+        display: ['"Playfair Display"', 'Georgia', 'Cambria', '"Times New Roman"', 'Times', 'serif'],
         mono: ['Menlo', 'Monaco', 'Consolas', '"Liberation Mono"', '"Courier New"', 'monospace'],
       },
       fontSize: {
-        // Responsive typography scaling for professional appearance
-        'xs': ['12px', { lineHeight: '16px', letterSpacing: '0.5px' }],
-        'sm': ['14px', { lineHeight: '20px', letterSpacing: '0.25px' }],
-        'base': ['16px', { lineHeight: '24px', letterSpacing: '0' }],
-        'lg': ['18px', { lineHeight: '28px', letterSpacing: '0' }],
-        'xl': ['20px', { lineHeight: '28px', letterSpacing: '0' }],
+        'xs': ['12px', { lineHeight: '18px', letterSpacing: '0.3px' }],
+        'sm': ['13px', { lineHeight: '20px', letterSpacing: '0.2px' }],
+        'base': ['15px', { lineHeight: '24px', letterSpacing: '0' }],
+        'lg': ['17px', { lineHeight: '28px', letterSpacing: '0' }],
+        'xl': ['20px', { lineHeight: '28px', letterSpacing: '-0.3px' }],
         '2xl': ['24px', { lineHeight: '32px', letterSpacing: '-0.5px' }],
-        '3xl': ['30px', { lineHeight: '36px', letterSpacing: '-0.5px' }],
+        '3xl': ['30px', { lineHeight: '38px', letterSpacing: '-0.5px' }],
         '4xl': ['36px', { lineHeight: '44px', letterSpacing: '-1px' }],
-        '5xl': ['48px', { lineHeight: '52px', letterSpacing: '-1px' }],
+        '5xl': ['48px', { lineHeight: '54px', letterSpacing: '-1px' }],
       },
       colors: {
         border: "hsl(var(--border))",
