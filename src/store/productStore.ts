@@ -78,11 +78,27 @@ const parseStringArray = (value: unknown) => {
 };
 
 const parseSpecs = (value: unknown) => {
-  if (!value || Array.isArray(value) || typeof value !== 'object') {
+  if (!value || Array.isArray(value)) {
     return undefined;
   }
 
-  return value as Record<string, string>;
+  if (typeof value === 'string') {
+    try {
+      const parsed = JSON.parse(value);
+      if (parsed && typeof parsed === 'object' && !Array.isArray(parsed)) {
+        return parsed as Record<string, string>;
+      }
+    } catch {
+      return undefined;
+    }
+    return undefined;
+  }
+
+  if (typeof value === 'object') {
+    return value as Record<string, string>;
+  }
+
+  return undefined;
 };
 
 const mapSupabaseToProduct = (row: Record<string, unknown>): Product => {
@@ -108,8 +124,10 @@ const mapSupabaseToProduct = (row: Record<string, unknown>): Product => {
     features: Array.isArray(row.features) 
       ? row.features.filter((f): f is string => typeof f === 'string') 
       : Array.isArray(specs?.features)
-        ? (specs.features as any[]).filter((f): f is string => typeof f === 'string')
-        : [],
+        ? parseStringArray(specs.features)
+        : typeof row.features === 'string'
+          ? parseStringArray(row.features)
+          : [],
     warranty: typeof row.warranty === 'string' ? row.warranty : undefined,
     sku: typeof row.sku === 'string' ? row.sku : undefined,
     color: typeof row.color === 'string' ? row.color : undefined,

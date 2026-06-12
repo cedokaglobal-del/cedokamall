@@ -1,5 +1,5 @@
 // Product Management Form Component
-import { useEffect, useState, useMemo } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -116,14 +116,19 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const previousProductId = useRef<string | undefined>(product?.id);
 
   useEffect(() => {
+    if (product?.id === previousProductId.current) return;
+    previousProductId.current = product?.id;
+
     setFormData(buildInitialFormData(product));
     setErrors({});
     setFeatureInput('');
     setActiveTab('general');
     setLoadedImages({});
     setSolarSubcategory(product && solarCategories.includes(product.category) ? product.category : '');
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [product]);
 
   useEffect(() => {
