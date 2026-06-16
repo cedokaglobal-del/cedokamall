@@ -81,7 +81,7 @@ const ProductCard = ({ product, priority = false }: { product: Product, priority
       <div className="p-3 sm:p-4 flex flex-col gap-2">
         {/* Seller */}
         <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-charcoal/50 line-clamp-1">
-          Cedoka Mall
+          {product.seller}
         </p>
         
         {/* Product Name */}

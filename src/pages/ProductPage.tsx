@@ -94,7 +94,7 @@ const ProductPage = () => {
           product.name,
           product.category,
           `${product.category} Nigeria`,
-          'Cedoka Mall Nigeria',
+          `${product.seller} Nigeria`,
           'original electrical equipment',
           'gadgets with warranty',
         ],
@@ -351,7 +351,7 @@ const ProductPage = () => {
                   <span className="break-words">{product.category}</span>
                   <span className="h-1 w-1 shrink-0 rounded-full bg-gold" />
                   <span className="break-words">Sold by{' '}
-                    <span className="text-gold">Cedoka Mall</span>
+                    <span className="text-gold">{product.seller}</span>
                   </span>
                   {product.sku && (
                     <>
@@ -711,7 +711,7 @@ const ProductPage = () => {
                     <dl className="mt-4 space-y-4 text-[13px] md:text-sm">
                       <div className="flex items-center justify-between gap-4 border-b border-gold-antique/10 pb-3">
                         <dt className="text-navy/55">Seller</dt>
-                        <dd className="break-words font-semibold text-navy">Cedoka Mall</dd>
+                        <dd className="break-words font-semibold text-navy">{product.seller}</dd>
                       </div>
                       {product.warranty && (
                         <div className="flex items-center justify-between gap-4 border-b border-gold-antique/10 pb-3">
