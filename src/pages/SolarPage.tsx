@@ -227,7 +227,7 @@ const SolarPage = () => {
 
         <div className="flex gap-10">
           {/* Sidebar (Desktop) */}
-          <aside className="hidden w-64 flex-shrink-0 space-y-10 lg:block">
+          <aside className="hidden w-64 flex-shrink-0 lg:block sticky top-20 self-start max-h-[calc(100vh-6rem)] overflow-y-auto space-y-10">
             {/* Category Filter */}
             <div>
               <h3 className="mb-6 flex items-center gap-3 font-serif text-xl font-bold text-navy">
