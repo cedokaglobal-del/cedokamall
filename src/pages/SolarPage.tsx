@@ -61,7 +61,7 @@ const SolarPage = () => {
   }, [urlCategory, SOLAR_TABS]);
 
   const solarProducts = useMemo(() => {
-    return products.filter((p) => SOLAR_CATEGORY_NAMES.includes(p.category));
+    return products.filter((p) => SOLAR_CATEGORY_NAMES.includes(p.category) || p.category === 'Solar');
   }, [products, SOLAR_CATEGORY_NAMES]);
 
   const filteredProducts = useMemo(() => {

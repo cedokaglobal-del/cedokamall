@@ -41,6 +41,7 @@ const CATEGORY_META: Record<string, { icon: LucideIcon; subcategory?: string }> 
   'Cables & Wiring': { icon: Sun, subcategory: 'Energy' },
   'Mounting & Frames': { icon: Sun, subcategory: 'Energy' },
   'Solar Accessories': { icon: Sun, subcategory: 'Energy' },
+  'Power Tank': { icon: Sun, subcategory: 'Energy' },
 };
 
 export const DEFAULT_CATEGORY_NAMES = [
@@ -115,6 +116,7 @@ export const DEFAULT_SOLAR_CATEGORIES = [
   'Cables & Wiring',
   'Mounting & Frames',
   'Solar Accessories',
+  'Power Tank',
 ];
 
 export const getCategoryOptions = (products: Product[], extraCategories: string[] = []) => {

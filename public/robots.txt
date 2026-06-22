@@ -2,7 +2,9 @@
 User-agent: *
 Allow: /
 Allow: /shop
+Allow: /solar
 Allow: /product/
+Allow: /brands
 
 Disallow: /admin
 Disallow: /admin/
@@ -14,11 +16,20 @@ Sitemap: https://cedokamall.com/sitemap.xml
 
 User-agent: Googlebot
 Allow: /
+Allow: /shop
+Allow: /solar
+Allow: /product/
 Disallow: /admin/
 Disallow: /cart
 
 User-agent: Bingbot
 Allow: /
+Allow: /shop
+Allow: /solar
+Allow: /product/
 Disallow: /admin/
 Disallow: /cart
 Crawl-delay: 1
+
+# Seasonal/Event-specific crawling hints
+# Googlebot will crawl dynamically generated pages via sitemap

@@ -71,10 +71,66 @@ const ProductPage = () => {
   const [hoverRating, setHoverRating] = useState(0);
   const [isRating, setIsRating] = useState(false);
 
+  // Hooks for reviews/rating - must be before early returns
+  const [userRating, setUserRating] = useState<number>(() => {
+    if (!id) return 0;
+    try {
+      return Number(localStorage.getItem(`cedoka_rating_${id}`)) || 0;
+    } catch { return 0; }
+  });
+
+  const [reviews, setReviews] = useState<Review[]>(() => (id ? loadReviews(id) : []));
+  const [reviewForm, setReviewForm] = useState({ name: '', rating: 0, text: '' });
+  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
+
   useEffect(() => {
     setQuantity(1);
     setActiveImage(0);
   }, [product?.id]);
+
+  useEffect(() => {
+    if (id) {
+      setReviews(loadReviews(id));
+    }
+  }, [id]);
+
+  const handleRate = async (rating: number) => {
+    if (isRating || userRating > 0) return;
+    setIsRating(true);
+    try {
+      await rateProduct(product.id, rating);
+      localStorage.setItem(`cedoka_rating_${id}`, String(rating));
+      setUserRating(rating);
+      toast.success('Thank you for your rating!');
+    } catch {
+      toast.error('Failed to submit rating. Please try again.');
+    } finally {
+      setIsRating(false);
+    }
+  };
+
+  const handleSubmitReview = () => {
+    if (!reviewForm.text.trim() || reviewForm.rating === 0 || !id) return;
+    setIsSubmittingReview(true);
+    try {
+      const review: Review = {
+        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 10),
+        name: reviewForm.name.trim() || 'Anonymous',
+        rating: reviewForm.rating,
+        text: reviewForm.text.trim(),
+        date: new Date().toISOString(),
+      };
+      const updated = [review, ...reviews];
+      saveReviews(id, updated);
+      setReviews(updated);
+      setReviewForm({ name: '', rating: 0, text: '' });
+      toast.success('Review submitted!');
+    } catch {
+      toast.error('Failed to submit review. Please try again.');
+    } finally {
+      setIsSubmittingReview(false);
+    }
+  };
 
   const relatedProducts = useMemo(() => {
     if (!product) {
@@ -201,61 +257,6 @@ const ProductPage = () => {
       quantity,
     });
     toast.success(`${product.name} added to cart`);
-  };
-
-  const [userRating, setUserRating] = useState<number>(() => {
-    if (!id) return 0;
-    try {
-      return Number(localStorage.getItem(`cedoka_rating_${id}`)) || 0;
-    } catch { return 0; }
-  });
-
-  const handleRate = async (rating: number) => {
-    if (isRating || userRating > 0) return;
-    setIsRating(true);
-    try {
-      await rateProduct(product.id, rating);
-      localStorage.setItem(`cedoka_rating_${id}`, String(rating));
-      setUserRating(rating);
-      toast.success('Thank you for your rating!');
-    } catch {
-      toast.error('Failed to submit rating. Please try again.');
-    } finally {
-      setIsRating(false);
-    }
-  };
-
-  const [reviews, setReviews] = useState<Review[]>(() => (id ? loadReviews(id) : []));
-  const [reviewForm, setReviewForm] = useState({ name: '', rating: 0, text: '' });
-  const [isSubmittingReview, setIsSubmittingReview] = useState(false);
-
-  useEffect(() => {
-    if (id) {
-      setReviews(loadReviews(id));
-    }
-  }, [id]);
-
-  const handleSubmitReview = () => {
-    if (!reviewForm.text.trim() || reviewForm.rating === 0 || !id) return;
-    setIsSubmittingReview(true);
-    try {
-      const review: Review = {
-        id: Date.now().toString(36) + Math.random().toString(36).slice(2, 10),
-        name: reviewForm.name.trim() || 'Anonymous',
-        rating: reviewForm.rating,
-        text: reviewForm.text.trim(),
-        date: new Date().toISOString(),
-      };
-      const updated = [review, ...reviews];
-      saveReviews(id, updated);
-      setReviews(updated);
-      setReviewForm({ name: '', rating: 0, text: '' });
-      toast.success('Review submitted!');
-    } catch {
-      toast.error('Failed to submit review. Please try again.');
-    } finally {
-      setIsSubmittingReview(false);
-    }
   };
 
   return (

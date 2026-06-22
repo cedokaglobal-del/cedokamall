@@ -116,7 +116,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
   });
 
   const [errors, setErrors] = useState<Record<string, string>>({});
-  const previousProductId = useRef<string | undefined>(product?.id);
+  const previousProductId = useRef<string | undefined>(undefined);
 
   useEffect(() => {
     if (product?.id === previousProductId.current) return;

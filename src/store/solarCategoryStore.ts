@@ -11,6 +11,7 @@ const DEFAULT_SOLAR_CATEGORIES = [
   'Cables & Wiring',
   'Mounting & Frames',
   'Solar Accessories',
+  'Power Tank',
 ];
 
 interface SolarCategoryState {

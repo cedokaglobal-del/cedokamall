@@ -4,7 +4,7 @@ import { ArrowLeft, SlidersHorizontal } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
-import { buildCategories, slugifyCategory } from '@/data/products';
+import { buildCategories, slugifyCategory, DEFAULT_SOLAR_CATEGORIES } from '@/data/products';
 import {
   getBreadcrumbSchema,
   getCollectionPageSchema,
@@ -29,7 +29,11 @@ const ShopPage = () => {
   const isLoading = useProductStore((state) => state.isLoading);
   const error = useProductStore((state) => state.error);
   const hasLoaded = useProductStore((state) => state.hasLoaded);
-  const categories = useMemo(() => buildCategories(products), [products]);
+  const categories = useMemo(() => {
+    const allCategories = buildCategories(products);
+    // Filter out solar subcategories - they should only appear on the Solar page
+    return allCategories.filter((cat) => !DEFAULT_SOLAR_CATEGORIES.includes(cat.name));
+  }, [products]);
 
   const [selectedCategory, setSelectedCategory] = useState(categoryParam || 'all');
   const [sortBy, setSortBy] = useState('popular');
@@ -83,7 +87,16 @@ const ShopPage = () => {
     }
 
     if (selectedCategory !== 'all') {
-      next = next.filter((product) => slugifyCategory(product.category) === selectedCategory);
+      if (selectedCategory === 'solar') {
+        // Include products with main Solar category AND all solar subcategories
+        next = next.filter(
+          (product) =>
+            slugifyCategory(product.category) === 'solar' ||
+            DEFAULT_SOLAR_CATEGORIES.includes(product.category)
+        );
+      } else {
+        next = next.filter((product) => slugifyCategory(product.category) === selectedCategory);
+      }
     }
 
     if (searchTerm) {
