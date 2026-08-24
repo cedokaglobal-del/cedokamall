@@ -17,7 +17,7 @@ const ProductCard = ({ product, priority = false }: { product: Product, priority
     : 0;
 
   return (
-    <article className="group overflow-hidden rounded-lg border border-gold-antique/10 bg-white transition-all duration-300 hover:-translate-y-2 hover:shadow-premium-lg card-hover">
+      <article className="group overflow-hidden rounded-lg border border-gold-antique/10 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-premium-lg">
       {/* Image Container */}
       <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-ivory to-muted">
         <Link to={`/product/${product.id}`} className="absolute inset-0 z-0">
@@ -40,7 +40,7 @@ const ProductCard = ({ product, priority = false }: { product: Product, priority
             }}
           />
           {!isImageLoaded && (
-            <div className="absolute inset-0 bg-gradient-to-r from-transparent via-white/20 to-transparent animate-pulse" />
+            <div className="absolute inset-0 bg-ivory animate-pulse" />
           )}
         </Link>
 

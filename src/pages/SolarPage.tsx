@@ -128,10 +128,8 @@ const SolarPage = () => {
       <Header />
 
       {/* Hero */}
-      <section className="relative flex items-center overflow-hidden bg-navy text-champagne min-h-[240px] sm:min-h-[320px]">
-        <div className="absolute inset-0 bg-gradient-to-r from-navy/95 via-navy/80 to-navy/70 z-10" />
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNDOUE4NEMiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyek0zNiAyNHYySDI0di0yaDEyeiIvPjwvZz48L2c+PC9zdmc+')] opacity-30" />
-        <div className="container relative z-20 py-10 sm:py-14">
+      <section className="relative flex items-center border-b border-gold-antique/20 bg-navy text-champagne min-h-[240px] sm:min-h-[320px]">
+        <div className="container relative z-10 py-10 sm:py-14">
           <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-champagne/50 mb-4">
             <Link to="/" className="transition-colors hover:text-gold">Home</Link>
             <ChevronRight className="h-3 w-3" />
@@ -165,6 +163,53 @@ const SolarPage = () => {
             >
               Calculate My Energy Needs
             </a>
+          </div>
+      </div>
+    </section>
+
+      {/* Guided shopping */}
+      <section className="border-b border-gold-antique/10 bg-white">
+        <div className="container py-10 sm:py-14">
+          <div className="grid items-center gap-8 lg:grid-cols-[1.1fr_1fr]">
+            <div>
+              <span className="text-xs font-bold uppercase tracking-[0.2em] text-gold">Choose with confidence</span>
+              <h2 className="mt-3 font-serif text-2xl font-bold text-navy sm:text-3xl">
+                Find the right solar solution
+              </h2>
+              <p className="mt-3 max-w-xl text-sm leading-7 text-navy/65">
+                Sizing a system starts with your daily power needs. Use our calculator to estimate the panel,
+                battery and inverter capacity for your home or office, then shop the matching components.
+              </p>
+              <div className="mt-6 flex flex-wrap gap-3">
+                <a
+                  href="#solar-calculator"
+                  className="inline-flex items-center gap-2 rounded-md bg-gold px-6 py-3 text-xs font-bold uppercase tracking-widest text-navy transition-all hover:bg-gold-antique hover:text-white"
+                >
+                  Use the energy calculator
+                </a>
+                <Link
+                  to="/solar"
+                  className="inline-flex items-center gap-2 rounded-md border border-gold/30 px-6 py-3 text-xs font-bold uppercase tracking-widest text-navy transition-all hover:bg-navy hover:text-gold"
+                >
+                  Browse all products
+                </Link>
+              </div>
+            </div>
+            <div className="grid gap-3 sm:grid-cols-3">
+              {[
+                { step: '1', title: 'List your loads', text: 'Note the appliances you want to run and their wattage.' },
+                { step: '2', title: 'Size the system', text: 'The calculator suggests panel, battery and inverter ratings.' },
+                { step: '3', title: 'Shop & install', text: 'Buy the components and arrange installation with our team.' },
+              ].map((item) => (
+                <div key={item.step} className="rounded-md border border-gold-antique/10 bg-ivory p-5">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-navy text-gold font-bold">
+                    {item.step}
+                  </div>
+                  <p className="mt-3 text-sm font-bold text-navy">{item.title}</p>
+                  <p className="mt-1 text-xs leading-5 text-navy/60">{item.text}</p>
+                </div>
+              ))}
+            </div>
           </div>
         </div>
       </section>
@@ -322,6 +367,60 @@ const SolarPage = () => {
             </div>
           </div>
         </div>
+
+        {/* System bundles */}
+        <section className="mt-16">
+          <div className="mb-8">
+            <h2 className="font-serif text-2xl font-bold text-navy sm:text-3xl">Solar system packages</h2>
+            <div className="mt-2 h-1 w-16 bg-gold" />
+            <p className="mt-4 max-w-2xl text-sm leading-6 text-navy/60">
+              Common combinations to help you start. Every package can be adjusted — message us with your load list
+              for a tailored quote.
+            </p>
+          </div>
+          <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {[
+              {
+                name: 'Home starter kit',
+                ideal: 'Fans, lighting, router and phone charging',
+                items: ['1× 200W solar panel', '1× 1kVA inverter', '1× 100Ah battery', 'Cables & charge controller'],
+              },
+              {
+                name: 'Small office kit',
+                ideal: 'TV, decoder, computers and lights',
+                items: ['2× 300W solar panels', '1× 2.4kVA inverter', '2× 100Ah batteries', 'Mounting & wiring'],
+              },
+              {
+                name: 'Full off-grid kit',
+                ideal: 'Fridge, freezer, pumps and appliances',
+                items: ['4× 400W solar panels', '1× 5kVA inverter', '4× 200Ah batteries', 'Complete mounting set'],
+              },
+            ].map((bundle) => (
+              <div key={bundle.name} className="flex flex-col rounded-md border border-gold-antique/10 bg-white p-6 shadow-sm">
+                <h3 className="font-serif text-lg font-bold text-navy">{bundle.name}</h3>
+                <p className="mt-1 text-xs uppercase tracking-wider text-gold">{bundle.ideal}</p>
+                <ul className="mt-4 space-y-2">
+                  {bundle.items.map((line) => (
+                    <li key={line} className="flex items-start gap-2 text-sm text-navy/70">
+                      <span className="mt-1.5 h-1.5 w-1.5 shrink-0 rounded-full bg-gold" />
+                      {line}
+                    </li>
+                  ))}
+                </ul>
+                <a
+                  href={`https://wa.me/2349128817136?text=${encodeURIComponent(
+                    `Hi Cedokamall, I'm interested in the ${bundle.name} (${bundle.ideal}). Please share availability and a quote.`
+                  )}`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="mt-6 inline-flex items-center justify-center gap-2 rounded-md bg-gold px-5 py-3 text-xs font-bold uppercase tracking-widest text-navy transition-all hover:bg-gold-antique hover:text-white"
+                >
+                  Get a quote
+                </a>
+              </div>
+            ))}
+          </div>
+        </section>
 
         {/* Energy Calculator */}
         <div id="solar-calculator" className="mt-16">

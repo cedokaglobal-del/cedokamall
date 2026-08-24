@@ -15,6 +15,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import { buildCategories } from '@/data/products';
+import { MAJOR_CATEGORIES } from '@/data/catalog';
 import {
   getBreadcrumbSchema,
   getItemListSchema,
@@ -183,12 +184,12 @@ const WelcomeGreeting = () => {
         </div>
         <div>
           <h4 className="font-serif text-lg font-bold text-navy">
-            {isReturning ? 'Welcome Back!' : 'Welcome to Cedokamall!'}
+            {isReturning ? 'Welcome back!' : 'Welcome to Cedokamall!'}
           </h4>
           <p className="mt-1 text-sm text-navy/60 font-sans">
             {isReturning 
-              ? 'Great to see you again. Explore our latest premium picks curated just for you.' 
-              : 'Experience the standard of luxury retail. We appreciate you choosing us today.'}
+              ? 'Good to see you again. Here are the latest arrivals worth a look.' 
+              : 'Thanks for visiting. Browse electronics, solar and farm products with warranty support.'}
           </p>
           <button 
             onClick={() => setShow(false)}
@@ -239,8 +240,6 @@ const Index = () => {
         .slice(0, 6),
     [products]
   );
-  const [visitorCount, setVisitorCount] = useState(3000);
-
   useSEO({
     title: SEO_CONFIG.siteTitle,
     description: SEO_CONFIG.siteDescription,
@@ -284,124 +283,117 @@ const Index = () => {
 
   useStructuredData(structuredDataSchemas);
 
-  useEffect(() => {
-    const calculateVisitors = () => {
-      const now = new Date();
-      const day = now.getDay();
-      const month = now.getMonth();
-      const hour = now.getHours();
-      
-      let base = 2840;
-      const hourFactor = Math.sin((hour - 8) * Math.PI / 12) * 500;
-      base += Math.max(0, hourFactor);
-      
-      if (day === 0 || day === 6) base += 1200;
-      
-      const isFestive = 
-        (month === 11) || 
-        (month === 0 && now.getDate() <= 5) || 
-        (month === 1 && now.getDate() >= 10 && now.getDate() <= 16) || 
-        (month === 10 && now.getDate() >= 20);
-        
-      if (isFestive) base += 1800;
-      
-      const jitter = Math.floor(Math.random() * 200) - 100;
-      return Math.floor(base + jitter);
-    };
-
-    setVisitorCount(calculateVisitors());
-
-    const interval = setInterval(() => {
-      setVisitorCount(calculateVisitors());
-    }, 5000);
-
-    return () => clearInterval(interval);
-  }, []);
-
   return (
     <div className="min-h-screen bg-ivory">
       <Header />
 
       {/* Hero Section */}
-      <section className="relative flex min-h-[320px] sm:min-h-[560px] items-center overflow-hidden bg-navy text-champagne">
-        <div
-          className="absolute inset-0 opacity-10"
-          style={{
-            backgroundImage:
-              "url(\"data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23C9A84C' fill-opacity='1'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E\")",
-          }}
-        />
-        <div className="container relative z-10 py-8 sm:py-20 md:py-32">
+      <section className="relative flex min-h-[320px] sm:min-h-[500px] items-center overflow-hidden bg-navy text-champagne">
+        <div className="container relative z-10 py-10 sm:py-20 md:py-24">
           <motion.div
             initial={{ opacity: 0, y: 30 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.6, ease: 'easeOut' }}
-            className="max-w-4xl"
+            className="max-w-3xl"
           >
-            <div className="mb-4 sm:mb-8 flex items-center gap-3">
-              <motion.span
-                initial={{ scale: 0.9, opacity: 0 }}
-                animate={{ scale: 1, opacity: 1 }}
-                transition={{ duration: 0.8, ease: 'easeOut' }}
-                className="rounded-md bg-gold px-5 py-2 text-xs font-bold uppercase tracking-[0.2em] text-navy shadow-lg"
-              >
-                The Elite Marketplace
-              </motion.span>
-            </div>
-            <h1 className="mb-4 sm:mb-8 font-serif text-3xl font-bold leading-[1.1] sm:text-6xl md:text-8xl text-white">
-              Everything Gadgets.
-              <br />
-              <span className="text-gradient-gold drop-shadow-xl italic">Delivered Nationwide.</span>
+            <span className="text-xs font-bold uppercase tracking-[0.2em] text-gold">
+              Nigeria's multi-category marketplace
+            </span>
+            <h1 className="mt-4 font-serif text-3xl font-bold leading-[1.12] sm:text-5xl md:text-6xl text-white">
+              Shop electronics, solar power and farm products in one place.
             </h1>
-            <p className="mb-6 sm:mb-12 max-w-2xl text-sm sm:text-lg leading-relaxed text-champagne/80 md:text-2xl font-sans font-light hidden sm:block">
-              The most Affordable, Reliable &amp; Original Electrical Equipment and Gadgets with Warranties - LG, Hisense, MeWe, Maxi etc
+            <p className="mt-5 max-w-2xl text-sm leading-relaxed text-champagne/80 sm:text-lg">
+              Original gadgets and appliances, reliable solar systems, and fresh farm produce — with
+              warranty support and delivery across Nigeria.
             </p>
-            <div className="flex flex-col gap-6 sm:flex-row">
+            <div className="mt-8 flex flex-col gap-4 sm:flex-row">
               <Link
                 to="/shop"
-                className="inline-flex items-center justify-center gap-3 rounded-md bg-gold px-8 sm:px-12 py-4 sm:py-5 text-lg sm:text-xl font-bold text-navy shadow-2xl transition-all duration-300 hover:bg-gold-antique hover:text-white transform hover:-translate-y-1 active:scale-95"
+                className="inline-flex items-center justify-center gap-3 rounded-md bg-gold px-8 sm:px-10 py-3.5 sm:py-4 text-sm sm:text-base font-bold text-navy shadow-lg transition-all duration-300 hover:bg-gold-antique hover:text-white"
               >
-                Explore Shop
-                <ArrowRight className="h-6 w-6 transition-transform group-hover:translate-x-1" />
+                Shop Electronics
+                <ArrowRight className="h-5 w-5" />
               </Link>
               <Link
-                to="/shop?deals=true"
-                className="inline-flex items-center justify-center gap-3 rounded-md border border-gold/30 bg-white/5 px-8 sm:px-12 py-4 sm:py-5 text-lg sm:text-xl font-bold text-champagne transition-all duration-300 hover:bg-white/10 hover:border-gold"
+                to="/solar"
+                className="inline-flex items-center justify-center gap-3 rounded-md border border-gold/30 bg-white/5 px-8 sm:px-10 py-3.5 sm:py-4 text-sm sm:text-base font-bold text-champagne transition-all duration-300 hover:bg-white/10 hover:border-gold"
               >
-                Flash Deals
+                Explore Solar
               </Link>
             </div>
           </motion.div>
         </div>
-
-        <div className="absolute -bottom-48 -right-48 h-[600px] w-[600px] rounded-full bg-gold/5 blur-[60px] hidden sm:block" />
-        <div className="absolute top-20 right-20 h-96 w-96 rounded-full bg-navy-deep/40 blur-3xl hidden sm:block" />
       </section>
 
       {/* Trust Bar */}
       <div className="overflow-hidden border-y border-gold-antique/10 bg-white py-6 shadow-sm">
         <div className="container flex flex-nowrap justify-start gap-8 overflow-x-auto whitespace-nowrap text-sm no-scrollbar md:flex-wrap md:justify-center md:gap-16">
           <span className="flex flex-shrink-0 items-center gap-3 font-semibold text-navy/80 uppercase tracking-widest text-xs">
-            <Users className="h-4 w-4 text-gold" />
-            <strong>1.2M+</strong> Elite Members
-          </span>
-          <span className="flex flex-shrink-0 items-center gap-3 font-semibold text-navy/80 uppercase tracking-widest text-xs">
-            <Star className="h-4 w-4 fill-gold text-gold" />
-            <strong>4.9/5</strong> Excellence Rating
-          </span>
-          <span className="flex flex-shrink-0 items-center gap-3 font-semibold text-navy/80 uppercase tracking-widest text-xs">
             <ShieldCheck className="h-4 w-4 text-gold" />
-            <strong>100%</strong> Secured Trust
+            Warranty-backed products
           </span>
           <span className="flex flex-shrink-0 items-center gap-3 font-semibold text-navy/80 uppercase tracking-widest text-xs">
             <Truck className="h-4 w-4 text-gold" />
-            <strong>Premium</strong> Logistics
+            Delivery across Nigeria
           </span>
-          <span className="flex flex-shrink-0 items-center gap-3 font-bold text-gold uppercase tracking-widest text-xs">
-            {visitorCount.toLocaleString()} Browsing Now
+          <span className="flex flex-shrink-0 items-center gap-3 font-semibold text-navy/80 uppercase tracking-widest text-xs">
+            <Star className="h-4 w-4 fill-gold text-gold" />
+            Original &amp; trusted brands
+          </span>
+          <span className="flex flex-shrink-0 items-center gap-3 font-semibold text-navy/80 uppercase tracking-widest text-xs">
+            <Users className="h-4 w-4 text-gold" />
+            Friendly support
           </span>
         </div>
       </div>
+
+      {/* Major Categories */}
+      <section className="container py-10 sm:py-16">
+        <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h2 className="font-serif text-2xl font-bold text-navy sm:text-4xl">Shop by category</h2>
+            <div className="mt-2 h-0.5 w-12 bg-gold sm:h-1 sm:w-20" />
+          </div>
+          <Link
+            to="/shop"
+            className="group flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gold hover:text-gold-antique sm:text-sm"
+          >
+            View all products
+            <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 group-hover:translate-x-1 transition-transform" />
+          </Link>
+        </div>
+        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+          {MAJOR_CATEGORIES.map((category) => (
+            <Link
+              key={category.slug}
+              to={category.href}
+              className="group relative overflow-hidden rounded-md border border-gold-antique/10 bg-white p-6 shadow-sm transition-all hover:border-gold/40 sm:p-8"
+            >
+              <div className="flex items-center gap-4">
+                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-ivory text-gold transition-colors group-hover:bg-gold/10">
+                  <category.icon className="h-6 w-6" />
+                </div>
+                <h3 className="font-serif text-lg font-bold text-navy sm:text-xl">{category.name}</h3>
+              </div>
+              <p className="mt-4 text-sm leading-6 text-navy/60">{category.tagline}</p>
+              <div className="mt-5 flex flex-wrap gap-2">
+                {category.subcategories.slice(0, 4).map((sub) => (
+                  <span
+                    key={sub.slug}
+                    className="rounded-full border border-gold-antique/20 bg-ivory px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-navy/70"
+                  >
+                    {sub.name}
+                  </span>
+                ))}
+              </div>
+              <span className="mt-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gold">
+                Shop now
+                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+              </span>
+            </Link>
+          ))}
+        </div>
+      </section>
 
       {/* Welcome Back / Appreciation System */}
       <WelcomeGreeting />
@@ -447,8 +439,8 @@ const Index = () => {
       <section className="container py-8 sm:py-16">
         <div className="mb-6 sm:mb-12 flex flex-col sm:flex-row sm:items-end justify-between gap-2 sm:gap-4">
           <div>
-            <h2 className="font-serif text-2xl sm:text-4xl font-bold text-navy">Product List</h2>
-            <p className="text-navy/60 font-sans tracking-wide text-xs sm:text-sm mt-1 sm:mt-2">Explore our latest premium arrivals</p>
+            <h2 className="font-serif text-2xl sm:text-4xl font-bold text-navy">Latest products</h2>
+            <p className="text-navy/60 font-sans tracking-wide text-xs sm:text-sm mt-1 sm:mt-2">Explore current arrivals across the store</p>
           </div>
           <Link to="/shop" className="group flex items-center gap-2 text-xs sm:text-sm font-bold uppercase tracking-widest text-gold hover:text-gold-antique transition-colors">
             See All Products
@@ -498,10 +490,10 @@ const Index = () => {
       {/* SEO Category Links */}
       <section className="container pb-6">
         <div className="rounded-md border border-gold-antique/10 bg-white p-6 sm:p-8 shadow-sm">
-          <h2 className="font-serif text-xl sm:text-3xl font-bold text-navy">Shop Original Electricals by Category</h2>
+          <h2 className="font-serif text-xl sm:text-3xl font-bold text-navy">Shop by category</h2>
           <p className="mt-4 max-w-4xl text-xs sm:text-sm leading-7 text-navy/70">
-            Original Electricals : home appliances and gadgets with warranties. Browse televisions, refrigerators,
-            air conditioners, smartphones, laptops, sound systems, kitchen accessories and more
+            Browse original electronics and gadgets, solar power systems and farm products. Filter by category to
+            compare products, warranties and prices.
           </p>
           {categories.length > 0 && (
             <div className="mt-6 flex flex-wrap gap-3">
@@ -524,8 +516,8 @@ const Index = () => {
         <div className="absolute top-0 right-0 w-1/3 h-full bg-gold/5 -skew-x-12 transform translate-x-1/2" />
         <div className="container relative z-10">
           <div className="mb-16 text-center">
-            <h2 className="font-serif text-4xl font-bold mb-4">Recommended for You</h2>
-            <p className="text-champagne/60 font-sans tracking-widest uppercase text-xs">Exclusively selected for your discerning taste</p>
+            <h2 className="font-serif text-4xl font-bold mb-4">Recommended for you</h2>
+            <p className="text-champagne/60 font-sans tracking-widest uppercase text-xs">Popular picks across the store</p>
             <div className="h-1 w-24 bg-gold mx-auto mt-6" />
           </div>
           {isLoading && products.length === 0 ? (
@@ -586,7 +578,7 @@ const Index = () => {
                 </div>
                 <div className="text-center md:text-left">
                   <h2 className="font-serif text-4xl font-bold text-navy mb-2">Flash Deals</h2>
-                  <p className="text-navy/40 font-sans text-xs uppercase tracking-widest">Premium opportunities expiring soon</p>
+                  <p className="text-navy/40 font-sans text-xs uppercase tracking-widest">Limited-time price drops</p>
                 </div>
               </div>
               <CountdownTimer />
@@ -610,7 +602,7 @@ const Index = () => {
       <section className="bg-ivory py-16 relative overflow-hidden">
         <div className="container relative z-10">
           <div className="mb-16 text-center">
-            <h2 className="font-serif text-4xl font-bold text-navy mb-4">what our customer says</h2>
+            <h2 className="font-serif text-4xl font-bold text-navy mb-4">What our customers say</h2>
             <div className="h-1 w-20 bg-gold mx-auto" />
           </div>
           <div className="grid gap-8 md:grid-cols-3">
@@ -676,7 +668,9 @@ const DraggableWhatsApp = () => {
     try {
       const saved = localStorage.getItem(WA_BTN_KEY);
       if (saved) return JSON.parse(saved);
-    } catch {}
+    } catch {
+      /* ignore */
+    }
     return { bottom: 32, right: 32 };
   });
 
@@ -706,7 +700,9 @@ const DraggableWhatsApp = () => {
 
   const handlePointerEnd = () => {
     if (dragRef.current.dragging) {
-      try { localStorage.setItem(WA_BTN_KEY, JSON.stringify(pos)); } catch {}
+      try { localStorage.setItem(WA_BTN_KEY, JSON.stringify(pos)); } catch {
+        /* ignore */
+      }
     }
   };
 

@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { Search, ShoppingCart, Menu, X, MapPin, Phone, ChevronDown, Sun, LayoutGrid } from 'lucide-react';
+import { Search, ShoppingCart, Menu, X, MapPin, Phone, ChevronDown, Sun, LayoutGrid, Sprout } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { buildCategories, slugifyCategory } from '@/data/products';
 import { useProductStore } from '@/store/productStore';
@@ -167,7 +167,7 @@ const Header = () => {
             </div>
           )}
 
-          {/* General Tab - Desktop */}
+          {/* Electronics & Gadgets - Desktop */}
           <Link
             to="/shop"
             className={cn(
@@ -176,10 +176,10 @@ const Header = () => {
             )}
           >
             <LayoutGrid className="w-4 h-4" />
-            General
+            Electronics
           </Link>
 
-          {/* Solar Nav Link - Desktop */}
+          {/* Renewable Energy - Desktop */}
           <Link
             to="/solar"
             className={cn(
@@ -188,7 +188,19 @@ const Header = () => {
             )}
           >
             <Sun className="w-4 h-4" />
-            Solar
+            Renewable Energy
+          </Link>
+
+          {/* Farms - Desktop */}
+          <Link
+            to="/farms"
+            className={cn(
+              'hidden lg:flex items-center gap-1.5 px-3 py-2 text-xs font-bold uppercase tracking-wider transition-colors whitespace-nowrap',
+              location.pathname === '/farms' ? 'text-gold' : 'text-champagne/70 hover:text-gold'
+            )}
+          >
+            <Sprout className="w-4 h-4" />
+            Farms
           </Link>
 
           {/* Actions */}
@@ -256,6 +268,19 @@ const Header = () => {
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Brands
+              </Link>
+              <Link
+                to="/farms"
+                className={cn(
+                  'flex items-center gap-2 rounded-lg border px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all',
+                  location.pathname === '/farms'
+                    ? 'bg-gold text-navy border-gold'
+                    : 'bg-navy-deep/50 border-gold-antique/10 text-champagne hover:border-gold/50'
+                )}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                <Sprout className="w-4 h-4 text-gold" />
+                Farms
               </Link>
             </div>
             <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 text-xs sm:text-sm">

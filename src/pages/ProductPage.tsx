@@ -13,6 +13,7 @@ import {
   Share2,
   Shield,
   ShoppingCart,
+  Zap,
   Star,
   Truck,
   User,
@@ -27,9 +28,66 @@ import { useCartStore } from '@/store/cartStore';
 import { useProductStore } from '@/store/productStore';
 import { toast } from 'sonner';
 import { getOptimizedImageUrl, generateSrcSet, generateSizes } from '@/utils/performance';
+import { RENEWABLE_ENERGY_CATEGORIES } from '@/data/catalog';
 
 const fallbackImage = '/image.png';
 const formatPrice = (amount: number) => `\u20A6${amount.toLocaleString()}`;
+
+const parseNumber = (value: string | undefined, unit: RegExp): number | null => {
+  if (!value) return null;
+  const match = value.match(unit);
+  if (!match) return null;
+  const parsed = Number(match[1].replace(/,/g, ''));
+  return Number.isFinite(parsed) ? parsed : null;
+};
+
+interface PowerGuidance {
+  wattage?: number;
+  capacityWh?: number;
+  voltage?: number;
+  bullets: string[];
+}
+
+/** Build an honest, spec-derived "What can this power?" summary for energy products. */
+const getPowerGuidance = (product: Product): PowerGuidance | null => {
+  const isEnergy = RENEWABLE_ENERGY_CATEGORIES.includes(product.category);
+  if (!isEnergy) return null;
+
+  const specs = product.specs || {};
+  const entries = Object.entries(specs).map(([k, v]) => [`${k} ${v}`, v] as const);
+
+  let wattage: number | null = null;
+  let wh: number | null = null;
+  let voltage: number | null = null;
+  let ah: number | null = null;
+
+  for (const [combined] of entries) {
+    if (wattage === null) wattage = parseNumber(combined, /(\d[\d,]*)\s*(?:w|watt|watts)\b/i);
+    if (wh === null) wh = parseNumber(combined, /(\d[\d,]*)\s*(?:wh|watt[- ]?hours?)\b/i);
+    if (voltage === null) voltage = parseNumber(combined, /(\d[\d,]*)\s*(?:v|volt|volts)\b/i);
+    if (ah === null) ah = parseNumber(combined, /(\d[\d,]*)\s*(?:ah|amp[- ]?hours?)\b/i);
+  }
+
+  if (wh === null && ah !== null && voltage !== null) wh = ah * voltage;
+
+  const bullets: string[] = [];
+  if (wattage !== null) {
+    bullets.push(`Rated around ${wattage.toLocaleString()} W — size connected loads below this figure.`);
+  }
+  if (wh !== null) {
+    const lightLoad = Math.round(wh / 50);
+    const heavyLoad = Math.round(wh / 200);
+    bullets.push(
+      `Stores about ${wh.toLocaleString()} Wh — roughly ${lightLoad} hrs for a light load (fan, router, lights) or ${heavyLoad} hrs for a heavier load (TV, decoder).`
+    );
+  }
+  if (voltage !== null) {
+    bullets.push(`System voltage: ${voltage} V.`);
+  }
+
+  if (bullets.length === 0) return null;
+  return { wattage: wattage ?? undefined, capacityWh: wh ?? undefined, voltage: voltage ?? undefined, bullets };
+};
 
 interface Review {
   id: string;
@@ -66,6 +124,7 @@ const ProductPage = () => {
   const addItem = useCartStore((state) => state.addItem);
 
   const product = useMemo(() => products.find((p) => p.id === id), [products, id]);
+  const powerInfo = useMemo(() => (product ? getPowerGuidance(product) : null), [product]);
   const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
@@ -234,16 +293,25 @@ const ProductPage = () => {
       value.trim().length > 0
   );
   const assuranceItems = [
-    { icon: Truck, label: 'Express Delivery', description: 'Fast dispatch across Nigeria.' },
+    { icon: Truck, label: 'Delivery across Nigeria', description: 'Dispatched from our Lagos store to your address.' },
     {
       icon: Shield,
-      label: 'Authenticity Guaranteed',
-      description: 'Original products from trusted retail sources.',
+      label: 'Authenticity checked',
+      description: 'Sourced from authorised suppliers and inspected before dispatch.',
     },
+    ...(product.warranty
+      ? [
+          {
+            icon: Shield,
+            label: `Warranty: ${product.warranty}`,
+            description: 'Covered as stated. Keep your receipt for any warranty claim.',
+          },
+        ]
+      : []),
     {
       icon: RotateCcw,
-      label: '7-Day Return Service',
-      description: 'Clear after-sales support for eligible orders.',
+      label: 'Returns & support',
+      description: 'Reach our team on WhatsApp for eligible returns and after-sales help.',
     },
   ];
 
@@ -427,6 +495,38 @@ const ProductPage = () => {
                             </div>
                           ))}
                         </dl>
+                      </div>
+                    )}
+
+                    {powerInfo && (
+                      <div className="overflow-hidden rounded-[1.5rem] border border-gold-antique/10 bg-white p-5 md:p-6">
+                        <div className="mb-5 flex items-center gap-2">
+                          <Zap className="h-4 w-4 text-gold" />
+                          <h2 className="text-sm font-bold uppercase tracking-[0.24em] text-navy">
+                            What can this power?
+                          </h2>
+                        </div>
+                        <ul className="grid gap-3">
+                          {powerInfo.bullets.map((bullet, index) => (
+                            <li
+                              key={index}
+                              className="flex min-w-0 items-start gap-3 rounded-2xl border border-gold-antique/10 bg-ivory/45 px-4 py-3.5 md:px-5"
+                            >
+                              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
+                              <span className="min-w-0 break-words text-[13px] leading-6 text-navy/76 md:text-sm">
+                                {bullet}
+                              </span>
+                            </li>
+                          ))}
+                        </ul>
+                        <p className="mt-4 text-[12px] leading-5 text-navy/50">
+                          Estimates are based on the listed specifications and typical appliance loads. For an exact
+                          system size, use our{' '}
+                          <Link to="/solar#solar-calculator" className="font-semibold text-gold hover:text-gold-antique">
+                            energy calculator
+                          </Link>{' '}
+                          or message our team on WhatsApp.
+                        </p>
                       </div>
                     )}
 

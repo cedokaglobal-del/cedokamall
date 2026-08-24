@@ -254,13 +254,30 @@ Payment: ${invoiceData.paymentMethod}
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="container py-10 sm:py-20 text-center">
-          <p className="text-6xl mb-4">🛒</p>
-          <h1 className="font-display text-2xl font-bold mb-2">Your cart is empty</h1>
-          <p className="text-muted-foreground mb-6">Discover amazing electronics and gadgets</p>
-          <Link to="/shop" className="inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-bold">
-            Start Shopping <ArrowRight className="w-4 h-4" />
-          </Link>
+        <div className="container py-10 sm:py-20">
+          <div className="mx-auto max-w-xl rounded-xl border border-gold-antique/10 bg-card p-8 text-center sm:p-12">
+            <h1 className="font-display text-2xl font-bold">Your cart is empty</h1>
+            <p className="mt-2 text-muted-foreground">
+              Add products from any of our categories to start an order.
+            </p>
+            <Link
+              to="/shop"
+              className="mt-6 inline-flex items-center gap-2 px-6 py-3 bg-primary text-primary-foreground rounded-xl font-bold transition-colors hover:bg-primary/90"
+            >
+              Browse electronics <ArrowRight className="w-4 h-4" />
+            </Link>
+            <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
+              <Link to="/solar" className="rounded-full border border-gold-antique/20 px-4 py-2 text-xs font-bold uppercase tracking-widest text-navy transition-colors hover:border-gold hover:text-gold">
+                Renewable Energy
+              </Link>
+              <Link to="/farms" className="rounded-full border border-gold-antique/20 px-4 py-2 text-xs font-bold uppercase tracking-widest text-navy transition-colors hover:border-gold hover:text-gold">
+                Farms
+              </Link>
+              <Link to="/brands" className="rounded-full border border-gold-antique/20 px-4 py-2 text-xs font-bold uppercase tracking-widest text-navy transition-colors hover:border-gold hover:text-gold">
+                Brands
+              </Link>
+            </div>
+          </div>
         </div>
         <Footer />
       </div>

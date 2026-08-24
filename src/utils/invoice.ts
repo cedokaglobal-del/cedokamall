@@ -25,7 +25,7 @@ interface InvoiceData {
 }
 
 const COMPANY = {
-  name: 'CedokaMall',
+  name: 'Cedokamall',
   address: '35 Ailegun Road, Ejigbo, Lagos',
   phone: '+234 912 881 7136',
   email: 'support@cedokamall.com',
@@ -292,7 +292,7 @@ export const generateInvoicePDF = (data: InvoiceData): jsPDF => {
   doc.setTextColor(201, 168, 76);
   doc.setFont('helvetica', 'normal');
   doc.setFontSize(8);
-  doc.text('Thank you for shopping with CedokaMall!', pageWidth / 2, 289, { align: 'center' });
+  doc.text('Thank you for shopping with Cedokamall!', pageWidth / 2, 289, { align: 'center' });
   doc.setFontSize(7);
   doc.setTextColor(150, 150, 150);
   doc.text(`${COMPANY.name} | ${COMPANY.address} | ${COMPANY.phone}`, pageWidth / 2, 294, { align: 'center' });

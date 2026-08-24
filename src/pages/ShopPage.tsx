@@ -216,7 +216,7 @@ const ShopPage = () => {
         <div className="mb-10 flex flex-col items-center justify-between gap-6 md:flex-row">
           <div>
             <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-navy">
-              {activeCategory?.name || (dealsOnly ? 'Elite Deals' : 'Premium Catalog')}
+              {activeCategory?.name || (dealsOnly ? 'Deals' : 'All Products')}
             </h1>
             <div className="mt-2 h-1 w-16 bg-gold" />
             <p className="mt-4 max-w-2xl break-words text-sm leading-6 text-navy/60">{pageDescription}</p>
@@ -292,7 +292,7 @@ const ShopPage = () => {
                       : 'text-navy/60 hover:bg-white hover:text-navy'
                   }`}
                 >
-                  All Masterpieces
+                  All Categories
                 </button>
                 {categories.map((category) => (
                   <button
@@ -382,13 +382,12 @@ const ShopPage = () => {
         {categories.length > 0 && (
           <section className="mt-8 sm:mt-16 rounded-md border border-gold-antique/10 bg-white p-4 sm:p-6 md:p-8 shadow-sm">
             <h2 className="font-serif text-2xl font-bold text-navy">
-              Browse Every Product Category on Cedokamall
+              Browse every product category
             </h2>
             <p className="mt-4 max-w-4xl text-sm leading-7 text-navy/70">
-              Explore original electrical equipment and gadgets across our full catalog, including TVs,
-              refrigerators, air conditioners, smartphones, laptops, sound systems, generators, fans and
-              more. Every category is curated to help shoppers in Nigeria compare reliable products,
-              warranties and price ranges quickly.
+              Explore original electronics and gadgets across our catalog, including TVs, refrigerators,
+              air conditioners, smartphones, laptops, sound systems, generators and fans. Every category is
+              organised to help you compare products, warranties and prices quickly.
             </p>
             <div className="mt-6 flex flex-wrap gap-3">
               {categories.map((category) => (
