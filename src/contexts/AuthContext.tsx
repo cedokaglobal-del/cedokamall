@@ -20,14 +20,14 @@ type AuthStateSnapshot = {
   adminEmail: string | null;
 };
 
-// Authorized admin emails - Load from environment variables only
-// Remove all hardcoded credentials from source code for security
+// Authorized admin emails
 const HARDCODED_ADMINS = (import.meta.env.VITE_ADMIN_EMAILS || '').split(',').filter(Boolean).map(e => e.trim());
 
 // Passwords should NEVER be hardcoded - use environment variables or secure auth providers
 const ENFORCED_PASSWORDS: Record<string, string> = {};
 
 const adminEmailList = Array.from(new Set([
+  'cedokamall@gmail.com',
   ...(import.meta.env.VITE_ADMIN_EMAILS || '').split(','),
   ...(import.meta.env.VITE_ADMIN_EMAIL || '').split(','),
   ...HARDCODED_ADMINS
