@@ -33,8 +33,29 @@ const COUPONS: Record<string, number> = {
   'WELCOME': 0.05,
 };
 
+const CART_CACHE_KEY = 'cedokamall.cart.v1';
+
+const loadCart = (): CartItem[] => {
+  if (typeof window === 'undefined') return [];
+  try {
+    const raw = window.localStorage.getItem(CART_CACHE_KEY);
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const persistCart = (items: CartItem[]) => {
+  if (typeof window === 'undefined') return;
+  try {
+    window.localStorage.setItem(CART_CACHE_KEY, JSON.stringify(items));
+  } catch { /* noop */ }
+};
+
 export const useCartStore = create<CartState>((set, get) => ({
-  items: [],
+  items: loadCart(),
   isOpen: false,
   couponCode: '',
   discount: 0,
@@ -42,33 +63,41 @@ export const useCartStore = create<CartState>((set, get) => ({
     if (item.inStock <= 0) return state;
     const desiredQuantity = Math.min(item.quantity ?? 1, item.inStock);
     const existing = state.items.find((i) => i.id === item.id);
-    if (existing) {
-      return {
-        items: state.items.map((entry) =>
+    const newItems = existing
+      ? state.items.map((entry) =>
           entry.id === item.id
             ? {
                 ...entry,
                 quantity: Math.min(entry.quantity + desiredQuantity, entry.inStock),
               }
             : entry
-        ),
-      };
-    }
-    return { items: [...state.items, { ...item, quantity: desiredQuantity }] };
+        )
+      : [...state.items, { ...item, quantity: desiredQuantity }];
+    persistCart(newItems);
+    return { items: newItems };
   }),
-  removeItem: (id) => set((state) => ({ items: state.items.filter((i) => i.id !== id) })),
-  clearCart: () => set({ items: [] }),
+  removeItem: (id) => set((state) => {
+    const newItems = state.items.filter((i) => i.id !== id);
+    persistCart(newItems);
+    return { items: newItems };
+  }),
+  clearCart: () => {
+    persistCart([]);
+    set({ items: [] });
+  },
   updateQuantity: (id, quantity) => set((state) => {
     const item = state.items.find(i => i.id === id);
-    if (!item || quantity < 1) return { items: state.items.filter((i) => i.id !== id) };
-    
+    if (!item || quantity < 1) {
+      const newItems = state.items.filter((i) => i.id !== id);
+      persistCart(newItems);
+      return { items: newItems };
+    }
     const validQuantity = Math.min(quantity, item.inStock);
-    
-    return {
-      items: validQuantity <= 0 
-        ? state.items.filter((i) => i.id !== id) 
-        : state.items.map((i) => i.id === id ? { ...i, quantity: validQuantity } : i),
-    };
+    const newItems = validQuantity <= 0
+      ? state.items.filter((i) => i.id !== id)
+      : state.items.map((i) => i.id === id ? { ...i, quantity: validQuantity } : i);
+    persistCart(newItems);
+    return { items: newItems };
   }),
   toggleCart: () => set((state) => ({ isOpen: !state.isOpen })),
   applyCoupon: (code) => {

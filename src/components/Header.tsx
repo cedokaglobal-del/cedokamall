@@ -7,7 +7,8 @@ import { useProductStore } from '@/store/productStore';
 import { useSolarCategoryStore } from '@/store/solarCategoryStore';
 import { cn } from '@/lib/utils';
 import { lazy, Suspense } from 'react';
-const MiniCart = lazy(() => import('./MiniCart'));
+import { safeLazy } from '@/utils/lazy';
+const MiniCart = safeLazy(() => import('./MiniCart'));
 
 const Header = () => {
   const [searchParams] = useSearchParams();
@@ -213,6 +214,9 @@ const Header = () => {
           </div>
         </div>
       </header>
+      <Suspense fallback={null}>
+        <MiniCart />
+      </Suspense>
     </>
   );
 };

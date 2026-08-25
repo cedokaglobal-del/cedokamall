@@ -49,7 +49,10 @@ const ProductCard = ({ product, priority = false }: { product: Product, priority
           {[...Array(5)].map((_, index) => (
             <Star
               key={index}
-              className="h-3 w-3 transition-colors duration-200 fill-gold text-gold"
+              className={cn(
+                'h-3 w-3 transition-colors duration-200',
+                index < Math.round(product.rating || 0) ? 'fill-gold text-gold' : 'fill-gray-200 text-gray-200'
+              )}
             />
           ))}
           <span className="ml-1 text-xs font-bold text-charcoal/60">

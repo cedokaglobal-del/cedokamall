@@ -779,7 +779,28 @@ const ProductPage = () => {
                         <Heart className="h-4 w-4 transition-transform group-hover:scale-110" />
                         Wishlist
                       </button>
-                      <button type="button" className="group flex items-center gap-2 transition-colors hover:text-gold">
+                      <button
+                        type="button"
+                        onClick={async () => {
+                          const shareData = {
+                            title: product.name,
+                            text: `Check out ${product.name} on Cedokamall - ₦${product.price.toLocaleString()}`,
+                            url: `${window.location.origin}/product/${product.id}`,
+                          };
+                          try {
+                            if (navigator.share) {
+                              await navigator.share(shareData);
+                            } else {
+                              await navigator.clipboard.writeText(shareData.url);
+                              toast.success('Product link copied to clipboard!');
+                            }
+                          } catch {
+                            await navigator.clipboard.writeText(shareData.url);
+                            toast.success('Product link copied to clipboard!');
+                          }
+                        }}
+                        className="group flex items-center gap-2 transition-colors hover:text-gold"
+                      >
                         <Share2 className="h-4 w-4 transition-transform group-hover:scale-110" />
                         Share
                       </button>
