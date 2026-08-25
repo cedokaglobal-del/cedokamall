@@ -14,8 +14,12 @@ class FlashDealStoreImpl implements FlashDealStore {
   deals: FlashDeal[] = [];
 
   constructor() {
-    const stored = localStorage.getItem('flashDeals');
-    this.deals = stored ? JSON.parse(stored) : [];
+    try {
+      const stored = localStorage.getItem('flashDeals');
+      this.deals = stored ? JSON.parse(stored) : [];
+    } catch {
+      this.deals = [];
+    }
   }
 
   setDeals(deals: FlashDeal[]): void {

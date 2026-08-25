@@ -169,7 +169,7 @@ const Index = () => {
     [products]
   );
   const homepageProducts = useMemo(
-    () => [...products].sort(() => Math.random() - 0.5),
+    () => [...products].sort((a, b) => (a.name > b.name ? 1 : a.name < b.name ? -1 : 0)),
     [products]
   );
   const trending = useMemo(

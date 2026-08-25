@@ -9,9 +9,10 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 function loadEnv() {
   const envPath = join(__dirname, '..', '.env');
   const envLocalPath = join(__dirname, '..', '.env.local');
+  const envProductionPath = join(__dirname, '..', '.env.production');
   const vars = {};
 
-  [envPath, envLocalPath].forEach((p) => {
+  [envPath, envLocalPath, envProductionPath].forEach((p) => {
     try {
       const content = readFileSync(p, 'utf8');
       content.split('\n').forEach((line) => {
