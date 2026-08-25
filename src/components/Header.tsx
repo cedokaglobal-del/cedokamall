@@ -178,7 +178,7 @@ const Header = () => {
 
             <Link
               to="/farms"
-              className="hidden lg-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors whitespace-nowrap text-champagne/70 hover:text-gold"
+              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors whitespace-nowrap text-champagne/70 hover:text-gold"
             >
               <Sprout className="w-3 h-3" /> Farms
             </Link>

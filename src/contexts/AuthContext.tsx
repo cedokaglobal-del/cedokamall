@@ -128,6 +128,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
 
     void supabase.auth.getSession().then(async ({ data }) => {
       await syncSession(data.session);
+    }).catch((err) => {
+      console.error('getSession failed:', err);
+    }).finally(() => {
       setIsLoading(false);
     });
 
