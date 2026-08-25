@@ -245,9 +245,6 @@ export function addConnectionHints(): void {
     const link = document.createElement('link');
     link.rel = hint.rel;
     link.href = hint.href;
-    if ('crossOrigin' in hint) {
-      link.setAttribute('crossOrigin', hint.crossOrigin);
-    }
     document.head.appendChild(link);
   });
 

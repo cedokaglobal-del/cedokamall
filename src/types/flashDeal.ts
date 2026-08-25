@@ -18,6 +18,7 @@ export interface FlashDealRequest {
   startTime: Date;
   endTime: Date;
   maxQuantity: number;
+  quantityLimit?: number;
 }
 
 export interface AdminFlashDealState {

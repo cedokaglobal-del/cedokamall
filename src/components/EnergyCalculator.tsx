@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Calculator, Plus, Trash2, Sun, Zap, Battery, BarChart3, ShoppingCart, MessageSquare, Check, ToggleLeft, ToggleRight, Edit3, Info, X } from 'lucide-react';
+import { Calculator, Plus, Trash2, Sun, Zap, Battery, BarChart3, ShoppingCart, MessageSquare, Check, ToggleLeft, ToggleRight, Edit3, Info, X, RotateCcw } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useCartStore } from '@/store/cartStore';
@@ -79,19 +79,25 @@ const loadFromStorage = () => {
       if (parsed.appliances?.length) {
         parsed.appliances = parsed.appliances.map((a) => ({
           ...a,
-          night: a.night ?? !(a as any).night,
-          minutes: typeof a.minutes === 'number' ? a.minutes : Math.round((a.hours || 0) * 60),
+          night: a.night ?? !a.night,
+          minutes: typeof a.minutes === 'number' ? a.minutes : 0,
           hours: undefined,
         }));
       }
       return parsed;
     }
-  } catch { }
+  } catch {
+    return null;
+  }
   return null;
 };
 
 const saveToStorage = (data: StorageData) => {
-  try { sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data)); } catch { }
+  try {
+    sessionStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  } catch {
+    return;
+  }
 };
 
 const computeResults = (appliances: ApplianceRow[], autonomy: number, dod: number, peakSunHours: number, inverterEff: number = 0.9, batteryEff: number = 0.85, tempDerating: number = 0.9, systemLosses: number = 0.8): CalculatorResults => {
@@ -216,6 +222,17 @@ const EnergyCalculator = () => {
 
   const enabledCount = useMemo(() => appliances.filter((a) => a.enabled).length, [appliances]);
 
+  const inputIssue = useMemo(() => {
+    if (enabledCount === 0) return 'Enable at least one appliance to calculate your system.';
+    if (appliances.some((appliance) => appliance.watts <= 0 || appliance.volts <= 0 || appliance.quantity <= 0)) {
+      return 'Every enabled appliance needs positive volts, watts, and quantity.';
+    }
+    if (dod <= 0 || peakSunHours <= 0 || inverterEff <= 0 || batteryEff <= 0 || systemLosses <= 0) {
+      return 'Update the system settings so efficiency, sunlight, and battery depth are above zero.';
+    }
+    return '';
+  }, [appliances, batteryEff, dod, enabledCount, inverterEff, peakSunHours, systemLosses]);
+
   const addAppliance = useCallback((preset?: { name: string; watts: number }) => {
     setAppliances((prev) => [...prev, {
       id: generateId(),
@@ -245,11 +262,31 @@ const EnergyCalculator = () => {
   };
 
   const handleCalculate = useCallback(() => {
+    if (inputIssue) {
+      setCalculated(false);
+      return;
+    }
     const comps = calcSystemComponents(results);
     setSystemComponents(comps);
     setCustomizing(false);
     setCalculated(true);
-  }, [results]);
+  }, [inputIssue, results]);
+
+  const resetCalculator = useCallback(() => {
+    sessionStorage.removeItem(STORAGE_KEY);
+    setAppliances([]);
+    setAutonomy(1);
+    setDoD(50);
+    setPeakSunHours(5);
+    setInverterEff(0.9);
+    setBatteryEff(0.85);
+    setBatteryType('not-sure');
+    setTempDerating(0.9);
+    setSystemLosses(0.8);
+    setMode('basic');
+    setSystemComponents([]);
+    setCalculated(false);
+  }, []);
 
   const handleBuySystem = useCallback(() => {
     systemComponents.forEach((comp) => {
@@ -319,7 +356,7 @@ const EnergyCalculator = () => {
     <div className="rounded-[1.5rem] border border-gold-antique/10 bg-white shadow-premium overflow-hidden">
 
       {/* Header */}
-      <div className="px-6 py-5 md:px-8 md:py-6 bg-gradient-to-r from-navy to-navy-deep">
+      <div className="px-6 py-5 md:px-8 md:py-6 bg-navy">
         <div className="flex items-center justify-between gap-3">
           <div className="flex items-center gap-3">
             <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gold/20">
@@ -330,7 +367,11 @@ const EnergyCalculator = () => {
               <p className="text-xs text-champagne/60 mt-0.5 hidden sm:block">Tap appliances to add them, then calculate your solar needs.</p>
             </div>
           </div>
-          <div className="flex items-center gap-1 bg-white/10 rounded-lg p-0.5">
+          <div className="flex items-center gap-1">
+            <button type="button" onClick={resetCalculator} className="rounded-lg p-2 text-champagne/60 hover:bg-white/10 hover:text-gold" aria-label="Reset calculator" title="Reset calculator">
+              <RotateCcw className="h-4 w-4" />
+            </button>
+            <div className="flex items-center gap-1 bg-white/10 rounded-lg p-0.5">
             <button
               type="button"
               onClick={() => setMode('basic')}
@@ -349,6 +390,7 @@ const EnergyCalculator = () => {
             >
               Advanced
             </button>
+            </div>
           </div>
         </div>
       </div>
@@ -760,7 +802,9 @@ const EnergyCalculator = () => {
 
         {/* Calculate Button */}
         {appliances.length > 0 && (
-          <div className="flex justify-center">
+          <div className="space-y-3">
+            {inputIssue && <p className="text-center text-sm font-medium text-destructive" role="alert">{inputIssue}</p>}
+            <div className="flex justify-center">
             <button
               type="button"
               onClick={handleCalculate}
@@ -769,12 +813,13 @@ const EnergyCalculator = () => {
               <Calculator className="h-5 w-5" />
               Calculate
             </button>
+            </div>
           </div>
         )}
 
         {/* Results */}
         {calculated && (
-        <div className="rounded-[1.5rem] border border-gold-antique/10 bg-gradient-to-br from-navy to-navy-deep p-5 md:p-6 text-champagne">
+        <div className="rounded-[1.5rem] border border-gold-antique/10 bg-navy p-5 md:p-6 text-champagne">
           <div className="flex items-center gap-2 mb-5">
             <BarChart3 className="h-5 w-5 text-gold" />
             <h3 className="text-sm font-bold uppercase tracking-[0.24em] text-gold">Your Solar Recommendation</h3>
@@ -979,13 +1024,13 @@ const EnergyCalculator = () => {
       const info = energyInfo(app);
       return (
       <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6" onClick={() => setInfoApplianceId(null)}>
-        <div className="absolute inset-0 bg-black/30 backdrop-blur-sm" />
+        {/* removed overlay div */}
         <div
           className="relative w-full max-w-md md:max-w-lg max-h-[80vh] overflow-y-auto rounded-2xl bg-white shadow-2xl border border-gold-antique/10 animate-fade-in"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
-          <div className="sticky top-0 z-10 flex items-center justify-between bg-gradient-to-r from-navy to-navy-deep px-5 py-4 rounded-t-2xl">
+          <div className="sticky top-0 z-10 flex items-center justify-between bg-navy px-5 py-4 rounded-t-2xl">
             <div className="flex items-center gap-2.5">
               <div className="flex h-7 w-7 items-center justify-center rounded-full bg-gold/20">
                 <Info className="h-3.5 w-3.5 text-gold" />

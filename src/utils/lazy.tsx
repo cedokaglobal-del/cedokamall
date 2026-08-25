@@ -5,7 +5,7 @@ import { lazy, ComponentType } from 'react';
  * by retrying the import. This is useful for production deployments
  * where old chunks might be cleared from the server.
  */
-export function safeLazy<T extends ComponentType<any>>(
+export function safeLazy<T extends ComponentType<unknown>>(
   factory: () => Promise<{ default: T }>,
   retriesLeft = 2,
   interval = 1000

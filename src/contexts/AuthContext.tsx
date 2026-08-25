@@ -163,7 +163,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
         return { success: false, message: 'Invalid password for this admin account.' };
       }
 
-      let { data, error } = await supabase.auth.signInWithPassword({
+      const { data, error } = await supabase.auth.signInWithPassword({
         email: normalizedEmail,
         password,
       });
@@ -182,9 +182,9 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       setIsAdmin(nextState.isAdmin);
       setAdminEmail(nextState.adminEmail);
       return { success: true };
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Unexpected login error:', error);
-      return { success: false, message: error?.message || 'An unexpected error occurred.' };
+      return { success: false, message: error instanceof Error ? error.message : 'An unexpected error occurred.' };
     } finally {
       setIsLoading(false);
     }
@@ -211,8 +211,8 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       }
 
       return { success: true, message: 'Check your email for the login link!' };
-    } catch (error: any) {
-      return { success: false, message: error?.message || 'Failed to send magic link.' };
+    } catch (error: unknown) {
+      return { success: false, message: error instanceof Error ? error.message : 'Failed to send magic link.' };
     } finally {
       setIsLoading(false);
     }
@@ -239,7 +239,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     logout,
     checkAuth,
     isLoading,
-  }), [isAuthenticated, isAdmin, adminEmail, checkAuth, isLoading]);
+  }), [isAuthenticated, isAdmin, adminEmail, login, loginWithMagicLink, logout, checkAuth, isLoading]);
 
   return (
     <AuthContext.Provider value={value}>

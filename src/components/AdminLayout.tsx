@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
-import { LogOut, Menu, X, Home, Package, BarChart3, ShoppingCart } from 'lucide-react';
+import { LogOut, Menu, X, Home, Package, BarChart3, ShoppingCart, Sun } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useAuth } from '@/contexts/useAuth';
 
@@ -25,6 +25,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
     { icon: ShoppingCart, label: 'Sales', href: '/admin/sales' },
     { icon: BarChart3, label: 'Analytics', href: '/admin/analytics' },
     { icon: Package, label: 'Flash Deals', href: '/admin/flash-deals' },
+    { icon: Sun, label: 'Solar Plans', href: '/admin/solar-plans' },
   ];
 
   const isActive = (href: string) => {

@@ -37,6 +37,7 @@ const AdminProducts   = safeLazy(() => import("./pages/AdminProducts"));
 const AdminAnalytics  = safeLazy(() => import("./pages/AdminAnalytics"));
 const AdminFlashDeals = safeLazy(() => import("./pages/AdminFlashDeals"));
 const AdminSales      = safeLazy(() => import("./pages/AdminSales"));
+const AdminSolarPlans = safeLazy(() => import("./pages/AdminSolarPlans"));
 
 // Lightweight page spinner shown while a chunk is loading
 const PageLoader = () => (
@@ -56,11 +57,14 @@ const ScrollToTop = () => {
   const location = useLocation();
   useEffect(() => {
     window.scrollTo(0, 0);
-    trackPageView(location.pathname);
-    if (typeof (window as any).gtag !== 'undefined') {
-      (window as any).gtag('config', 'G-6KG0L3JXPM', { page_path: location.pathname + location.search });
-    }
   }, [location.pathname]);
+
+  useEffect(() => {
+    trackPageView(location.pathname);
+    if (window.gtag) {
+      window.gtag('config', 'G-6KG0L3JXPM', { page_path: location.pathname + location.search });
+    }
+  }, [location.pathname, location.search]);
 
   useEffect(() => { trackReferrer(); }, []);
 
@@ -233,6 +237,14 @@ const App = () => {
                     element={
                       <ProtectedRoute>
                         <AdminSales />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/solar-plans"
+                    element={
+                      <ProtectedRoute>
+                        <AdminSolarPlans />
                       </ProtectedRoute>
                     }
                   />

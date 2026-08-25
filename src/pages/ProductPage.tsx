@@ -29,6 +29,7 @@ import { useProductStore } from '@/store/productStore';
 import { toast } from 'sonner';
 import { getOptimizedImageUrl, generateSrcSet, generateSizes } from '@/utils/performance';
 import { RENEWABLE_ENERGY_CATEGORIES } from '@/data/catalog';
+import type { Product } from '@/types/product';
 
 const fallbackImage = '/image.png';
 const formatPrice = (amount: number) => `\u20A6${amount.toLocaleString()}`;
@@ -377,7 +378,6 @@ const ProductPage = () => {
                 alt={product.name}
                 className="h-full w-full object-cover transition-transform duration-700 group-hover:scale-105"
                 loading="eager"
-                fetchpriority="high"
                 decoding="async"
                 onError={(event) => {
                   event.currentTarget.src = fallbackImage;
@@ -415,7 +415,7 @@ const ProductPage = () => {
 
           <div className="space-y-6">
             <section className="overflow-hidden rounded-[1.75rem] border border-gold-antique/10 bg-white shadow-premium">
-              <div className="border-b border-gold-antique/10 bg-gradient-to-r from-white via-white to-gold/10 px-6 py-6 md:px-8">
+              <div className="border-b border-gold-antique/10 bg-white px-6 py-6 md:px-8">
                 <div className="mb-4 flex flex-wrap items-center gap-3 text-[11px] font-bold uppercase tracking-[0.22em] text-navy/55">
                   <span className="break-words">{product.category}</span>
                   <span className="h-1 w-1 shrink-0 rounded-full bg-gold" />

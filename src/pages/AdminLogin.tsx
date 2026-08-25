@@ -37,7 +37,7 @@ const AdminLogin = () => {
       return () => window.cancelIdleCallback(idleId);
     }
 
-    const timer = window.setTimeout(preloadAdminRoutes, 400);
+    const timer = setTimeout(preloadAdminRoutes, 400);
     return () => window.clearTimeout(timer);
   }, []);
 
@@ -83,8 +83,8 @@ const AdminLogin = () => {
           setError(result.message);
         }
       }
-    } catch (err: any) {
-      setError(err?.message || 'Login failed. Please contact the administrator.');
+    } catch (err: unknown) {
+      setError(err instanceof Error ? err.message : 'Login failed. Please contact the administrator.');
     } finally {
       setIsLoading(false);
     }

@@ -100,7 +100,7 @@ const FloatingCalculatorButton = ({ externalOpen, onExternalToggle }: FloatingCa
           </button>
         </div>
         <div className="p-4 md:p-6">
-          <EnergyCalculator variant="drawer" />
+          <EnergyCalculator />
         </div>
       </div>
     </>

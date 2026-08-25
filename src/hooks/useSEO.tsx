@@ -106,12 +106,13 @@ export const useStructuredData = (schema: StructuredDataNode | StructuredDataNod
   const schemaSignature = JSON.stringify(schemas);
 
   useEffect(() => {
+    const schemasToInject = JSON.parse(schemaSignature) as StructuredDataNode[];
     const existingScripts = Array.from(
       document.querySelectorAll('script[data-managed-structured-data="true"]')
     );
     existingScripts.forEach((script) => script.remove());
 
-    schemas.forEach((entry, index) => {
+    schemasToInject.forEach((entry, index) => {
       const script = document.createElement('script');
       script.type = 'application/ld+json';
       script.textContent = JSON.stringify(entry);

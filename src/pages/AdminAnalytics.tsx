@@ -37,8 +37,7 @@ const AdminAnalytics = () => {
 
   useEffect(() => {
     void fetchTransactions();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [fetchTransactions]);
 
   useEffect(() => {
     const loadVisitors = async () => {
@@ -52,7 +51,6 @@ const AdminAnalytics = () => {
       }
     };
     void loadVisitors();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   useEffect(() => {
@@ -60,7 +58,6 @@ const AdminAnalytics = () => {
     return () => {
       unsubscribe();
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleExport = () => {

@@ -4,7 +4,8 @@ import { ArrowLeft, SlidersHorizontal } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
-import { buildCategories, slugifyCategory, DEFAULT_SOLAR_CATEGORIES } from '@/data/products';
+import { buildCategories, slugifyCategory } from '@/data/products';
+import { isRenewableEnergyCategory } from '@/data/catalog';
 import {
   getBreadcrumbSchema,
   getCollectionPageSchema,
@@ -13,6 +14,7 @@ import {
 } from '@/config/seo';
 import { useSEO, useStructuredData } from '@/hooks/useSEO';
 import { useProductStore } from '@/store/productStore';
+import { useSolarCategoryStore } from '@/store/solarCategoryStore';
 import { trackSearch } from '@/utils/tracking';
 
 const DEFAULT_PRICE_RANGE: [number, number] = [0, 0];
@@ -26,14 +28,17 @@ const ShopPage = () => {
   useEffect(() => { if (searchTerm) trackSearch(searchTerm); }, [searchTerm]);
 
   const products = useProductStore((state) => state.products);
+  const solarCategories = useSolarCategoryStore((state) => state.categories);
   const isLoading = useProductStore((state) => state.isLoading);
   const error = useProductStore((state) => state.error);
   const hasLoaded = useProductStore((state) => state.hasLoaded);
   const categories = useMemo(() => {
     const allCategories = buildCategories(products);
     // Filter out solar subcategories - they should only appear on the Solar page
-    return allCategories.filter((cat) => !DEFAULT_SOLAR_CATEGORIES.includes(cat.name));
-  }, [products]);
+    return allCategories.filter(
+      (cat) => !isRenewableEnergyCategory(cat.name) && !solarCategories.includes(cat.name)
+    );
+  }, [products, solarCategories]);
 
   const [selectedCategory, setSelectedCategory] = useState(categoryParam || 'all');
   const [sortBy, setSortBy] = useState('popular');
@@ -80,23 +85,16 @@ const ShopPage = () => {
   }, [sliderMax]);
 
   const filteredProducts = useMemo(() => {
-    let next = [...products];
+    let next = products.filter(
+      (product) => !isRenewableEnergyCategory(product.category) && !solarCategories.includes(product.category)
+    );
 
     if (dealsOnly) {
       next = next.filter((product) => product.badge === 'FLASH DEAL');
     }
 
     if (selectedCategory !== 'all') {
-      if (selectedCategory === 'solar') {
-        // Include products with main Solar category AND all solar subcategories
-        next = next.filter(
-          (product) =>
-            slugifyCategory(product.category) === 'solar' ||
-            DEFAULT_SOLAR_CATEGORIES.includes(product.category)
-        );
-      } else {
-        next = next.filter((product) => slugifyCategory(product.category) === selectedCategory);
-      }
+      next = next.filter((product) => slugifyCategory(product.category) === selectedCategory);
     }
 
     if (searchTerm) {
@@ -134,7 +132,7 @@ const ShopPage = () => {
           return scoreB - scoreA;
         });
     }
-  }, [dealsOnly, priceRange, products, searchTerm, selectedCategory, sortBy]);
+  }, [dealsOnly, priceRange, products, searchTerm, selectedCategory, solarCategories, sortBy]);
 
   const pageTitle = activeCategory
     ? `${activeCategory.name} in Nigeria - Cedokamall`

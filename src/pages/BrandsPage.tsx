@@ -81,7 +81,7 @@ const BrandsPage = () => {
                   to={`/shop?brand=${encodeURIComponent(brand)}`}
                   className="group rounded-xl border border-gold-antique/10 bg-white p-6 text-center shadow-sm transition-all duration-300 hover:-translate-y-1 hover:shadow-premium-lg"
                 >
-                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-gradient-to-br from-ivory to-gold/10 transition-transform group-hover:scale-110">
+                  <div className="mx-auto flex h-16 w-16 items-center justify-center rounded-full bg-ivory transition-transform group-hover:scale-110">
                     <span className="text-2xl font-bold text-gold">{brand.charAt(0).toUpperCase()}</span>
                   </div>
                   <h3 className="mt-4 font-serif text-base font-bold text-navy group-hover:text-gold transition-colors line-clamp-2">

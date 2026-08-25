@@ -319,14 +319,14 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
       }
       await onSubmit(finalData);
       toast.success(product ? 'Product updated successfully' : 'Product created successfully');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error saving product form:', error);
-      const errorMessage = error?.message || 'Please check your details and try again.';
+      const errorMessage = error instanceof Error ? error.message : 'Please check your details and try again.';
       toast.error(`We could not save this product: ${errorMessage}`);
     }
   };
 
-  const handleChange = (field: keyof ProductFormData, value: any) => {
+  const handleChange = (field: keyof ProductFormData, value: ProductFormData[keyof ProductFormData]) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors((prev) => {

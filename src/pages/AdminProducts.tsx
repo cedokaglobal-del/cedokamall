@@ -44,7 +44,7 @@ const [isFormOpen, setIsFormOpen] = useState(false);
    const [isDeletePasswordOpen, setIsDeletePasswordOpen] = useState(false);
    const [pendingDeleteProduct, setPendingDeleteProduct] = useState<Product | null>(null);
 
-  const filteredProducts = useMemo(() => getFilteredProducts(), [filter, products]);
+  const filteredProducts = useMemo(() => getFilteredProducts(), [getFilteredProducts]);
   const categories = useMemo(() => getCategoryOptions(products), [products]);
 
   const handleAddProduct = () => {

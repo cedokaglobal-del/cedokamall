@@ -145,5 +145,11 @@ export const RENEWABLE_ENERGY_CATEGORIES = MAJOR_CATEGORY_MAP[
   'renewable-energy'
 ].productCategories;
 
+/** Return true when a product belongs to the Solar super category. */
+export const isRenewableEnergyCategory = (productCategory: string): boolean =>
+  RENEWABLE_ENERGY_CATEGORIES.some(
+    (category) => category.toLowerCase() === productCategory.trim().toLowerCase()
+  );
+
 /** Categories that belong to the Farms group. */
 export const FARM_CATEGORIES = MAJOR_CATEGORY_MAP['farms'].productCategories;

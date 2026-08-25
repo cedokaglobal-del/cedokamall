@@ -26,57 +26,7 @@ import {
 } from '@/config/seo';
 import { useSEO, useStructuredData } from '@/hooks/useSEO';
 import { useProductStore } from '@/store/productStore';
-import type { Product } from '@/types/product';
-
-// Seasonal product ordering
-const DRY_SEASON_KEYWORDS = ['freezer', 'refrigerator', 'air conditioner', 'ac', 'cooling', 'fan', 'cooler'];
-const RAINY_SEASON_KEYWORDS = ['television', 'tv', 'sound', 'speaker', 'generator', 'inverter', 'stabilizer', 'home theatre'];
-
-const getSeasonalProducts = (products: Product[]): Product[] => {
-  const now = new Date();
-  const month = now.getMonth();
-  const isDrySeason = month >= 10 || month <= 2;
-
-  const priorityKeywords = isDrySeason ? DRY_SEASON_KEYWORDS : RAINY_SEASON_KEYWORDS;
-
-  const scored = products.map(product => {
-    const name = product.name.toLowerCase();
-    let score = 0;
-    for (const kw of priorityKeywords) {
-      if (name.includes(kw)) {
-        score += 10;
-      }
-    }
-    score += (product.searchCount || 0) * 0.5;
-    score += (product.salesCount || 0) * 0.3;
-    score += (product.rating || 0) * 0.2;
-    return { product, score };
-  });
-
-  scored.sort((a, b) => b.score - a.score);
-
-  const seasonal = scored.filter(p => p.score >= 10).map(p => p.product);
-  const others = scored.filter(p => p.score < 10).map(p => p.product);
-
-  const shuffledOthers = [...others].sort(() => Math.random() - 0.5);
-
-  const categorySet = new Set<string>();
-  const orderedOthers: Product[] = [];
-  for (const p of shuffledOthers) {
-    if (!categorySet.has(p.category)) {
-      orderedOthers.push(p);
-      categorySet.add(p.category);
-    }
-  }
-  for (const p of shuffledOthers) {
-    if (!categorySet.has(p.category)) {
-      orderedOthers.push(p);
-      categorySet.add(p.category);
-    }
-  }
-
-  return [...seasonal.slice(0, 2), ...orderedOthers];
-};
+import heroImage from '../../Image/Hero Page Image.jfif';
 
 const CountdownTimer = () => {
   const [time, setTime] = useState({ h: 5, m: 42, s: 18 });
@@ -218,8 +168,8 @@ const Index = () => {
     () => products.filter((product) => product.badge === 'FLASH DEAL').slice(0, 5),
     [products]
   );
-  const seasonalProducts = useMemo(
-    () => getSeasonalProducts(products),
+  const homepageProducts = useMemo(
+    () => [...products].sort(() => Math.random() - 0.5),
     [products]
   );
   const trending = useMemo(
@@ -288,40 +238,39 @@ const Index = () => {
       <Header />
 
       {/* Hero Section */}
-      <section className="relative flex min-h-[320px] sm:min-h-[500px] items-center overflow-hidden bg-navy text-champagne">
-        <div className="container relative z-10 py-10 sm:py-20 md:py-24">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.6, ease: 'easeOut' }}
-            className="max-w-3xl"
-          >
-            <span className="text-xs font-bold uppercase tracking-[0.2em] text-gold">
-              Nigeria's multi-category marketplace
-            </span>
-            <h1 className="mt-4 font-serif text-3xl font-bold leading-[1.12] sm:text-5xl md:text-6xl text-white">
-              Shop electronics, solar power and farm products in one place.
+      <section className="relative min-h-[320px] sm:min-h-[480px] items-center overflow-hidden bg-navy">
+        <img
+          src={heroImage}
+          alt="Featured Cedokamall electronics and technology"
+          className="absolute inset-0 h-full w-full object-cover object-center"
+          fetchPriority="high"
+          decoding="async"
+        />
+        <div className="absolute inset-0 bg-navy/70" aria-hidden="true" />
+        <div className="container relative py-10 sm:py-16 md:py-20">
+          <div className="max-w-2xl text-center">
+            <h1 className="mt-4 font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-white leading-[1.2]">
+              Quality Tools & Tech
             </h1>
-            <p className="mt-5 max-w-2xl text-sm leading-relaxed text-champagne/80 sm:text-lg">
-              Original gadgets and appliances, reliable solar systems, and fresh farm produce — with
-              warranty support and delivery across Nigeria.
+            <p className="mt-4 text-champagne/80 text-sm sm:text-base font-sans leading-relaxed">
+              Electronics, solar power and farm products.
             </p>
-            <div className="mt-8 flex flex-col gap-4 sm:flex-row">
+            <div className="mt-8 flex flex-col sm:flex-row justify-center gap-4">
               <Link
                 to="/shop"
-                className="inline-flex items-center justify-center gap-3 rounded-md bg-gold px-8 sm:px-10 py-3.5 sm:py-4 text-sm sm:text-base font-bold text-navy shadow-lg transition-all duration-300 hover:bg-gold-antique hover:text-white"
+                className="inline-flex items-center justify-center gap-2 rounded-md bg-gold px-6 py-2.5 text-sm font-bold text-navy transition-colors duration-200 hover:bg-gold-antique hover:text-white"
               >
-                Shop Electronics
-                <ArrowRight className="h-5 w-5" />
+                Shop Now
+                <ArrowRight className="h-4 w-4" />
               </Link>
               <Link
                 to="/solar"
-                className="inline-flex items-center justify-center gap-3 rounded-md border border-gold/30 bg-white/5 px-8 sm:px-10 py-3.5 sm:py-4 text-sm sm:text-base font-bold text-champagne transition-all duration-300 hover:bg-white/10 hover:border-gold"
+                className="inline-flex items-center justify-center gap-2 rounded-md border border-gold/30 bg-white/5 px-6 py-2.5 text-sm font-bold text-champagne transition-colors duration-200 hover:bg-white/10 hover:border-gold"
               >
                 Explore Solar
               </Link>
             </div>
-          </motion.div>
+          </div>
         </div>
       </section>
 
@@ -348,18 +297,15 @@ const Index = () => {
       </div>
 
       {/* Major Categories */}
-      <section className="container py-10 sm:py-16">
-        <div className="mb-8 flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h2 className="font-serif text-2xl font-bold text-navy sm:text-4xl">Shop by category</h2>
-            <div className="mt-2 h-0.5 w-12 bg-gold sm:h-1 sm:w-20" />
-          </div>
+      <section className="container py-8 sm:py-12">
+        <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-end justify-between gap-2">
+          <h2 className="font-serif text-2xl font-bold text-navy sm:text-3xl">Shop by category</h2>
           <Link
             to="/shop"
-            className="group flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gold hover:text-gold-antique sm:text-sm"
+            className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider text-gold hover:text-gold-antique transition-colors"
           >
-            View all products
-            <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 group-hover:translate-x-1 transition-transform" />
+            View all
+            <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
         <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -367,28 +313,20 @@ const Index = () => {
             <Link
               key={category.slug}
               to={category.href}
-              className="group relative overflow-hidden rounded-md border border-gold-antique/10 bg-white p-6 shadow-sm transition-all hover:border-gold/40 sm:p-8"
+              className="group relative rounded-md bg-white border border-gold-antique/10 p-5 sm:p-6 transition-all hover:border-gold/30"
             >
-              <div className="flex items-center gap-4">
-                <div className="flex h-12 w-12 items-center justify-center rounded-full bg-ivory text-gold transition-colors group-hover:bg-gold/10">
-                  <category.icon className="h-6 w-6" />
+              <div className="flex items-center gap-3">
+                <div className="flex h-10 w-10 items-center justify-center rounded-bg bg-ivory">
+                  <category.icon className="h-5 w-5" />
                 </div>
-                <h3 className="font-serif text-lg font-bold text-navy sm:text-xl">{category.name}</h3>
+                <h3 className="font-serif text-base font-bold text-navy sm:text-lg">{category.name}</h3>
               </div>
-              <p className="mt-4 text-sm leading-6 text-navy/60">{category.tagline}</p>
-              <div className="mt-5 flex flex-wrap gap-2">
-                {category.subcategories.slice(0, 4).map((sub) => (
-                  <span
-                    key={sub.slug}
-                    className="rounded-full border border-gold-antique/20 bg-ivory px-3 py-1 text-[11px] font-semibold uppercase tracking-wider text-navy/70"
-                  >
-                    {sub.name}
-                  </span>
-                ))}
-              </div>
-              <span className="mt-6 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gold">
+              <p className="mt-2 text-sm text-navy/50 leading-relaxed">{category.tagline}</p>
+              <span className="mt-3 flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gold">
                 Shop now
-                <ArrowRight className="h-4 w-4 transition-transform group-hover:translate-x-1" />
+                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                  <path d="M5 12h14M12 5l7 7-7 7" />
+                </svg>
               </span>
             </Link>
           ))}
@@ -419,7 +357,7 @@ const Index = () => {
                   className={index > 3 ? 'hidden md:block' : ''}
                 >
                   <motion.div
-                    whileHover={{ y: -6, shadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)" }}
+                    whileHover={{ y: -6, boxShadow: "0 20px 25px -5px rgba(0, 0, 0, 0.1)" }}
                     whileTap={{ scale: 0.98 }}
                     className="rounded-md border border-gold-antique/10 bg-white p-3 sm:p-6 text-center transition-all group hover:border-gold/30 h-full will-change-transform"
                   >
@@ -480,7 +418,7 @@ const Index = () => {
           </div>
         ) : (
           <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-            {seasonalProducts.slice(0, 10).map((product, idx) => (
+            {homepageProducts.map((product, idx) => (
               <ProductCard key={product.id} product={product} priority={idx < 4} />
             ))}
           </div>

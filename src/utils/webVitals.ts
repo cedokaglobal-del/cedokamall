@@ -119,7 +119,7 @@ export const initWebVitals = (): (() => void) => {
       for (const entry of list.getEntries()) {
         const metric: PerformanceMetric = {
           name: entry.name,
-          value: entry.duration || (entry as Record<string, number>).value || 0,
+          value: entry.duration || ((entry as unknown as Record<string, number>).value || 0),
           id: entry.startTime,
         };
         reportWebVitals(metric);

@@ -23,13 +23,28 @@ const loadCachedTransactions = (): Transaction[] => {
   const stored = localStorage.getItem(TRANSACTION_CACHE_KEY);
   if (!stored) return [];
   try {
-    const parsed = JSON.parse(stored);
-    return parsed.map((t: any) => ({
-      ...t,
-      deliveryMethod: t.deliveryMethod || t.delivery_method || '',
-      createdAt: new Date(t.createdAt),
-      updatedAt: new Date(t.updatedAt),
-    }));
+    const parsed = JSON.parse(stored) as unknown;
+    if (!Array.isArray(parsed)) return [];
+    return parsed
+      .filter((value): value is Record<string, unknown> => Boolean(value && typeof value === 'object'))
+      .map((t) => ({
+        id: String(t.id ?? ''),
+        orderId: String(t.orderId ?? ''),
+        productId: String(t.productId ?? ''),
+        productName: String(t.productName ?? ''),
+        customerEmail: String(t.customerEmail ?? ''),
+        amount: Number(t.amount ?? 0),
+        currency: String(t.currency ?? 'NGN'),
+        quantity: Number(t.quantity ?? 0),
+        status: t.status as Transaction['status'],
+        type: t.type as Transaction['type'],
+        paymentMethod: String(t.paymentMethod ?? ''),
+        deliveryMethod: String(t.deliveryMethod ?? t.delivery_method ?? ''),
+        category: String(t.category ?? 'General'),
+        profit: Number(t.profit ?? 0),
+        createdAt: new Date(String(t.createdAt)),
+        updatedAt: new Date(String(t.updatedAt)),
+      }));
   } catch (e) {
     return [];
   }
@@ -64,7 +79,7 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
         if (error) throw error;
 
         if (data) {
-          const transactions = data.map((row: any) => ({
+          const transactions = data.map((row) => ({
             id: String(row.id),
             orderId: String(row.order_id),
             productId: String(row.product_id),
@@ -73,9 +88,9 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
             amount: Number(row.amount),
             currency: '₦',
             quantity: Number(row.quantity),
-            status: row.status,
-            type: row.type || 'sale',
-            paymentMethod: row.payment_method,
+            status: row.status as Transaction['status'],
+            type: (row.type || 'sale') as Transaction['type'],
+            paymentMethod: String(row.payment_method || ''),
             deliveryMethod: row.delivery_method || '',
             category: String(row.category || 'General'),
             profit: Number(row.profit || row.amount * 0.3),
@@ -94,9 +109,9 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
           }
         }
       }, { maxRetries: 2 });
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error fetching transactions:', err);
-      set({ error: err.message });
+      set({ error: err instanceof Error ? err.message : 'Unable to fetch transactions.' });
     } finally {
       set({ isLoading: false });
     }
@@ -142,7 +157,7 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
           return { transactions };
         });
       }
-    } catch (err: any) {
+    } catch (err: unknown) {
       console.error('Error adding transaction:', err);
       // Local fallback
       const fallbackTxn: Transaction = {
@@ -302,7 +317,7 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
 // Export a legacy object for compatibility with non-hook usage if needed
 export const transactionStore = {
   get transactions() { return useTransactionStore.getState().transactions; },
-  addTransaction: (data: any) => useTransactionStore.getState().addTransaction(data),
+  addTransaction: (data: Omit<Transaction, 'id' | 'createdAt' | 'updatedAt'>) => useTransactionStore.getState().addTransaction(data),
   getTransactionSummary: (days: number) => useTransactionStore.getState().getTransactionSummary(days),
   getAnalyticsData: (days: number) => useTransactionStore.getState().getAnalyticsData(days),
 };

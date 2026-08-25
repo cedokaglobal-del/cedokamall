@@ -73,38 +73,37 @@ const Header = () => {
   return (
     <>
       {/* Top bar */}
-      <div className="bg-navy text-champagne text-xs sm:text-sm py-2 sm:py-2.5 border-b border-gold-antique/20 transition-all duration-300">
+      <div className="bg-navy text-champagne text-xs sm:text-sm py-2 sm:py-2.5 border-b border-gold-antique/20">
         <div className="container flex justify-between items-center font-sans gap-2 sm:gap-4 flex-wrap">
           <div className="flex items-center gap-2 sm:gap-4 flex-wrap min-w-0">
             <span className="flex items-center gap-1 opacity-90 text-xs sm:text-sm whitespace-nowrap">
               <MapPin className="w-3 h-3 sm:w-4 sm:h-4 text-gold flex-shrink-0" /> 
-              <span className="hidden sm:inline">Delivery Across Nigeria</span>
-              <span className="sm:hidden">Delivery NGN</span>
+              <span className="hidden sm:inline">Delivery</span>
+              <span className="sm:hidden">NGN</span>
             </span>
             <span className="hidden sm:flex items-center gap-1 opacity-90">
               <Phone className="w-4 h-4 text-gold flex-shrink-0" /> 
-              <Link to="tel:09128817136" className="hover:text-gold transition-colors duration-300">09128817136</Link>
+              <Link to="tel:09128817136" className="hover:text-gold">09128817136</Link>
             </span>
           </div>
         </div>
       </div>
 
       {/* Main header */}
-      <header className="sticky top-0 z-50 bg-navy text-champagne border-b border-gold-antique/30 shadow-premium transition-shadow duration-300">
+      <header className="sticky top-0 z-50 bg-navy text-champagne border-b border-gold-antique/30">
         <div className="container flex items-center gap-1 sm:gap-3 py-2.5 sm:py-3 flex-wrap md:flex-nowrap">
           {/* Logo */}
           <Link 
             to="/" 
-            className="flex-shrink-0 flex items-center mr-1 sm:mr-2 transition-transform duration-300 hover:scale-105" 
+            className="flex-shrink-0 flex items-center mr-1 sm:mr-2 hover:scale-105"
             aria-label="Cedokamall Home"
           >
             <img
               src="/header_logo.png"
               alt="Cedokamall"
-              className="object-contain brightness-150 contrast-200"
-              style={{ height: 'clamp(40px, 8vw, 56px)', width: 'auto', maxWidth: '200px', filter: 'drop-shadow(0 0 8px rgba(201, 168, 76, 0.5))' }}
+              className="object-contain"
+              style={{ height: 'clamp(40px, 8vw, 56px)', width: 'auto', maxWidth: '200px' }}
               loading="eager"
-              fetchpriority="high"
               decoding="async"
             />
           </Link>
@@ -115,201 +114,104 @@ const Header = () => {
               type="text"
               value={searchQuery}
               onChange={handleInputChange}
-              placeholder="Search products..."
-              className="w-full pl-4 sm:pl-5 pr-10 sm:pr-12 py-2 sm:py-2.5 rounded-lg border border-gold-antique/30 bg-navy-deep/50 text-champagne text-xs sm:text-base focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all duration-300 placeholder:text-champagne/50"
+              placeholder="Search..."
+              className="w-full pl-3 sm:pl-5 pr-8 sm:pr-10 py-2 sm:py-2.5 rounded-lg border border-gold-antique/30 bg-navy-deep/50 text-champagne text-xs sm:text-base focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all duration-200 placeholder:text-champagne/50"
               aria-label="Search products"
             />
             <button 
               type="submit" 
-              className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 min-h-11 min-w-11 p-2 hover:text-gold transition-colors duration-300 flex-shrink-0 active:scale-95 rounded-md hover:bg-white/5" 
+              className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 min-h-10 min-w-10 p-1.5 hover:text-gold transition-colors duration-200 flex-shrink-0 rounded-md hover:bg-white/5"
               aria-label="Search"
             >
               <Search className="w-4 h-4 sm:w-5 sm:h-5" />
             </button>
           </form>
 
-          {/* Categories dropdown - desktop only */}
-          {categories.length > 0 && (
-            <div className="relative hidden lg:block">
-              <button
-                type="button"
-                onClick={() => setCatMenuOpen(!catMenuOpen)}
-                className={cn(
-                  'flex items-center gap-2 px-3 py-2 text-xs font-bold uppercase tracking-wider transition-all rounded-md whitespace-nowrap',
-                  catMenuOpen || location.pathname === '/shop' ? 'text-gold' : 'text-champagne/70 hover:text-gold'
-                )}
-              >
-                <Menu className="w-4 h-4" /> Categories <ChevronDown className={cn('w-3 h-3 transition-transform duration-300', catMenuOpen && 'rotate-180')} />
-              </button>
-              {catMenuOpen && (
-                <div className="absolute top-full left-0 mt-2 bg-navy-deep rounded-lg shadow-premium-lg border border-gold-antique/30 p-2 w-64 z-50 animate-slide-down duration-250 max-h-96 overflow-y-auto">
-                  {(isSolarPage ? solarCategoryLinks : categories).map((item, idx) => {
-                    const slug = 'slug' in item ? item.slug : (item as { name: string; slug: string }).slug;
-                    const name = item.name;
-                    const href = isSolarPage
-                      ? `/solar?category=${slug}`
-                      : `/shop?category=${slug}`;
-                    return (
-                      <Link
-                        key={slug}
-                        to={href}
-                        className="flex items-center gap-3 px-4 py-3 rounded-md hover:bg-gold-antique/20 hover:text-white transition-all duration-250 text-sm font-medium"
-                        style={{ animationDelay: `${idx * 50}ms` }}
-                        onClick={() => setCatMenuOpen(false)}
-                      >
-                        <Sun className="w-4 h-4 text-gold flex-shrink-0" />
-                        <span>{name}</span>
-                      </Link>
-                    );
-                  })}
-                </div>
-              )}
-            </div>
-          )}
-
-          {/* Electronics & Gadgets - Desktop */}
-          <Link
-            to="/shop"
-            className={cn(
-              'hidden lg:flex items-center gap-1.5 px-3 py-2 text-xs font-bold uppercase tracking-wider transition-colors whitespace-nowrap',
-              location.pathname === '/shop' ? 'text-gold' : 'text-champagne/70 hover:text-gold'
+          {/* Categories - desktop */}
+          <div className="relative hidden lg:block">
+            <button
+              type="button"
+              onClick={() => setCatMenuOpen(!catMenuOpen)}
+              className="flex items-center gap-2 px-3 py-2 text-xs font-bold uppercase tracking-wider rounded-md whitespace-nowrap text-champagne/70 hover:text-gold transition-all duration-200"
+            >
+              <Menu className="w-3 h-3" /> Categories <ChevronDown className="w-2 h-2 transition-transform duration-200" />
+            </button>
+            {catMenuOpen && (
+              <div className="absolute top-full left-0 mt-2 bg-navy-deep rounded-lg border border-gold-antique/20 p-2 w-64 z-50 max-h-[200px] overflow-y-auto">
+                {(isSolarPage ? solarCategoryLinks : categories).map((item, idx) => {
+                  const slug = 'slug' in item ? item.slug : (item as { name: string; slug: string }).slug;
+                  const name = item.name;
+                  const href = isSolarPage
+                    ? `/solar?category=${slug}`
+                    : `/shop?category=${slug}`;
+                  return (
+                    <Link
+                      key={slug}
+                      to={href}
+                      className="flex items-center gap-3 px-3 py-2 rounded-md hover:bg-gold-antique/20 hover:text-white transition-all duration-200 text-sm font-medium"
+                      onClick={() => setCatMenuOpen(false)}
+                    >
+                      <Sun className="w-3 h-3 text-gold flex-shrink-0" />
+                      <span>{name}</span>
+                    </Link>
+                  );
+                })}
+              </div>
             )}
-          >
-            <LayoutGrid className="w-4 h-4" />
-            Electronics
-          </Link>
+          </div>
 
-          {/* Renewable Energy - Desktop */}
-          <Link
-            to="/solar"
-            className={cn(
-              'hidden lg:flex items-center gap-1.5 px-3 py-2 text-xs font-bold uppercase tracking-wider transition-colors whitespace-nowrap',
-              isSolarPage ? 'text-gold' : 'text-champagne/70 hover:text-gold'
-            )}
-          >
-            <Sun className="w-4 h-4" />
-            Renewable Energy
-          </Link>
+          {/* Desktop category links */}
+          <div className="flex items-center gap-1 sm:gap-3">
+            <Link
+              to="/shop"
+              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors whitespace-nowrap text-champagne/70 hover:text-gold"
+            >
+              <LayoutGrid className="w-3 h-3" /> Electronics
+            </Link>
 
-          {/* Farms - Desktop */}
-          <Link
-            to="/farms"
-            className={cn(
-              'hidden lg:flex items-center gap-1.5 px-3 py-2 text-xs font-bold uppercase tracking-wider transition-colors whitespace-nowrap',
-              location.pathname === '/farms' ? 'text-gold' : 'text-champagne/70 hover:text-gold'
-            )}
-          >
-            <Sprout className="w-4 h-4" />
-            Farms
-          </Link>
+            <Link
+              to="/solar"
+              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors whitespace-nowrap text-champagne/70 hover:text-gold"
+            >
+              <Sun className="w-3 h-3" /> Renewable Energy
+            </Link>
+
+            <Link
+              to="/farms"
+              className="hidden lg-flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors whitespace-nowrap text-champagne/70 hover:text-gold"
+            >
+              <Sprout className="w-3 h-3" /> Farms
+            </Link>
+          </div>
 
           {/* Actions */}
-          <div className="flex items-center gap-1 sm:gap-3 flex-shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3">
             <button 
               type="button" 
               onClick={toggleCart} 
-              className="relative flex min-h-11 min-w-11 items-center justify-center p-2 sm:p-2.5 hover:text-gold transition-all duration-300 rounded-lg hover:bg-white/5 group active:scale-95" 
+              className="relative flex min-h-10 min-w-10 items-center justify-center p-2 sm:p-2.5 hover:text-gold transition-colors rounded-lg hover:bg-white/5 group active:scale-95"
               title="Shopping Cart"
               aria-label="Shopping Cart"
             >
-              <ShoppingCart className="w-5 h-5 sm:w-6 sm:h-6" />
+              <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
               {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-5 h-5 bg-gold text-navy text-[10px] font-bold rounded-full flex items-center justify-center shadow-premium-sm border border-navy animate-scale-in">
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-gold text-navy text-[10px] font-bold rounded-full shadow border border-navy">
                   {itemCount > 9 ? '9+' : itemCount}
                 </span>
               )}
-              <span className="hidden md:inline ml-2 font-medium text-sm">Cart</span>
+              <span className="hidden md:inline ml-1 font-medium text-sm">Cart</span>
             </button>
             <button 
               type="button" 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
-              className="md:hidden min-h-11 min-w-11 p-2 hover:text-gold transition-all duration-300 rounded-lg hover:bg-white/5 active:scale-95" 
+              className="md:hidden min-h-10 min-w-10 p-2 sm:p-2.5 hover:text-gold transition-colors rounded-lg hover:bg-white/5 active:scale-95"
               title="Menu"
               aria-label="Toggle menu"
             >
-              {mobileMenuOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+              {mobileMenuOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
             </button>
           </div>
         </div>
-
-        {/* Mobile menu */}
-        {mobileMenuOpen && categories.length > 0 && (
-          <div className="md:hidden border-t border-gold-antique/20 bg-navy-deep p-3 sm:p-4 animate-slide-down duration-300 max-h-[60vh] overflow-y-auto">
-            <div className="flex items-center gap-2 mb-3 pb-3 border-b border-gold-antique/10">
-              <Link
-                to="/solar"
-                className={cn(
-                  'flex items-center gap-2 rounded-lg border px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all',
-                  isSolarPage
-                    ? 'bg-gold text-navy border-gold'
-                    : 'bg-navy-deep/50 border-gold-antique/10 text-champagne hover:border-gold/50'
-                )}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Sun className="w-4 h-4 text-gold" />
-                Solar Store
-              </Link>
-              <Link
-                to="/shop"
-                className={cn(
-                  'flex items-center gap-2 rounded-lg border px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all',
-                  !isSolarPage
-                    ? 'bg-gold text-navy border-gold'
-                    : 'bg-navy-deep/50 border-gold-antique/10 text-champagne hover:border-gold/50'
-                )}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <LayoutGrid className="w-4 h-4 text-gold" />
-                General Store
-              </Link>
-              <Link
-                to="/brands"
-                className="flex items-center gap-2 rounded-lg bg-navy-deep/50 border border-gold-antique/10 px-4 py-2.5 text-xs font-bold uppercase tracking-wider text-champagne hover:border-gold/50 transition-all"
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Brands
-              </Link>
-              <Link
-                to="/farms"
-                className={cn(
-                  'flex items-center gap-2 rounded-lg border px-4 py-2.5 text-xs font-bold uppercase tracking-wider transition-all',
-                  location.pathname === '/farms'
-                    ? 'bg-gold text-navy border-gold'
-                    : 'bg-navy-deep/50 border-gold-antique/10 text-champagne hover:border-gold/50'
-                )}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                <Sprout className="w-4 h-4 text-gold" />
-                Farms
-              </Link>
-            </div>
-            <div className="grid grid-cols-2 sm:grid-cols-3 gap-2 sm:gap-3 text-xs sm:text-sm">
-              {(isSolarPage ? solarCategoryLinks : categories).map((item, idx) => {
-                const slug = 'slug' in item ? item.slug : (item as { name: string; slug: string }).slug;
-                const name = item.name;
-                const href = isSolarPage
-                  ? `/solar?category=${slug}`
-                  : `/shop?category=${slug}`;
-                return (
-                  <Link
-                    key={slug}
-                    to={href}
-                    className="flex items-center gap-2 px-2 sm:px-3 py-2.5 sm:py-3 rounded-lg bg-navy-deep/50 border border-gold-antique/10 hover:border-gold/50 hover:bg-gold-antique/10 transition-all duration-300 overflow-hidden"
-                    style={{ animationDelay: `${idx * 30}ms` }}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    <Sun className="w-4 h-4 flex-shrink-0 text-gold" />
-                    <span className="truncate font-medium">{name}</span>
-                  </Link>
-                );
-              })}
-            </div>
-          </div>
-        )}
-
-        <Suspense fallback={null}>
-          {isCartOpen && <MiniCart />}
-        </Suspense>
       </header>
     </>
   );

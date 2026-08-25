@@ -19,12 +19,18 @@ const getStore = (): TrackStore => {
   try {
     const raw = localStorage.getItem(TRACK_KEY);
     if (raw) return JSON.parse(raw);
-  } catch {}
+  } catch {
+    return { searches: [], pageViews: [], referrers: [] };
+  }
   return { searches: [], pageViews: [], referrers: [] };
 };
 
 const saveStore = (s: TrackStore) => {
-  try { localStorage.setItem(TRACK_KEY, JSON.stringify(s)); } catch {}
+  try {
+    localStorage.setItem(TRACK_KEY, JSON.stringify(s));
+  } catch {
+    return;
+  }
 };
 
 export const trackSearch = (term: string) => {

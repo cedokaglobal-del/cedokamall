@@ -42,8 +42,10 @@ export const useSolarCategoryStore = create<SolarCategoryState>()(
     {
       name: 'cedokamall-solar-categories',
       merge: (persisted, current) => {
-        const raw = (persisted as any)?.categories;
-        const saved = Array.isArray(raw) ? raw.filter((c: any) => typeof c === 'string') : [];
+        const raw = persisted && typeof persisted === 'object' && 'categories' in persisted
+          ? persisted.categories
+          : undefined;
+        const saved = Array.isArray(raw) ? raw.filter((c): c is string => typeof c === 'string') : [];
         return {
           ...current,
           categories: [...new Set([...DEFAULT_SOLAR_CATEGORIES, ...saved])].sort(),

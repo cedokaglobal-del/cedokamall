@@ -97,10 +97,10 @@ const flushPendingDuration = async () => {
       is_new_session: false,
       additional_duration: durationToFlush,
     });
-  } catch (error: any) {
+  } catch (error: unknown) {
     pendingDurationSeconds += durationToFlush;
     // Suppress repetitive 404 errors silently
-    if (error?.status !== 404) {
+    if (!(error && typeof error === 'object' && 'status' in error && error.status === 404)) {
       console.debug('Visitor duration sync unavailable:', error);
     }
   }
@@ -148,9 +148,9 @@ export const useVisitorStore = create<VisitorStore>()(
             } else {
               set({ isRealtimeConnected: false });
             }
-          } catch (error: any) {
+          } catch (error: unknown) {
             // Suppress repetitive 404 errors silently
-            if (error?.status !== 404) {
+            if (!(error && typeof error === 'object' && 'status' in error && error.status === 404)) {
               console.debug('Supabase visitor sync unavailable:', error);
             }
             set({ isRealtimeConnected: false });

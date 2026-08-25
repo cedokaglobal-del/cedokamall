@@ -65,12 +65,14 @@ export const seedHistoricalSales = async () => {
           productName,
           customerEmail: order.customer,
           amount: item.price * item.qty,
+          currency: 'NGN',
           quantity: item.qty,
           status: 'completed',
           type: 'sale',
           paymentMethod: 'Cash',
           deliveryMethod: 'Walk-in / Store Pickup',
           category,
+          profit: item.price * item.qty * 0.3,
         });
 
         if (product) {

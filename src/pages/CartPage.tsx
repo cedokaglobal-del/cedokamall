@@ -215,12 +215,14 @@ Payment: ${invoiceData.paymentMethod}
         productName: item.name,
         customerEmail: customerName,
         amount: item.price * item.quantity,
+        currency: 'NGN',
         quantity: item.quantity,
         status: 'completed',
         type: 'sale',
         paymentMethod: paymentMethod === 'online' ? 'Transfer' : 'Cash',
         deliveryMethod: deliveryMethod === 'walk-in' ? 'Walk-in / Store Pickup' : 'Home Delivery',
         category: item.category || 'General',
+        profit: item.price * item.quantity * 0.3,
       });
     });
 

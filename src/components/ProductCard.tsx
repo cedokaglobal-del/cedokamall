@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import * as React from 'react';
 import { Heart, ShoppingCart, Star, Eye } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { Product } from '@/types/product';
@@ -10,98 +10,46 @@ import { getOptimizedImageUrl, generateSrcSet, generateSizes } from '@/utils/per
 const formatPrice = (amount: number) => `\u20A6${amount.toLocaleString()}`;
 
 const ProductCard = ({ product, priority = false }: { product: Product, priority?: boolean }) => {
-  const [isImageLoaded, setIsImageLoaded] = useState(false);
   const addItem = useCartStore((state) => state.addItem);
   const discount = product.originalPrice
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
 
   return (
-      <article className="group overflow-hidden rounded-lg border border-gold-antique/10 bg-white transition-all duration-300 hover:-translate-y-1 hover:shadow-premium-lg">
-      {/* Image Container */}
-      <div className="relative aspect-[4/5] overflow-hidden bg-gradient-to-br from-ivory to-muted">
+    <article className="group overflow-hidden rounded-md bg-white border border-gold-antique/10 transition-colors duration-200 hover:border-gold/20 hover:-translate-y-0.5">
+      {/* Image */}
+      <div className="relative aspect-[4/5] overflow-hidden bg-ivory">
         <Link to={`/product/${product.id}`} className="absolute inset-0 z-0">
           <img
             src={getOptimizedImageUrl(product.image, 600)}
             srcSet={generateSrcSet(product.image)}
             sizes={generateSizes('product')}
             alt={product.name}
-            className={cn(
-              'h-full w-full object-cover transition-all duration-500 ease-in-out group-hover:scale-110',
-              isImageLoaded ? 'opacity-100' : 'opacity-0'
-            )}
+            className="h-full w-full object-cover transition-transform duration-300 ease-in-out group-hover:scale-105"
             loading={priority ? "eager" : "lazy"}
-            fetchpriority={priority ? "high" : "auto"}
             decoding="async"
-            onLoad={() => setIsImageLoaded(true)}
             onError={(event) => {
-              event.currentTarget.src = '/image.png';
-              setIsImageLoaded(true);
+              event.currentTarget.src = '/placeholder-product.jpg';
             }}
           />
-          {!isImageLoaded && (
-            <div className="absolute inset-0 bg-ivory animate-pulse" />
-          )}
         </Link>
-
-        {/* Badge */}
-        {product.badge && (
-          <span className="absolute left-2 sm:left-3 top-2 sm:top-3 z-10 rounded-sm bg-navy px-2 py-1 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-champagne shadow-premium-sm animation-fade-in">
-            {product.badge}
-          </span>
-        )}
-        
-        {/* Discount Badge */}
-        {discount > 0 && (
-          <span className="absolute right-2 sm:right-3 top-2 sm:top-3 z-10 rounded-sm bg-gold px-2 py-1 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-navy shadow-premium-sm animation-fade-in">
-            -{discount}%
-          </span>
-        )}
-
-        {/* Hover Overlay */}
-        <div className="pointer-events-none absolute inset-0 z-10 flex items-center justify-center gap-2 bg-navy/20 opacity-0 transition-opacity duration-300 group-hover:opacity-100">
-          <button
-            type="button"
-            className="pointer-events-auto flex h-10 w-10 translate-y-4 items-center justify-center rounded-full bg-white shadow-premium-lg transition-all duration-300 group-hover:translate-y-0 hover:bg-gold hover:text-navy hover:scale-110"
-            aria-label="Add to wishlist"
-          >
-            <Heart className="h-5 w-5 transition-transform duration-300 hover:scale-110" />
-          </button>
-          <Link
-            to={`/product/${product.id}`}
-            className="pointer-events-auto flex h-10 w-10 translate-y-4 items-center justify-center rounded-full bg-white shadow-premium-lg transition-all duration-300 delay-75 group-hover:translate-y-0 hover:bg-gold hover:text-navy hover:scale-110"
-            aria-label="View product"
-          >
-            <Eye className="h-5 w-5 transition-transform duration-300 hover:scale-110" />
-          </Link>
-        </div>
       </div>
 
       {/* Content */}
-      <div className="p-3 sm:p-4 flex flex-col gap-2">
-        {/* Seller */}
-        <p className="text-[10px] sm:text-xs font-semibold uppercase tracking-widest text-charcoal/50 line-clamp-1">
-          {product.seller}
-        </p>
-        
+      <div className="p-4 sm:p-5 flex flex-col gap-3">
         {/* Product Name */}
         <Link to={`/product/${product.id}`}>
-          <h3 className="min-h-[2.5rem] font-serif text-sm sm:text-base font-bold leading-tight text-charcoal transition-colors duration-300 hover:text-gold line-clamp-2 group-hover:text-gold">
+          <h3 className="font-serif text-base sm:text-lg font-bold leading-tight text-charcoal transition-colors duration-200 hover:text-gold line-clamp-2 group-hover:text-gold">
             {product.name}
           </h3>
         </Link>
 
         {/* Rating */}
-        <div className="flex items-center gap-1 mb-1">
+        <div className="flex items-center gap-1 mb-2">
           {[...Array(5)].map((_, index) => (
             <Star
               key={index}
-              className={cn(
-                'h-3 w-3 transition-all duration-300',
-                index < Math.floor(product.rating || 0)
-                  ? 'fill-gold text-gold'
-                  : 'fill-gray-200 text-gray-200'
-              )}
+              className="h-3 w-3 transition-colors duration-200 fill-gold text-gold"
             />
           ))}
           <span className="ml-1 text-xs font-bold text-charcoal/60">
@@ -110,9 +58,9 @@ const ProductCard = ({ product, priority = false }: { product: Product, priority
         </div>
 
         {/* Price Section */}
-        <div className="flex items-center justify-between gap-3 border-t border-gold-antique/10 pt-3 mt-2">
+        <div className="flex items-center justify-between pt-3 border-t border-gold-antique/10">
           <div className="flex min-w-0 flex-col">
-            <span className="break-words text-base sm:text-lg font-bold tracking-tight text-gold transition-colors duration-300">
+            <span className="break-words text-base sm:text-lg font-bold tracking-tight text-gold transition-colors duration-200">
               {formatPrice(product.price)}
             </span>
             {product.originalPrice && (
@@ -134,15 +82,16 @@ const ProductCard = ({ product, priority = false }: { product: Product, priority
                 price: product.price,
                 image: product.image,
                 inStock: product.inStock,
+                category: product.category,
               });
               toast.success(`${product.name} added to cart`, {
                 duration: 2000,
               });
             }}
-            className="flex h-11 w-11 items-center justify-center rounded-md bg-navy text-gold shadow-premium-sm transition-all duration-300 hover:scale-110 hover:bg-gold hover:text-navy active:scale-95 focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2"
+            className="flex h-10 w-10 items-center justify-center rounded-md bg-navy text-gold shadow-premium-sm transition-all duration-200 hover:scale-110 hover:bg-gold hover:text-navy active:scale-95 focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2"
             aria-label="Add to cart"
           >
-            <ShoppingCart className="h-5 w-5 transition-transform duration-300 pointer-events-none" />
+            <ShoppingCart className="h-5 w-5 transition-transform duration-200 pointer-events-none" />
           </button>
         </div>
       </div>

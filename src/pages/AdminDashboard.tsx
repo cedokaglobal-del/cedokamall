@@ -201,7 +201,6 @@ const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
     return () => {
       window.clearTimeout(timer);
     };
-    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const handleRefresh = async () => {
