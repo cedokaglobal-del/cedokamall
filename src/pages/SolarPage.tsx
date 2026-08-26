@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Sun, ChevronRight, SlidersHorizontal, ArrowLeft, Zap, Clock, AlertTriangle } from 'lucide-react';
+import { Sun, ChevronRight, SlidersHorizontal, ArrowLeft } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
+import SolarPlanCard from '@/components/SolarPlanCard';
 import EnergyCalculator from '@/components/EnergyCalculator';
 import { useProductStore } from '@/store/productStore';
 import { useSolarCategoryStore } from '@/store/solarCategoryStore';
@@ -378,91 +379,17 @@ const SolarPage = () => {
         {/* System plans */}
         {plans.filter((p) => p.isActive).length > 0 && (
           <section className="mt-16">
-            <div className="mb-8">
-              <h2 className="font-serif text-2xl font-bold text-navy sm:text-3xl">Solar System Plans</h2>
-              <div className="mt-2 h-1 w-16 bg-gold" />
-              <p className="mt-4 max-w-2xl text-sm leading-6 text-navy/60">
-                Ready-made solar system packages designed for different needs. Each plan includes detailed specs, backup time, and what it can power.
+            <div className="mb-8 text-center">
+              <span className="text-xs font-bold uppercase tracking-[0.2em] text-gold">Tailored for your needs</span>
+              <h2 className="mt-3 font-serif text-2xl font-bold text-navy sm:text-3xl">Solar System Plans</h2>
+              <div className="mx-auto mt-3 h-1 w-16 bg-gold" />
+              <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-navy/60">
+                Ready-made solar packages designed for homes and offices. Each plan details exactly what you get, what it can power, and how long it lasts.
               </p>
             </div>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
               {plans.filter((p) => p.isActive).map((plan) => (
-                <div key={plan.id} className="flex flex-col overflow-hidden rounded-xl border border-gold-antique/10 bg-white shadow-sm">
-                  {plan.image && <img src={plan.image} alt={plan.name} className="h-44 w-full object-cover" />}
-                  <div className="flex flex-1 flex-col p-6">
-                    <div>
-                      <h3 className="font-serif text-lg font-bold text-navy">{plan.name}</h3>
-                      {plan.capacity && <p className="mt-1 text-xs font-bold uppercase tracking-wider text-gold">{plan.capacity}</p>}
-                    </div>
-                    {plan.price > 0 && (
-                      <p className="mt-2 text-xl font-bold text-navy">₦{plan.price.toLocaleString()}</p>
-                    )}
-                    {plan.description && (
-                      <p className="mt-3 text-sm leading-6 text-navy/60">{plan.description}</p>
-                    )}
-                    {plan.bestFor && (
-                      <div className="mt-4 rounded-lg bg-gold/5 px-3 py-2">
-                        <p className="text-xs font-bold text-navy/55">Best For</p>
-                        <p className="mt-0.5 text-sm font-semibold text-navy">{plan.bestFor}</p>
-                      </div>
-                    )}
-                    {plan.canPower.length > 0 && (
-                      <div className="mt-4">
-                        <div className="mb-2 flex items-center gap-1.5">
-                          <Zap className="h-3.5 w-3.5 text-gold" />
-                          <p className="text-xs font-bold uppercase tracking-wider text-navy/55">Can Power</p>
-                        </div>
-                        <ul className="space-y-1.5">
-                          {plan.canPower.map((item) => (
-                            <li key={item} className="flex items-center gap-2 text-sm text-navy/70">
-                              <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-gold" />
-                              {item}
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    {plan.backupTime && (
-                      <div className="mt-4 flex items-center gap-2 rounded-lg bg-navy/5 px-3 py-2">
-                        <Clock className="h-3.5 w-3.5 text-navy/50" />
-                        <div>
-                          <p className="text-[10px] font-bold uppercase tracking-wider text-navy/45">Backup Time</p>
-                          <p className="text-sm font-semibold text-navy">{plan.backupTime}</p>
-                        </div>
-                      </div>
-                    )}
-                    {plan.items.length > 0 && (
-                      <div className="mt-4 border-t border-gold-antique/10 pt-4">
-                        <p className="text-[10px] font-bold uppercase tracking-wider text-navy/45">Includes</p>
-                        <ul className="mt-2 space-y-1">
-                          {plan.items.map((item) => (
-                            <li key={item.id} className="text-xs text-navy/60">
-                              {item.quantity}× {item.name} ({item.watts}W / {item.volts}V)
-                            </li>
-                          ))}
-                        </ul>
-                      </div>
-                    )}
-                    {plan.notes && (
-                      <div className="mt-4 flex items-start gap-2 rounded-lg bg-amber-50 px-3 py-2">
-                        <AlertTriangle className="mt-0.5 h-3.5 w-3.5 shrink-0 text-amber-600" />
-                        <p className="text-xs leading-5 text-amber-800">{plan.notes}</p>
-                      </div>
-                    )}
-                    <div className="mt-auto pt-5">
-                      <a
-                        href={`https://wa.me/2349128817136?text=${encodeURIComponent(
-                          `Hi Cedokamall, I'm interested in the ${plan.name} solar plan. Please share availability and a quote.`
-                        )}`}
-                        target="_blank"
-                        rel="noopener noreferrer"
-                        className="inline-flex w-full items-center justify-center gap-2 rounded-md bg-gold px-5 py-3 text-xs font-bold uppercase tracking-widest text-navy transition-all hover:bg-gold-antique hover:text-white"
-                      >
-                        Get a quote
-                      </a>
-                    </div>
-                  </div>
-                </div>
+                <SolarPlanCard key={plan.id} plan={plan} />
               ))}
             </div>
           </section>

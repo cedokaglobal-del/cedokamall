@@ -7,6 +7,7 @@ import {
   Package,
   ShieldCheck,
   Star,
+  Sun,
   Timer,
   Truck,
   Users,
@@ -14,6 +15,7 @@ import {
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
+import SolarPlanCard from '@/components/SolarPlanCard';
 import { buildCategories } from '@/data/products';
 import { MAJOR_CATEGORIES } from '@/data/catalog';
 import {
@@ -26,6 +28,7 @@ import {
 } from '@/config/seo';
 import { useSEO, useStructuredData } from '@/hooks/useSEO';
 import { useProductStore } from '@/store/productStore';
+import { useSolarPlanStore } from '@/store/solarPlanStore';
 import heroImage from '../../Image/Hero Page Image.jfif';
 
 const CountdownTimer = () => {
@@ -158,6 +161,8 @@ const Index = () => {
   const isLoading = useProductStore((state) => state.isLoading);
   const error = useProductStore((state) => state.error);
   const hasLoaded = useProductStore((state) => state.hasLoaded);
+  const plans = useSolarPlanStore((s) => s.plans);
+  const fetchPlans = useSolarPlanStore((s) => s.fetchPlans);
   const categories = useMemo(() => buildCategories(products), [products]);
   const topCategories = useMemo(
     () => [...categories].sort((a, b) => b.count - a.count).slice(0, 8),
@@ -190,6 +195,10 @@ const Index = () => {
         .slice(0, 6),
     [products]
   );
+
+  useEffect(() => {
+    void fetchPlans();
+  }, [fetchPlans]);
   useSEO({
     title: SEO_CONFIG.siteTitle,
     description: SEO_CONFIG.siteDescription,
@@ -369,6 +378,38 @@ const Index = () => {
                   </motion.div>
                 </Link>
               ))}
+          </div>
+        </section>
+      )}
+
+      {/* Solar System Plans */}
+      {plans.filter((p) => p.isActive).length > 0 && (
+        <section className="bg-white border-y border-gold-antique/10 py-16 sm:py-20">
+          <div className="container">
+            <div className="mb-10 text-center">
+              <div className="inline-flex items-center gap-2 rounded-full bg-gold/10 px-4 py-1.5">
+                <Sun className="h-3.5 w-3.5 text-gold" />
+                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold">Solar Energy</span>
+              </div>
+              <h2 className="mt-4 font-serif text-2xl sm:text-3xl font-bold text-navy">Power Your Home with Solar</h2>
+              <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-navy/60">
+                Pre-designed solar plans for every need. Tap any plan for full specs or get a custom quote.
+              </p>
+            </div>
+            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+              {plans.filter((p) => p.isActive).slice(0, 3).map((plan) => (
+                <SolarPlanCard key={plan.id} plan={plan} compact />
+              ))}
+            </div>
+            <div className="mt-10 text-center">
+              <Link
+                to="/solar"
+                className="inline-flex items-center gap-2 rounded-md bg-navy px-8 py-3 text-xs font-bold uppercase tracking-widest text-gold transition-all hover:bg-gold hover:text-navy"
+              >
+                View All Solar Plans
+                <ArrowRight className="h-4 w-4" />
+              </Link>
+            </div>
           </div>
         </section>
       )}
