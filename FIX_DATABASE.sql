@@ -83,15 +83,45 @@ CREATE TABLE IF NOT EXISTS public.solar_plans (
   description text NOT NULL DEFAULT '',
   price numeric(12,2) NOT NULL DEFAULT 0,
   capacity text NOT NULL DEFAULT '',
-  panel_type text NOT NULL DEFAULT '',
-  inverter_type text NOT NULL DEFAULT '',
-  battery_type text NOT NULL DEFAULT '',
-  warranty text NOT NULL DEFAULT '',
-  features jsonb NOT NULL DEFAULT '[]'::jsonb,
+  best_for text NOT NULL DEFAULT '',
+  can_power jsonb NOT NULL DEFAULT '[]'::jsonb,
+  backup_time text NOT NULL DEFAULT '',
+  notes text NOT NULL DEFAULT '',
+  image text,
+  items jsonb NOT NULL DEFAULT '[]'::jsonb,
   is_active boolean NOT NULL DEFAULT true,
   created_at timestamptz NOT NULL DEFAULT now(),
   updated_at timestamptz NOT NULL DEFAULT now()
 );
+
+-- Add columns if table already existed without them
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='solar_plans' AND column_name='best_for') = FALSE THEN
+    ALTER TABLE public.solar_plans ADD COLUMN best_for text NOT NULL DEFAULT '';
+  END IF;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='solar_plans' AND column_name='can_power') = FALSE THEN
+    ALTER TABLE public.solar_plans ADD COLUMN can_power jsonb NOT NULL DEFAULT '[]'::jsonb;
+  END IF;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='solar_plans' AND column_name='backup_time') = FALSE THEN
+    ALTER TABLE public.solar_plans ADD COLUMN backup_time text NOT NULL DEFAULT '';
+  END IF;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
+
+DO $$ BEGIN
+  IF EXISTS (SELECT 1 FROM information_schema.columns WHERE table_schema='public' AND table_name='solar_plans' AND column_name='notes') = FALSE THEN
+    ALTER TABLE public.solar_plans ADD COLUMN notes text NOT NULL DEFAULT '';
+  END IF;
+EXCEPTION WHEN duplicate_column THEN NULL;
+END $$;
 
 ALTER TABLE public.solar_plans ENABLE ROW LEVEL SECURITY;
 
@@ -100,6 +130,28 @@ CREATE POLICY "public can read solar plans"
 ON public.solar_plans
 FOR SELECT
 TO anon, authenticated
+USING (true);
+
+DROP POLICY IF EXISTS "anon can insert solar plans" ON public.solar_plans;
+CREATE POLICY "anon can insert solar plans"
+ON public.solar_plans
+FOR INSERT
+TO anon
+WITH CHECK (true);
+
+DROP POLICY IF EXISTS "anon can update solar plans" ON public.solar_plans;
+CREATE POLICY "anon can update solar plans"
+ON public.solar_plans
+FOR UPDATE
+TO anon
+USING (true)
+WITH CHECK (true);
+
+DROP POLICY IF EXISTS "anon can delete solar plans" ON public.solar_plans;
+CREATE POLICY "anon can delete solar plans"
+ON public.solar_plans
+FOR DELETE
+TO anon
 USING (true);
 
 DROP POLICY IF EXISTS "admins can manage solar plans" ON public.solar_plans;

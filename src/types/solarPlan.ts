@@ -14,7 +14,14 @@ export interface SolarPlan {
   name: string;
   description: string;
   image?: string;
+  price: number;
+  capacity: string;
+  bestFor: string;
+  canPower: string[];
+  backupTime: string;
+  notes: string;
   items: SolarPlanItem[];
+  isActive: boolean;
   createdAt: string;
   updatedAt: string;
 }

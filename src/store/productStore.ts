@@ -515,24 +515,29 @@ export const useProductStore = create<ProductState>((set, get) => ({
   },
 
   rateProduct: async (id, newRating) => {
+    const current = get().products.find((p) => p.id === id);
+    if (!current) return;
+
+    const oldRating = current.rating || 0;
+    const oldReviews = current.reviews || 0;
+    const nextReviews = oldReviews + 1;
+    const nextRating = Number(((oldRating * oldReviews + newRating) / nextReviews).toFixed(1));
+
+    // Update local state immediately so the UI always reflects the rating
+    set((state) => {
+      const products = state.products.map((product) =>
+        product.id === id
+          ? { ...product, rating: nextRating, reviews: nextReviews }
+          : product
+      );
+      persistProducts(products);
+      return { products, lastSyncedAt: new Date().toISOString() };
+    });
+
     try {
-      const current = get().products.find((p) => p.id === id);
-      if (!current) return;
-
-      const oldRating = current.rating || 0;
-      const oldReviews = current.reviews || 0;
-      
-      // Calculate new average rating
-      // Formula: ((oldRating * oldReviews) + newRating) / (oldReviews + 1)
-      const nextReviews = oldReviews + 1;
-      const nextRating = Number(((oldRating * oldReviews + newRating) / nextReviews).toFixed(1));
-
       const { data, error } = await supabase
         .from('products')
-        .update({
-          rating: nextRating,
-          reviews: nextReviews,
-        })
+        .update({ rating: nextRating, reviews: nextReviews })
         .eq('id', id)
         .select();
 
@@ -545,15 +550,11 @@ export const useProductStore = create<ProductState>((set, get) => ({
             product.id === id ? mapSupabaseToProduct(row) : product
           );
           persistProducts(products);
-          return {
-            products,
-            lastSyncedAt: new Date().toISOString(),
-          };
+          return { products, lastSyncedAt: new Date().toISOString() };
         });
       }
     } catch (error) {
-      console.error('Error rating product:', error);
-      throw error;
+      console.warn('Supabase rating update failed, using local rating:', error);
     }
   },
 

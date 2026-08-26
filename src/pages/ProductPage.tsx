@@ -418,10 +418,6 @@ const ProductPage = () => {
               <div className="border-b border-gold-antique/10 bg-white px-6 py-6 md:px-8">
                 <div className="mb-4 flex flex-wrap items-center gap-3 text-[11px] font-bold uppercase tracking-[0.22em] text-navy/55">
                   <span className="break-words">{product.category}</span>
-                  <span className="h-1 w-1 shrink-0 rounded-full bg-gold" />
-                  <span className="break-words">Sold by{' '}
-                    <span className="text-gold">{product.seller}</span>
-                  </span>
                   {product.sku && (
                     <>
                       <span className="h-1 w-1 shrink-0 rounded-full bg-gold" />
@@ -831,10 +827,6 @@ const ProductPage = () => {
                       Purchase Snapshot
                     </h2>
                     <dl className="mt-4 space-y-4 text-[13px] md:text-sm">
-                      <div className="flex items-center justify-between gap-4 border-b border-gold-antique/10 pb-3">
-                        <dt className="text-navy/55">Seller</dt>
-                        <dd className="break-words font-semibold text-navy">{product.seller}</dd>
-                      </div>
                       {product.warranty && (
                         <div className="flex items-center justify-between gap-4 border-b border-gold-antique/10 pb-3">
                           <dt className="text-navy/55">Warranty</dt>
@@ -854,6 +846,20 @@ const ProductPage = () => {
                     </dl>
                   </div>
                   </aside>
+                </div>
+
+                <div className="overflow-hidden rounded-[1.5rem] border border-gold/20 bg-gold/5 p-5 md:p-6">
+                  <div className="flex items-start gap-3">
+                    <Shield className="mt-0.5 h-5 w-5 shrink-0 text-gold" />
+                    <div>
+                      <p className="text-sm font-bold text-navy">
+                        Original Product Guaranteed by {product.seller}
+                      </p>
+                      <p className="mt-1 text-[13px] leading-6 text-navy/60">
+                        Distributed by Cedoka Global
+                      </p>
+                    </div>
+                  </div>
                 </div>
 
                 <div className="overflow-hidden rounded-[1.5rem] border border-gold-antique/10 bg-ivory/70 p-5 md:p-6">
