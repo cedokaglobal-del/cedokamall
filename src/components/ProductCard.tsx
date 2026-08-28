@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { Heart, ShoppingCart, Star, Eye } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { Product } from '@/types/product';
 import { useCartStore } from '@/store/cartStore';
 import { cn } from '@/lib/utils';
@@ -11,6 +11,8 @@ const formatPrice = (amount: number) => `\u20A6${amount.toLocaleString()}`;
 
 const ProductCard = ({ product, priority = false }: { product: Product, priority?: boolean }) => {
   const addItem = useCartStore((state) => state.addItem);
+  const location = useLocation();
+  const from = { pathname: location.pathname, search: location.search };
   const discount = product.originalPrice
     ? Math.round(((product.originalPrice - product.price) / product.originalPrice) * 100)
     : 0;
@@ -19,7 +21,7 @@ const ProductCard = ({ product, priority = false }: { product: Product, priority
     <article className="group overflow-hidden rounded-md bg-white border border-gold-antique/10 transition-colors duration-200 hover:border-gold/20 hover:-translate-y-0.5">
       {/* Image */}
       <div className="relative aspect-[4/5] overflow-hidden bg-ivory">
-        <Link to={`/product/${product.id}`} className="absolute inset-0 z-0">
+        <Link to={`/product/${product.id}`} state={{ from }} className="absolute inset-0 z-0">
           <img
             src={getOptimizedImageUrl(product.image, 600)}
             srcSet={generateSrcSet(product.image)}
@@ -38,7 +40,7 @@ const ProductCard = ({ product, priority = false }: { product: Product, priority
       {/* Content */}
       <div className="p-4 sm:p-5 flex flex-col gap-3">
         {/* Product Name */}
-        <Link to={`/product/${product.id}`}>
+        <Link to={`/product/${product.id}`} state={{ from }}>
           <h3 className="font-serif text-base sm:text-lg font-bold leading-tight text-charcoal transition-colors duration-200 hover:text-gold line-clamp-2 group-hover:text-gold">
             {product.name}
           </h3>

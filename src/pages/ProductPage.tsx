@@ -1,4 +1,4 @@
-import { Link, useNavigate, useParams } from 'react-router-dom';
+import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
 import { useEffect, useMemo, useState } from 'react';
 import {
   ArrowLeft,
@@ -118,6 +118,8 @@ const saveReviews = (productId: string, reviews: Review[]): void => {
 const ProductPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
+  const backTo = (location.state as { from?: { pathname: string; search: string } })?.from;
   const products = useProductStore((s) => s.products);
   const isLoading = useProductStore((s) => s.isLoading);
   const hasLoaded = useProductStore((s) => s.hasLoaded);
@@ -273,7 +275,7 @@ const ProductPage = () => {
         <Header />
         <div className="container py-20 text-center">
           <h1 className="font-display text-2xl font-bold">Product not found</h1>
-          <Link to="/shop" className="mt-4 block text-primary underline">
+          <Link to={backTo || "/shop"} className="mt-4 block text-primary underline">
             Back to shop
           </Link>
         </div>
@@ -339,14 +341,14 @@ const ProductPage = () => {
               Home
             </Link>
             <ChevronRight className="h-3 w-3" />
-            <Link to="/shop" className="transition-colors hover:text-gold">
+            <Link to={backTo || "/shop"} className="transition-colors hover:text-gold">
               Collections
             </Link>
             <ChevronRight className="h-3 w-3" />
             <span className="max-w-[100px] sm:max-w-[200px] truncate text-navy">{product.name}</span>
           </nav>
           <Link
-            to={`/shop?category=${product?.category?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || '/shop'}`}
+            to={backTo || `/shop?category=${product?.category?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || ''}`}
             className="w-full sm:w-auto flex items-center justify-center gap-2 rounded-md border border-gold-antique/20 bg-white px-5 py-2 text-xs font-bold uppercase tracking-widest text-navy shadow-sm transition-all hover:bg-navy hover:text-gold"
           >
             <ArrowLeft className="h-4 w-4" />
