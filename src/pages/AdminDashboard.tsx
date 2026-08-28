@@ -83,7 +83,7 @@ const AdminDashboard = () => {
 
   const [isFormOpen, setIsFormOpen] = useState(false);
   const [editingProduct, setEditingProduct] = useState<Product | undefined>();
-const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
+  const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const [isClearAllOpen, setIsClearAllOpen] = useState(false);
   const [isConfirmClearAllOpen, setIsConfirmClearAllOpen] = useState(false);
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -181,9 +181,7 @@ const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
 
   useEffect(() => {
     const unsubscribe = subscribeToVisitorRealtime();
-    return () => {
-      unsubscribe();
-    };
+    return () => { unsubscribe(); };
   }, [subscribeToVisitorRealtime]);
 
   const transactionSummary = useMemo(
@@ -197,10 +195,7 @@ const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
       void useTransactionStore.getState().fetchTransactions();
       void useVisitorStore.getState().syncWithSupabase();
     }, 120);
-
-    return () => {
-      window.clearTimeout(timer);
-    };
+    return () => { window.clearTimeout(timer); };
   }, []);
 
   const handleRefresh = async () => {
@@ -239,13 +234,11 @@ const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
   const handleFormSubmit = async (formData: ProductFormData) => {
     try {
       setIsSubmitting(true);
-
       if (editingProduct) {
         await updateProduct(editingProduct.id, formData);
       } else {
         await addProduct(formData);
       }
-
       setEditingProduct(undefined);
       setIsFormOpen(false);
     } finally {
@@ -253,84 +246,45 @@ const [deleteTarget, setDeleteTarget] = useState<Product | null>(null);
     }
   };
 
-const handleVerifyDeletePassword = async () => {
-     try {
-       setDeletePasswordError('');
+  const handleVerifyDeletePassword = async () => {
+    try {
+      setDeletePasswordError('');
+      if (!deletePassword) { setDeletePasswordError('Password is required'); return; }
+      if (!adminEmail) { setDeletePasswordError('Admin session not found. Please log in again.'); return; }
+      setIsSubmitting(true);
+      const { error: authError } = await supabase.auth.signInWithPassword({ email: adminEmail, password: deletePassword });
+      if (authError) { setDeletePasswordError('Incorrect password. Please try again.'); setIsSubmitting(false); return; }
+      setDeletePassword('');
+      setDeletePasswordError('');
+      setIsDeletePasswordOpen(false);
+      setDeleteTarget(pendingDeleteProduct);
+    } catch (error) {
+      console.error('Password verification failed:', error);
+      setDeletePasswordError('An error occurred. Please try again.');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
-       if (!deletePassword) {
-         setDeletePasswordError('Password is required');
-         return;
-       }
-
-       if (!adminEmail) {
-         setDeletePasswordError('Admin session not found. Please log in again.');
-         return;
-       }
-
-       setIsSubmitting(true);
-
-       const { error: authError } = await supabase.auth.signInWithPassword({
-         email: adminEmail,
-         password: deletePassword,
-       });
-
-       if (authError) {
-         setDeletePasswordError('Incorrect password. Please try again.');
-         setIsSubmitting(false);
-         return;
-       }
-
-       setDeletePassword('');
-       setDeletePasswordError('');
-       setIsDeletePasswordOpen(false);
-       setDeleteTarget(pendingDeleteProduct);
-     } catch (error) {
-       console.error('Password verification failed:', error);
-       setDeletePasswordError('An error occurred. Please try again.');
-     } finally {
-       setIsSubmitting(false);
-     }
-   };
-
-   const handleConfirmDelete = async () => {
-     if (!deleteTarget) return;
-
-     try {
-       setIsSubmitting(true);
-       await deleteProduct(deleteTarget.id);
-       setDeleteTarget(null);
-     } finally {
-       setIsSubmitting(false);
-     }
-   };
+  const handleConfirmDelete = async () => {
+    if (!deleteTarget) return;
+    try {
+      setIsSubmitting(true);
+      await deleteProduct(deleteTarget.id);
+      setDeleteTarget(null);
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
 
   const handleVerifyClearPassword = async () => {
     try {
       setClearPasswordError('');
-
-      if (!clearPassword) {
-        setClearPasswordError('Password is required');
-        return;
-      }
-
-      if (!adminEmail) {
-        setClearPasswordError('Admin session not found. Please log in again.');
-        return;
-      }
-
+      if (!clearPassword) { setClearPasswordError('Password is required'); return; }
+      if (!adminEmail) { setClearPasswordError('Admin session not found. Please log in again.'); return; }
       setIsSubmitting(true);
-
-      const { error: authError } = await supabase.auth.signInWithPassword({
-        email: adminEmail,
-        password: clearPassword,
-      });
-
-      if (authError) {
-        setClearPasswordError('Incorrect password. Please try again.');
-        setIsSubmitting(false);
-        return;
-      }
-
+      const { error: authError } = await supabase.auth.signInWithPassword({ email: adminEmail, password: clearPassword });
+      if (authError) { setClearPasswordError('Incorrect password. Please try again.'); setIsSubmitting(false); return; }
       setClearPassword('');
       setClearPasswordError('');
       setIsClearAllOpen(false);
@@ -358,171 +312,93 @@ const handleVerifyDeletePassword = async () => {
   };
 
   const stats = [
-    {
-      label: 'Products',
-      value: products.length.toString(),
-      note: 'Live records in Supabase',
-      icon: Package,
-    },
-    {
-      label: 'Categories',
-      value: categoryCount.toString(),
-      note: 'Derived from your catalog',
-      icon: Shapes,
-    },
-    {
-      label: 'Low Stock',
-      value: lowStockProducts.length.toString(),
-      note: 'Needs restocking soon',
-      icon: AlertCircle,
-    },
-    {
-      label: 'Inventory Value',
-      value: currency.format(totalInventoryValue),
-      note: 'Based on current stock levels',
-      icon: RefreshCw,
-    },
+    { label: 'Products', value: products.length.toString(), note: 'Live records', icon: Package },
+    { label: 'Categories', value: categoryCount.toString(), note: 'From catalog', icon: Shapes },
+    { label: 'Low Stock', value: lowStockProducts.length.toString(), note: 'Needs restocking', icon: AlertCircle },
+    { label: 'Inventory', value: currency.format(totalInventoryValue), note: 'Current value', icon: RefreshCw },
   ];
 
   const businessStats = [
-    {
-      label: 'Total Sales',
-      value: transactionSummary.totalOrders.toString(),
-      change: '+12%',
-      icon: ShoppingCart,
-      color: 'text-blue-600',
-      bgColor: 'bg-blue-100',
-    },
-    {
-      label: 'Total Revenue',
-      value: currency.format(transactionSummary.totalRevenue),
-      change: '+8.4%',
-      icon: CircleDollarSign,
-      color: 'text-emerald-600',
-      bgColor: 'bg-emerald-100',
-    },
-    {
-      label: 'Site Visitors',
-      value: visitorStats.totalVisitors.toLocaleString(),
-      change: isVisitorRealtimeConnected ? 'LIVE' : 'SYNC',
-      icon: Users,
-      color: 'text-orange-600',
-      bgColor: 'bg-orange-100',
-    },
-    {
-      label: 'Avg. Stay Time',
-      value: formatDuration(avgStayDuration),
-      change: '+2m',
-      icon: Clock,
-      color: 'text-purple-600',
-      bgColor: 'bg-purple-100',
-    },
+    { label: 'Total Sales', value: transactionSummary.totalOrders.toString(), icon: ShoppingCart, color: 'text-blue-600', bgColor: 'bg-blue-50' },
+    { label: 'Revenue', value: currency.format(transactionSummary.totalRevenue), icon: CircleDollarSign, color: 'text-emerald-600', bgColor: 'bg-emerald-50' },
+    { label: 'Visitors', value: visitorStats.totalVisitors.toLocaleString(), icon: Users, color: 'text-orange-600', bgColor: 'bg-orange-50' },
+    { label: 'Avg. Stay', value: formatDuration(avgStayDuration), icon: Clock, color: 'text-purple-600', bgColor: 'bg-purple-50' },
   ];
 
   return (
     <AdminLayout>
-      <div className="space-y-6 pb-8 min-h-screen">
-        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+      <div className="space-y-5 pb-8">
+        {/* Header */}
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-emerald bg-clip-text text-transparent">
-              Product Operations
-            </h1>
-            <p className="text-muted-foreground text-sm mt-2">
-              This dashboard now reflects your live product catalog instead of demo analytics.
-            </p>
-            <div className="mt-3 flex flex-wrap items-center gap-2 text-xs">
-              <span className="inline-flex items-center gap-2 rounded-full border border-emerald-200 bg-emerald-50 px-3 py-1 font-medium text-emerald-700">
-                <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
-                Live sync active
+            <h1 className="text-2xl sm:text-3xl font-bold text-navy">Dashboard</h1>
+            <div className="mt-2 flex flex-wrap items-center gap-2 text-xs">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-emerald-200 bg-emerald-50 px-2.5 py-0.5 font-medium text-emerald-700">
+                <span className="h-1.5 w-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                Live
               </span>
               <span className="text-muted-foreground">
-                Last synced {lastSyncedAt ? new Date(lastSyncedAt).toLocaleTimeString() : 'just now'}
+                Synced {lastSyncedAt ? new Date(lastSyncedAt).toLocaleTimeString() : 'just now'}
               </span>
             </div>
           </div>
-
-          <div className="flex flex-wrap gap-2 sm:gap-3">
-            <Button onClick={handleAddProduct} size="lg" className="gap-2">
-              <Plus className="w-4 h-4" /> Add Product
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={handleAddProduct} size="sm" className="gap-1.5">
+              <Plus className="w-3.5 h-3.5" /> Add
             </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={handleRefresh}
-              className="gap-2"
-              disabled={isRefreshing}
-            >
-              <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} /> Refresh
-            </Button>
-            <Button
-              variant="outline"
-              size="lg"
-              onClick={() => navigate('/admin/products')}
-              className="gap-2"
-            >
-              <Package className="w-4 h-4" /> Manage Catalog
+            <Button variant="outline" size="sm" onClick={handleRefresh} className="gap-1.5" disabled={isRefreshing}>
+              <RefreshCw className={cn("w-3.5 h-3.5", isRefreshing && "animate-spin")} />
+              {isRefreshing ? 'Syncing...' : 'Refresh'}
             </Button>
           </div>
         </div>
 
         {error && (
-          <Card className="p-4 border-destructive/30 bg-destructive/5">
-            <p className="font-medium text-destructive">Database connection issue</p>
-            <p className="text-sm text-muted-foreground mt-1">{error}</p>
+          <Card className="p-3 border-red-200 bg-red-50">
+            <p className="font-medium text-red-700 text-sm">{error}</p>
           </Card>
         )}
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-4 gap-4 md:gap-6">
+        {/* Stats Grid */}
+        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
           {businessStats.map((stat) => {
             const Icon = stat.icon;
             return (
-              <Card key={stat.label} className="p-6 overflow-hidden relative group hover:shadow-lg transition-all duration-300 border-none bg-white/50 backdrop-blur-sm">
-                <div className="flex items-center justify-between mb-4">
-                  <div className={cn("p-3 rounded-2xl", stat.bgColor)}>
-                    <Icon className={cn("w-6 h-6", stat.color)} />
+              <Card key={stat.label} className="p-4">
+                <div className="flex items-center gap-3">
+                  <div className={cn("p-2 rounded-lg", stat.bgColor)}>
+                    <Icon className={cn("w-4 h-4", stat.color)} />
                   </div>
-                  <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-1 rounded-full text-[10px] font-bold">
-                    <TrendingUp className="w-3 h-3" />
-                    {stat.change}
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{stat.label}</p>
+                    <p className="text-lg font-bold truncate">{stat.value}</p>
                   </div>
-                </div>
-                <div>
-                  <p className="text-muted-foreground text-xs font-bold uppercase tracking-widest mb-1">
-                    {stat.label}
-                  </p>
-                  <p className="text-3xl font-black tracking-tight">{stat.value}</p>
-                </div>
-                <div className="absolute -bottom-6 -right-6 opacity-[0.03] group-hover:opacity-[0.08] transition-opacity">
-                  <Icon className="w-32 h-32" />
                 </div>
               </Card>
             );
           })}
         </div>
 
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          <Card className="lg:col-span-2 p-6 overflow-hidden relative">
-            <div className="flex items-center justify-between mb-6">
-              <div>
-                <h3 className="text-lg font-bold">Operations Overview</h3>
-                <p className="text-sm text-muted-foreground">Key metrics for inventory and catalog health.</p>
-              </div>
-              <Button variant="ghost" size="sm" onClick={() => navigate('/admin/products')} className="text-primary font-bold">
-                View Full Catalog
+        {/* Operations + Top Product */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
+          <Card className="lg:col-span-2 p-4">
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="font-bold text-sm">Operations</h3>
+              <Button variant="ghost" size="sm" onClick={() => navigate('/admin/products')} className="text-xs font-bold">
+                View All
               </Button>
             </div>
-            
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-3">
               {stats.map((stat) => {
                 const Icon = stat.icon;
                 return (
-                  <div key={stat.label} className="flex items-center gap-4 p-4 rounded-xl border bg-muted/20">
-                    <div className="p-3 rounded-lg bg-background shadow-sm">
-                      <Icon className="w-5 h-5 text-primary" />
+                  <div key={stat.label} className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
+                    <div className="p-2 rounded-lg bg-white shadow-sm">
+                      <Icon className="w-4 h-4 text-navy" />
                     </div>
-                    <div>
-                      <p className="text-[10px] text-muted-foreground uppercase font-black tracking-tighter">{stat.label}</p>
-                      <p className="text-xl font-bold">{stat.value}</p>
+                    <div className="min-w-0">
+                      <p className="text-[10px] font-bold uppercase text-muted-foreground">{stat.label}</p>
+                      <p className="text-sm font-bold truncate">{stat.value}</p>
                     </div>
                   </div>
                 );
@@ -530,135 +406,66 @@ const handleVerifyDeletePassword = async () => {
             </div>
           </Card>
 
-          <Card className="p-6 bg-gradient-to-br from-primary/5 to-transparent border-primary/10">
-            <h3 className="text-lg font-bold mb-4 flex items-center gap-2">
-              <TrendingUp className="w-5 h-5 text-primary" />
-              Top Performing Product
+          <Card className="p-4">
+            <h3 className="font-bold text-sm mb-3 flex items-center gap-2">
+              <TrendingUp className="w-4 h-4 text-navy" />
+              Top Product
             </h3>
             {transactionSummary.topProduct !== 'N/A' ? (
-              <div className="space-y-4">
-                <div className="p-4 rounded-2xl bg-white shadow-sm border border-primary/5">
-                  <p className="text-xs text-muted-foreground font-bold uppercase mb-1">Product Name</p>
-                  <p className="break-words font-bold text-lg line-clamp-1">{transactionSummary.topProduct}</p>
-                  <div className="mt-3 flex items-center gap-4">
-                    <div className="flex-1">
-                      <p className="text-[10px] text-muted-foreground uppercase font-bold">Orders</p>
-                      <p className="font-black text-primary text-xl">124</p>
-                    </div>
-                    <div className="flex-1 border-l pl-4">
-                      <p className="text-[10px] text-muted-foreground uppercase font-bold">Conversion</p>
-                      <p className="font-black text-emerald-600 text-xl">4.2%</p>
-                    </div>
-                  </div>
-                </div>
-                <Button className="w-full rounded-xl font-bold gap-2" onClick={() => navigate('/admin/products')}>
-                  <Package className="w-4 h-4" />
-                  View Details
+              <div>
+                <p className="font-bold text-sm line-clamp-2">{transactionSummary.topProduct}</p>
+                <Button className="w-full mt-3 gap-1.5" size="sm" onClick={() => navigate('/admin/products')}>
+                  <Package className="w-3.5 h-3.5" /> View Details
                 </Button>
               </div>
             ) : (
-              <div className="text-center py-8">
-                <p className="text-sm text-muted-foreground">No sales data available yet.</p>
-              </div>
+              <p className="text-xs text-muted-foreground py-4 text-center">No sales data yet</p>
             )}
           </Card>
         </div>
 
-        <Card className="overflow-hidden shadow-md">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 sm:p-8 border-b bg-gradient-to-r from-muted/50 to-transparent">
-            <div>
-              <h2 className="text-xl font-bold flex items-center gap-3">
-                <div className="p-2.5 bg-primary/10 rounded-lg">
-                  <Package className="w-5 h-5 text-primary" />
-                </div>
-                Recent Products
-              </h2>
-              <p className="text-sm text-muted-foreground mt-2">
-                Your homepage and shop now depend on the database rows listed here.
-              </p>
-            </div>
-
+        {/* Recent Products */}
+        <Card className="overflow-hidden">
+          <div className="flex items-center justify-between p-4 border-b">
+            <h2 className="font-bold text-sm">Recent Products</h2>
             {products.length > 0 && (
-              <Button
-                variant="destructive"
-                size="sm"
-                className="gap-1.5"
-                onClick={() => setIsClearAllOpen(true)}
-              >
-                <Trash2 className="w-4 h-4" /> Clear Catalog
+              <Button variant="ghost" size="sm" className="gap-1 text-xs text-red-600" onClick={() => setIsClearAllOpen(true)}>
+                <Trash2 className="w-3.5 h-3.5" /> Clear
               </Button>
             )}
           </div>
-
           {isLoading ? (
-            <div className="p-12 text-center text-muted-foreground">Loading products from Supabase...</div>
+            <div className="p-8 text-center text-sm text-muted-foreground">Loading...</div>
           ) : recentProducts.length === 0 ? (
-            <div className="p-12 text-center">
-              <Package className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
-              <p className="font-semibold text-muted-foreground">No products found in the database</p>
-              <p className="text-sm text-muted-foreground mt-2">
-                Run the Supabase SQL setup, then add your first live product.
-              </p>
-              <Button onClick={handleAddProduct} className="mt-4 gap-2">
-                <Plus className="w-4 h-4" /> Add First Product
+            <div className="p-8 text-center">
+              <Package className="w-10 h-10 text-muted-foreground/30 mx-auto mb-2" />
+              <p className="text-sm font-medium text-muted-foreground">No products yet</p>
+              <Button onClick={handleAddProduct} className="mt-3 gap-1.5" size="sm">
+                <Plus className="w-3.5 h-3.5" /> Add First Product
               </Button>
             </div>
           ) : (
-            <div className="p-4 sm:p-6 grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-4">
+            <div className="p-3 grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
               {recentProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="rounded-xl border bg-background p-4 hover:shadow-md transition-shadow"
-                >
-                  <div className="flex gap-4">
-                    <img
-                      src={product.image || '/image.png'}
-                      alt={product.name}
-                      className="w-20 h-20 rounded-lg object-cover flex-shrink-0"
-                      onError={(event) => {
-                        (event.target as HTMLImageElement).src = '/image.png';
-                      }}
-                    />
-                    <div className="min-w-0 flex-1">
-                      <p className="break-words font-semibold line-clamp-2">{product.name}</p>
-                      <p className="text-sm text-muted-foreground mt-1">{product.category}</p>
-                      <p className="text-sm font-semibold text-primary mt-2">
-                        {currency.format(product.price)}
-                      </p>
-                      <p
-                        className={`text-xs mt-2 font-medium ${
-                          product.inStock <= 0
-                            ? 'text-red-600'
-                            : product.inStock < 10
-                              ? 'text-yellow-600'
-                              : 'text-green-600'
-                        }`}
-                      >
-                        {product.inStock} units in stock
-                      </p>
+                <div key={product.id} className="flex gap-3 p-3 rounded-lg border hover:shadow-sm transition-shadow">
+                  <img
+                    src={product.image || '/image.png'}
+                    alt={product.name}
+                    className="w-14 h-14 rounded-lg object-cover shrink-0"
+                    onError={(e) => { (e.target as HTMLImageElement).src = '/image.png'; }}
+                  />
+                  <div className="min-w-0 flex-1">
+                    <p className="text-sm font-semibold line-clamp-1">{product.name}</p>
+                    <p className="text-xs text-muted-foreground">{product.category}</p>
+                    <p className="text-sm font-bold text-navy mt-0.5">{currency.format(product.price)}</p>
+                    <div className="flex gap-1.5 mt-2">
+                      <Button variant="outline" size="sm" onClick={() => handleEditProduct(product)} className="h-7 px-2 text-xs gap-1">
+                        <Edit2 className="w-3 h-3" /> Edit
+                      </Button>
+                      <Button variant="destructive" size="sm" className="h-7 px-2 text-xs gap-1" onClick={() => { setPendingDeleteProduct(product); setIsDeletePasswordOpen(true); }}>
+                        <Trash2 className="w-3 h-3" /> Delete
+                      </Button>
                     </div>
-                  </div>
-
-                  <div className="flex justify-end gap-2 mt-4">
-                    <Button
-                      variant="outline"
-                      size="sm"
-                      onClick={() => handleEditProduct(product)}
-                      className="gap-1.5"
-                    >
-                      <Edit2 className="w-4 h-4" /> Edit
-                    </Button>
-                    <Button
-                      variant="destructive"
-                      size="sm"
-                      onClick={() => {
-                        setPendingDeleteProduct(product);
-                        setIsDeletePasswordOpen(true);
-                      }}
-                      className="gap-1.5"
-                    >
-                      <Trash2 className="w-4 h-4" /> Delete
-                    </Button>
                   </div>
                 </div>
               ))}
@@ -666,65 +473,42 @@ const handleVerifyDeletePassword = async () => {
           )}
         </Card>
 
-        {/* Sales Section */}
-        <Card className="overflow-hidden shadow-md">
-          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-6 sm:p-8 border-b bg-gradient-to-r from-emerald-50/50 to-transparent">
-            <div>
-              <h2 className="text-xl font-bold flex items-center gap-3">
-                <div className="p-2.5 bg-emerald-100 rounded-lg">
-                  <BarChart3 className="w-5 h-5 text-emerald-600" />
-                </div>
-                Completed Sales
-              </h2>
-              <p className="text-sm text-muted-foreground mt-2">
-                Products ordered by total quantity sold. Click a product to see all its transactions.
-              </p>
-            </div>
+        {/* Sales Table */}
+        <Card className="overflow-hidden">
+          <div className="p-4 border-b">
+            <h2 className="font-bold text-sm flex items-center gap-2">
+              <BarChart3 className="w-4 h-4 text-emerald-600" />
+              Completed Sales
+            </h2>
           </div>
-
           {salesData.length === 0 ? (
-            <div className="p-12 text-center">
-              <BarChart3 className="w-12 h-12 text-muted-foreground/40 mx-auto mb-3" />
-              <p className="font-semibold text-muted-foreground">No sales data yet</p>
-              <p className="text-sm text-muted-foreground mt-2">Sales will appear here once orders are placed.</p>
-            </div>
+            <div className="p-8 text-center text-sm text-muted-foreground">No sales data yet</div>
           ) : (
             <>
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-muted">
-                      <TableHead>Product</TableHead>
-                      <TableHead>Category</TableHead>
-                      <TableHead className="text-right">Qty Sold</TableHead>
-                      <TableHead className="text-right">Stock Left</TableHead>
-                      <TableHead className="text-right">Last Sale</TableHead>
-                      <TableHead className="w-12"></TableHead>
+                    <TableRow className="bg-gray-50">
+                      <TableHead className="text-xs">Product</TableHead>
+                      <TableHead className="text-xs">Qty</TableHead>
+                      <TableHead className="text-xs">Stock</TableHead>
+                      <TableHead className="text-xs">Last Sale</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
                     {paginatedSales.map((sale) => (
                       <TableRow
                         key={sale.name}
-                        className="hover:bg-muted/50 cursor-pointer"
-                        onClick={() => {
-                          setSelectedSaleProduct(sale.name);
-                          setSaleTransactionPage(1);
-                        }}
+                        className="cursor-pointer hover:bg-gray-50"
+                        onClick={() => { setSelectedSaleProduct(sale.name); setSaleTransactionPage(1); }}
                       >
-                        <TableCell className="font-medium break-words max-w-[300px]">{sale.name}</TableCell>
-                        <TableCell className="text-muted-foreground">{sale.category}</TableCell>
-                        <TableCell className="text-right font-semibold text-emerald-600">{sale.totalSold}</TableCell>
-                        <TableCell className="text-right">
-                          <span className={sale.stockLeft < 10 ? 'text-red-600 font-medium' : ''}>
-                            {sale.stockLeft}
-                          </span>
+                        <TableCell className="text-sm font-medium max-w-[200px] truncate">{sale.name}</TableCell>
+                        <TableCell className="text-sm font-semibold text-emerald-600">{sale.totalSold}</TableCell>
+                        <TableCell className="text-sm">
+                          <span className={sale.stockLeft < 10 ? 'text-red-600 font-medium' : ''}>{sale.stockLeft}</span>
                         </TableCell>
-                        <TableCell className="text-right text-sm text-muted-foreground whitespace-nowrap">
+                        <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
                           {new Intl.DateTimeFormat('en-NG', { month: 'short', day: 'numeric' }).format(sale.lastSale)}
-                        </TableCell>
-                        <TableCell>
-                          <ChevronRight className="w-4 h-4 text-muted-foreground" />
                         </TableCell>
                       </TableRow>
                     ))}
@@ -743,28 +527,17 @@ const handleVerifyDeletePassword = async () => {
         </Card>
       </div>
 
+      {/* Product Form Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent 
-          className="max-w-2xl w-[95vw] sm:w-auto"
-          onPointerDownOutside={(e) => e.preventDefault()}
-          onEscapeKeyDown={(e) => e.preventDefault()}
-        >
-          <DialogHeader>
+        <DialogContent className="max-w-2xl w-[95vw] sm:w-auto max-h-[90vh] overflow-hidden flex flex-col" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+          <DialogHeader className="shrink-0">
             <DialogTitle>{editingProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
             <DialogDescription>
-              {editingProduct
-                ? 'Update the live product record stored in Supabase.'
-                : 'Create a product that will appear on the storefront once saved.'}
+              {editingProduct ? 'Update product details and save changes.' : 'Fill in details to add a new product.'}
             </DialogDescription>
           </DialogHeader>
-          <div className="max-h-[70vh] overflow-y-auto">
-            <Suspense
-              fallback={
-                <div className="flex min-h-[320px] items-center justify-center text-sm text-muted-foreground">
-                  Loading product form...
-                </div>
-              }
-            >
+          <div className="flex-1 overflow-y-auto min-h-0">
+            <Suspense fallback={<div className="flex min-h-[200px] items-center justify-center text-sm text-muted-foreground">Loading...</div>}>
               <ProductForm
                 product={editingProduct}
                 onSubmit={handleFormSubmit}
@@ -776,179 +549,85 @@ const handleVerifyDeletePassword = async () => {
         </DialogContent>
       </Dialog>
 
-<Dialog open={isDeletePasswordOpen} onOpenChange={(open) => {
-         setIsDeletePasswordOpen(open);
-         if (!open) {
-           setDeletePassword('');
-           setDeletePasswordError('');
-           setPendingDeleteProduct(null);
-         }
-       }}>
-         <DialogContent className="max-w-md" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
-           <DialogHeader>
-             <DialogTitle className="flex items-center gap-2 text-lg text-red-600">
-               <Lock className="w-5 h-5" />
-               Verify Password to Delete
-             </DialogTitle>
-             <DialogDescription className="text-base">
-               Enter your admin password to delete <strong>"{pendingDeleteProduct?.name}"</strong>. This action cannot be undone.
-             </DialogDescription>
-           </DialogHeader>
-
-           <div className="space-y-4 py-6 border-y">
-             <p className="text-sm text-muted-foreground">
-               For security verification, please enter your admin password:
-             </p>
-             <div className="space-y-2">
-               <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                 Admin Password
-               </label>
-               <div className="relative">
-                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                 <Input
-                   type="password"
-                   placeholder="Enter your admin password"
-                   value={deletePassword}
-                   onChange={(e) => {
-                     setDeletePassword(e.target.value);
-                     setDeletePasswordError('');
-                   }}
-                   onKeyDown={(e) => {
-                     if (e.key === 'Enter' && deletePassword && !isSubmitting) {
-                       e.preventDefault();
-                       void handleVerifyDeletePassword();
-                     }
-                   }}
-                   disabled={isSubmitting}
-                   className="pl-10 h-11"
-                   autoFocus
-                 />
-               </div>
-               {deletePasswordError && (
-                 <p className="text-xs text-red-600 font-medium bg-red-50 p-2 rounded">{deletePasswordError}</p>
-               )}
-             </div>
-           </div>
-
-           <div className="flex gap-3 justify-end">
-             <Button
-               variant="outline"
-               disabled={isSubmitting}
-               onClick={() => {
-                 setDeletePassword('');
-                 setDeletePasswordError('');
-                 setIsDeletePasswordOpen(false);
-                 setPendingDeleteProduct(null);
-               }}
-             >
-               Cancel
-             </Button>
-             <Button
-               variant="destructive"
-               onClick={() => void handleVerifyDeletePassword()}
-               disabled={isSubmitting || !deletePassword}
-             >
-               {isSubmitting ? 'Verifying...' : 'Verify Password'}
-             </Button>
-           </div>
-         </DialogContent>
-       </Dialog>
-
-       <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
-         <AlertDialogContent>
-           <AlertDialogHeader>
-             <AlertDialogTitle>Delete Product?</AlertDialogTitle>
-             <AlertDialogDescription>
-               <strong>"{deleteTarget?.name}"</strong> will be permanently removed from the catalog.
-               This action cannot be undone.
-             </AlertDialogDescription>
-           </AlertDialogHeader>
-           <div className="flex gap-3 justify-end">
-             <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
-             <AlertDialogAction
-               onClick={() => void handleConfirmDelete()}
-               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-             >
-               Delete
-             </AlertDialogAction>
-           </div>
-         </AlertDialogContent>
-       </AlertDialog>
-
-      <Dialog 
-        open={isClearAllOpen} 
-        onOpenChange={(open) => {
-          setIsClearAllOpen(open);
-          if (!open) {
-            setClearPassword('');
-            setClearPasswordError('');
-          }
-        }}
-      >
-        <DialogContent className="max-w-md" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+      {/* Delete Password Dialog */}
+      <Dialog open={isDeletePasswordOpen} onOpenChange={(open) => { setIsDeletePasswordOpen(open); if (!open) { setDeletePassword(''); setDeletePasswordError(''); setPendingDeleteProduct(null); } }}>
+        <DialogContent className="max-w-sm w-[90vw]" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2 text-lg text-red-600">
-              <Lock className="w-5 h-5" />
-              Clear Entire Catalog?
+            <DialogTitle className="text-base text-red-600 flex items-center gap-2">
+              <Lock className="w-4 h-4" /> Confirm Delete
             </DialogTitle>
-            <DialogDescription className="text-base">
-              This will permanently delete all <strong>{products.length} products</strong> from the database. This action cannot be undone.
+            <DialogDescription className="text-sm">
+              Delete <strong>"{pendingDeleteProduct?.name}"</strong>?
             </DialogDescription>
           </DialogHeader>
-          
-          <div className="space-y-4 py-6 border-y">
-            <p className="text-sm text-muted-foreground">
-              For security verification, please enter your admin password:
-            </p>
-            <div className="space-y-2">
-              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                Admin Password
-              </label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                <Input
-                  type="password"
-                  placeholder="Enter your admin password"
-                  value={clearPassword}
-                  onChange={(e) => {
-                    setClearPassword(e.target.value);
-                    setClearPasswordError('');
-                  }}
-                  onKeyDown={(e) => {
-                    if (e.key === 'Enter' && clearPassword && !isSubmitting) {
-                      e.preventDefault();
-                      void handleVerifyClearPassword();
-                    }
-                  }}
-                  disabled={isSubmitting}
-                  className="pl-10 h-11"
-                  autoFocus
-                />
-              </div>
-              {clearPasswordError && (
-                <p className="text-xs text-red-600 font-medium bg-red-50 p-2 rounded">{clearPasswordError}</p>
-              )}
+          <div className="space-y-3 py-4 border-y">
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <Input
+                type="password"
+                placeholder="Admin password"
+                value={deletePassword}
+                onChange={(e) => { setDeletePassword(e.target.value); setDeletePasswordError(''); }}
+                onKeyDown={(e) => { if (e.key === 'Enter' && deletePassword && !isSubmitting) { e.preventDefault(); void handleVerifyDeletePassword(); } }}
+                disabled={isSubmitting}
+                className="pl-10 h-10"
+                autoFocus
+              />
             </div>
+            {deletePasswordError && <p className="text-xs text-red-600">{deletePasswordError}</p>}
           </div>
-
-          <div className="flex gap-3 justify-end">
-            <Button 
-              variant="outline"
-              disabled={isSubmitting}
-              onClick={() => {
-                setClearPassword('');
-                setClearPasswordError('');
-                setIsClearAllOpen(false);
-              }}
-            >
-              Cancel
+          <div className="flex gap-2 justify-end pt-2">
+            <Button variant="outline" size="sm" disabled={isSubmitting} onClick={() => { setDeletePassword(''); setDeletePasswordError(''); setIsDeletePasswordOpen(false); setPendingDeleteProduct(null); }}>Cancel</Button>
+            <Button variant="destructive" size="sm" onClick={() => void handleVerifyDeletePassword()} disabled={isSubmitting || !deletePassword}>
+              {isSubmitting ? 'Verifying...' : 'Delete'}
             </Button>
-            <Button
-              variant="destructive"
-              onClick={() => void handleVerifyClearPassword()}
-              disabled={isSubmitting || !clearPassword}
-            >
-              {isSubmitting ? 'Verifying...' : 'Verify Password'}
+          </div>
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Confirmation */}
+      <AlertDialog open={!!deleteTarget} onOpenChange={(open) => !open && setDeleteTarget(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete "{deleteTarget?.name}"?</AlertDialogTitle>
+            <AlertDialogDescription>This action cannot be undone.</AlertDialogDescription>
+          </AlertDialogHeader>
+          <div className="flex gap-2 justify-end">
+            <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={() => void handleConfirmDelete()} className="bg-red-600 hover:bg-red-700">Delete</AlertDialogAction>
+          </div>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Clear All Password */}
+      <Dialog open={isClearAllOpen} onOpenChange={(open) => { setIsClearAllOpen(open); if (!open) { setClearPassword(''); setClearPasswordError(''); } }}>
+        <DialogContent className="max-w-sm w-[90vw]" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle className="text-base text-red-600 flex items-center gap-2">
+              <Lock className="w-4 h-4" /> Clear Entire Catalog?
+            </DialogTitle>
+            <DialogDescription className="text-sm">Permanently delete all <strong>{products.length} products</strong>.</DialogDescription>
+          </DialogHeader>
+          <div className="space-y-3 py-4 border-y">
+            <div className="relative">
+              <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <Input
+                type="password"
+                placeholder="Admin password"
+                value={clearPassword}
+                onChange={(e) => { setClearPassword(e.target.value); setClearPasswordError(''); }}
+                onKeyDown={(e) => { if (e.key === 'Enter' && clearPassword && !isSubmitting) { e.preventDefault(); void handleVerifyClearPassword(); } }}
+                disabled={isSubmitting}
+                className="pl-10 h-10"
+                autoFocus
+              />
+            </div>
+            {clearPasswordError && <p className="text-xs text-red-600">{clearPasswordError}</p>}
+          </div>
+          <div className="flex gap-2 justify-end pt-2">
+            <Button variant="outline" size="sm" disabled={isSubmitting} onClick={() => { setClearPassword(''); setClearPasswordError(''); setIsClearAllOpen(false); }}>Cancel</Button>
+            <Button variant="destructive" size="sm" onClick={() => void handleVerifyClearPassword()} disabled={isSubmitting || !clearPassword}>
+              {isSubmitting ? 'Verifying...' : 'Verify'}
             </Button>
           </div>
         </DialogContent>
@@ -958,84 +637,50 @@ const handleVerifyDeletePassword = async () => {
       <AlertDialog open={isConfirmClearAllOpen} onOpenChange={setIsConfirmClearAllOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle className="flex items-center gap-2 text-lg text-red-600">
-              <Trash2 className="w-5 h-5" />
-              Are You Absolutely Sure?
-            </AlertDialogTitle>
-            <AlertDialogDescription className="text-base space-y-3">
-              <p className="font-semibold text-red-600">
-                ⚠️ WARNING: This action is irreversible!
-              </p>
-              <p>
-                You are about to permanently delete all <strong>{products.length} products</strong> from your catalog and database.
-              </p>
-              <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
-                <li>All product data will be lost forever</li>
-                <li>Product images will remain on the server but will be orphaned</li>
-                <li>Customer reviews and ratings for these products will be deleted</li>
-                <li>This action cannot be undone or recovered</li>
-              </ul>
-              <p className="pt-2 text-sm font-medium">
-                Are you sure you want to proceed?
-              </p>
+            <AlertDialogTitle className="text-red-600">Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogDescription className="text-sm">
+              This permanently deletes all <strong>{products.length} products</strong>. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
-          <div className="flex gap-3 justify-end">
+          <div className="flex gap-2 justify-end">
             <AlertDialogCancel disabled={isSubmitting}>Cancel</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={handleConfirmClearAll}
-              disabled={isSubmitting}
-              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-            >
-              {isSubmitting ? 'Clearing...' : 'Yes, Clear Everything'}
+            <AlertDialogAction onClick={handleConfirmClearAll} disabled={isSubmitting} className="bg-red-600 hover:bg-red-700">
+              {isSubmitting ? 'Clearing...' : 'Clear Everything'}
             </AlertDialogAction>
           </div>
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Sale Transaction Detail Dialog */}
+      {/* Sale Transaction Detail */}
       <Dialog open={!!selectedSaleProduct} onOpenChange={(open) => { if (!open) setSelectedSaleProduct(null); }}>
-        <DialogContent className="max-w-3xl max-h-[80vh] overflow-y-auto">
+        <DialogContent className="max-w-2xl max-h-[80vh] overflow-y-auto">
           <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <BarChart3 className="w-5 h-5 text-emerald-600" />
-              Transactions for "{selectedSaleProduct}"
-            </DialogTitle>
-            <DialogDescription>
-              {selectedSaleTransactions.length} completed sale{selectedSaleTransactions.length !== 1 ? 's' : ''}
-            </DialogDescription>
+            <DialogTitle className="text-base">Transactions for "{selectedSaleProduct}"</DialogTitle>
+            <DialogDescription>{selectedSaleTransactions.length} completed sales</DialogDescription>
           </DialogHeader>
-
           {selectedSaleTransactions.length > 0 ? (
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-muted">
-                    <TableHead>Order ID</TableHead>
-                    <TableHead>Customer</TableHead>
-                    <TableHead>Qty</TableHead>
-                    <TableHead>Amount</TableHead>
-                    <TableHead>Payment</TableHead>
-                    <TableHead>Date</TableHead>
+                  <TableRow className="bg-gray-50">
+                    <TableHead className="text-xs">Order</TableHead>
+                    <TableHead className="text-xs">Customer</TableHead>
+                    <TableHead className="text-xs">Qty</TableHead>
+                    <TableHead className="text-xs">Amount</TableHead>
+                    <TableHead className="text-xs">Date</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {(() => {
-                    const pSize = 20;
-                    const start = (saleTransactionPage - 1) * pSize;
-                    const end = start + pSize;
-                    const paged = selectedSaleTransactions.slice(start, end);
-                    return paged.map((t) => (
+                    const start = (saleTransactionPage - 1) * 20;
+                    return selectedSaleTransactions.slice(start, start + 20).map((t) => (
                       <TableRow key={t.id}>
-                        <TableCell className="font-mono text-sm max-w-[160px] truncate">{t.orderId}</TableCell>
-                        <TableCell className="max-w-[200px] truncate">{t.customerEmail}</TableCell>
-                        <TableCell className="text-center">{t.quantity}</TableCell>
-                        <TableCell className="font-semibold">
-                          {new Intl.NumberFormat('en-NG', { style: 'currency', currency: 'NGN', minimumFractionDigits: 0 }).format(t.amount)}
-                        </TableCell>
-                        <TableCell>{t.paymentMethod}</TableCell>
-                        <TableCell className="text-sm text-muted-foreground whitespace-nowrap">
-                          {new Intl.DateTimeFormat('en-NG', { month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit' }).format(new Date(t.createdAt))}
+                        <TableCell className="font-mono text-xs max-w-[120px] truncate">{t.orderId}</TableCell>
+                        <TableCell className="text-xs max-w-[150px] truncate">{t.customerEmail}</TableCell>
+                        <TableCell className="text-center text-xs">{t.quantity}</TableCell>
+                        <TableCell className="text-xs font-semibold">{currency.format(t.amount)}</TableCell>
+                        <TableCell className="text-xs text-muted-foreground whitespace-nowrap">
+                          {new Intl.DateTimeFormat('en-NG', { month: 'short', day: 'numeric' }).format(new Date(t.createdAt))}
                         </TableCell>
                       </TableRow>
                     ));
@@ -1051,7 +696,7 @@ const handleVerifyDeletePassword = async () => {
               />
             </div>
           ) : (
-            <div className="py-8 text-center text-muted-foreground">No transactions found for this product.</div>
+            <div className="py-6 text-center text-sm text-muted-foreground">No transactions found.</div>
           )}
         </DialogContent>
       </Dialog>

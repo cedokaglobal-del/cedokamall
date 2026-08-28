@@ -80,7 +80,7 @@ const buildInitialFormData = (product?: Product): ProductFormData => ({
   sku: product?.sku || '',
   warranty: product?.warranty || '',
   specs: product?.specs || {},
-  features: normalizeStringArray(product?.features),
+  features: normalizeStringArray(product?.features) || normalizeStringArray(product?.specs?.features),
   color: product?.color || '',
   badge: product?.badge || undefined,
 });

@@ -200,6 +200,7 @@ const loadCachedProducts = (): Product[] => {
 
 const buildProductPayload = (productData: ProductFormData) => {
   const images = productData.images?.filter(Boolean) || [];
+  const features = productData.features || [];
 
   return {
     name: productData.name,
@@ -214,9 +215,10 @@ const buildProductPayload = (productData: ProductFormData) => {
     sku: productData.sku || null,
     warranty: productData.warranty || null,
     color: productData.color || null,
+    features,
     specs: {
       ...(productData.specs || {}),
-      features: productData.features || [],
+      features,
     },
     badge: productData.badge || null,
   };
@@ -383,6 +385,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
   updateProduct: async (id, updates) => {
     try {
       const current = get().products.find((product) => product.id === id);
+      const mergedFeatures = updates.features ?? current?.features ?? [];
       const nextPayload = buildProductPayload({
         name: updates.name ?? current?.name ?? '',
         description: updates.description ?? current?.description ?? '',
@@ -397,7 +400,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
         warranty: updates.warranty ?? current?.warranty,
         specs: updates.specs ?? current?.specs,
         color: updates.color ?? current?.color,
-        features: updates.features ?? current?.features,
+        features: mergedFeatures,
         badge: updates.badge ?? current?.badge,
       });
 

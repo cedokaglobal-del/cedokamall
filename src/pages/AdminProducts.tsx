@@ -217,32 +217,27 @@ const handleDeleteProduct = async (productId: string) => {
 
   return (
     <AdminLayout>
-      <div className="space-y-6">
+      <div className="space-y-5">
         {/* Header */}
-        <div className="flex items-center justify-between flex-wrap gap-4">
+        <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-3">
           <div>
-            <h1 className="text-3xl font-bold">Products</h1>
-            <p className="text-muted-foreground mt-2">
-              Manage your product catalog ({filteredProducts.length} products)
+            <h1 className="text-2xl sm:text-3xl font-bold text-navy">Products</h1>
+            <p className="text-muted-foreground text-sm mt-1">
+              {filteredProducts.length} products
             </p>
           </div>
-          <div className="flex gap-2">
-            <Button onClick={handleRefresh} size="lg" variant="outline" className="gap-2" disabled={isRefreshing}>
-              <svg className={'w-4 h-4' + (isRefreshing ? ' animate-spin' : '')} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
-              {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          <div className="flex flex-wrap gap-2">
+            <Button onClick={handleRefresh} size="sm" variant="outline" className="gap-1.5" disabled={isRefreshing}>
+              <svg className={'w-3.5 h-3.5' + (isRefreshing ? ' animate-spin' : '')} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+              {isRefreshing ? 'Syncing...' : 'Refresh'}
             </Button>
-            <Button onClick={handleAddProduct} size="lg" className="gap-2">
-              <Plus className="w-4 h-4" />
+            <Button onClick={handleAddProduct} size="sm" className="gap-1.5">
+              <Plus className="w-3.5 h-3.5" />
               Add Product
             </Button>
             {products.length > 0 && (
-              <Button 
-                onClick={() => setIsClearAllPasswordOpen(true)} 
-                size="lg" 
-                variant="destructive" 
-                className="gap-2"
-              >
-                <Trash2 className="w-4 h-4" />
+              <Button onClick={() => setIsClearAllPasswordOpen(true)} size="sm" variant="destructive" className="gap-1.5">
+                <Trash2 className="w-3.5 h-3.5" />
                 Clear All
               </Button>
             )}
@@ -250,13 +245,13 @@ const handleDeleteProduct = async (productId: string) => {
         </div>
 
         {/* Filters */}
-        <Card className="p-6">
-          <div className="flex items-center gap-2 mb-4">
+        <Card className="p-4">
+          <div className="flex items-center gap-2 mb-3">
             <Filter className="w-4 h-4" />
-            <h3 className="font-semibold">Filters</h3>
+            <h3 className="font-semibold text-sm">Filters</h3>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
             {/* Search */}
             <div>
               <Label htmlFor="search" className="text-xs mb-2 block">
@@ -564,17 +559,14 @@ const handleDeleteProduct = async (productId: string) => {
 
       {/* Product Form Dialog */}
       <Dialog open={isFormOpen} onOpenChange={setIsFormOpen}>
-        <DialogContent className="max-w-2xl" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
-          <DialogHeader>
-            <DialogTitle>{editingProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
-            <DialogDescription>
-              {editingProduct
-                ? 'Update the product details and save changes'
-                : 'Fill in the product details to add a new item to your catalog'}
+        <DialogContent className="max-w-2xl w-[95vw] sm:w-auto max-h-[90vh] overflow-hidden flex flex-col" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+          <DialogHeader className="shrink-0">
+            <DialogTitle className="text-base">{editingProduct ? 'Edit Product' : 'Add New Product'}</DialogTitle>
+            <DialogDescription className="text-sm">
+              {editingProduct ? 'Update product details and save changes.' : 'Fill in details to add a new product.'}
             </DialogDescription>
           </DialogHeader>
-
-          <div className="max-h-[70vh] overflow-y-auto">
+          <div className="flex-1 overflow-y-auto min-h-0">
             <ProductForm
               product={editingProduct}
               onSubmit={handleFormSubmit}
