@@ -526,57 +526,6 @@ const ProductPage = () => {
                       </div>
                     )}
 
-                    <div className="overflow-hidden rounded-[1.5rem] border border-gold-antique/10 bg-white p-5 md:p-6">
-                      <h2 className="text-sm font-bold uppercase tracking-[0.24em] text-navy">
-                        Rate This Product
-                      </h2>
-                      <div className="mt-4 flex flex-wrap items-center gap-3">
-                        {userRating > 0 ? (
-                          <div className="flex items-center gap-2">
-                            <div className="flex">
-                              {[1, 2, 3, 4, 5].map((star) => (
-                                <Star
-                                  key={star}
-                                  className={cn(
-                                    'h-5 w-5',
-                                    star <= userRating ? 'fill-gold text-gold' : 'fill-gray-200 text-gray-200'
-                                  )}
-                                />
-                              ))}
-                            </div>
-                            <span className="text-sm text-navy/55">Your rating: {userRating}/5</span>
-                          </div>
-                        ) : (
-                          <>
-                            {[1, 2, 3, 4, 5].map((rating) => (
-                              <button
-                                key={rating}
-                                type="button"
-                                onMouseEnter={() => setHoverRating(rating)}
-                                onMouseLeave={() => setHoverRating(0)}
-                                onClick={() => void handleRate(rating)}
-                                disabled={isRating}
-                                className="rounded-full border border-gold-antique/10 bg-ivory px-3 py-2 transition-colors hover:border-gold hover:bg-gold/10 disabled:cursor-not-allowed"
-                                aria-label={`Rate ${product.name} ${rating} star${rating > 1 ? 's' : ''}`}
-                              >
-                                <Star
-                                  className={cn(
-                                    'h-5 w-5',
-                                    rating <= (hoverRating || Math.round(product.rating || 0))
-                                      ? 'fill-gold text-gold'
-                                      : 'fill-gray-200 text-gray-200'
-                                  )}
-                                />
-                              </button>
-                            ))}
-                          </>
-                        )}
-                        <span className="text-[13px] text-navy/55 md:text-sm">
-                          {isRating ? 'Submitting your rating...' : userRating > 0 ? 'You have rated this product.' : 'Tap a star to share your feedback.'}
-                        </span>
-                      </div>
-                    </div>
-
                   <div className="overflow-hidden rounded-[1.5rem] border border-gold-antique/10 bg-white p-5 md:p-6">
                     <div className="mb-5 flex items-center gap-2">
                       <MessageSquare className="h-4 w-4 text-gold" />
