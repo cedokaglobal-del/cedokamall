@@ -121,13 +121,21 @@ const mapSupabaseToProduct = (row: Record<string, unknown>): Product => {
     reviews: Number(row.reviews ?? 0),
     badge: typeof row.badge === 'string' ? row.badge : undefined,
     specs: specs,
-    features: Array.isArray(row.features) 
-      ? row.features.filter((f): f is string => typeof f === 'string') 
-      : Array.isArray(specs?.features)
-        ? parseStringArray(specs.features)
-        : typeof row.features === 'string'
-          ? parseStringArray(row.features)
-          : [],
+    features: (() => {
+      // First try top-level features column (non-empty array)
+      if (Array.isArray(row.features) && row.features.length > 0) {
+        return row.features.filter((f): f is string => typeof f === 'string');
+      }
+      // Fallback to specs.features (where features were historically stored)
+      if (Array.isArray(specs?.features) && (specs.features as unknown[]).length > 0) {
+        return parseStringArray(specs.features);
+      }
+      // Try as string
+      if (typeof row.features === 'string') {
+        return parseStringArray(row.features);
+      }
+      return [];
+    })(),
     warranty: typeof row.warranty === 'string' ? row.warranty : undefined,
     sku: typeof row.sku === 'string' ? row.sku : undefined,
     color: typeof row.color === 'string' ? row.color : undefined,
@@ -385,7 +393,14 @@ export const useProductStore = create<ProductState>((set, get) => ({
   updateProduct: async (id, updates) => {
     try {
       const current = get().products.find((product) => product.id === id);
-      const mergedFeatures = updates.features ?? current?.features ?? [];
+      // Ensure features are always preserved: check updates, then current.features, then current.specs.features
+      const mergedFeatures = updates.features?.length
+        ? updates.features
+        : current?.features?.length
+          ? current.features
+          : Array.isArray(current?.specs?.features)
+            ? (current.specs.features as string[])
+            : [];
       const nextPayload = buildProductPayload({
         name: updates.name ?? current?.name ?? '',
         description: updates.description ?? current?.description ?? '',

@@ -203,7 +203,17 @@ WITH CHECK (bucket_id = 'product-images');
 -- ============================================
 -- 7. INSERT YOUR ADMIN EMAIL into admin_users table
 -- ============================================
--- Only run this if the admin_users table exists and you need to add yourself
 INSERT INTO public.admin_users (email, active)
 VALUES ('cedokamall@gmail.com', true)
 ON CONFLICT (email) DO UPDATE SET active = true;
+
+-- ============================================
+-- 8. BACKFILL features column from specs.features
+-- ============================================
+-- Existing products may have features only in specs.features (JSONB)
+-- but the top-level features column is empty. This copies them over.
+UPDATE public.products
+SET features = (specs->'features')
+WHERE features = '[]'::jsonb
+  AND specs ? 'features'
+  AND jsonb_array_length(specs->'features') > 0;

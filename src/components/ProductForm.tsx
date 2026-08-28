@@ -67,23 +67,31 @@ const normalizeStringArray = (value: unknown, fallback?: string): string[] => {
   return fallback ? [fallback] : [];
 };
 
-const buildInitialFormData = (product?: Product): ProductFormData => ({
-  name: product?.name || '',
-  price: product?.price ?? 0,
-  originalPrice: product?.originalPrice,
-  category: product?.category || '',
-  description: product?.description || '',
-  inStock: product?.inStock ?? 0,
-  seller: product?.seller || '',
-  image: product?.image || '',
-  images: normalizeStringArray(product?.images, product?.image),
-  sku: product?.sku || '',
-  warranty: product?.warranty || '',
-  specs: product?.specs || {},
-  features: normalizeStringArray(product?.features) || normalizeStringArray(product?.specs?.features),
-  color: product?.color || '',
-  badge: product?.badge || undefined,
-});
+const buildInitialFormData = (product?: Product): ProductFormData => {
+  const rawFeatures = product?.features;
+  const hasTopLevelFeatures = Array.isArray(rawFeatures) && rawFeatures.length > 0;
+  const features = hasTopLevelFeatures
+    ? normalizeStringArray(rawFeatures)
+    : normalizeStringArray(product?.specs?.features);
+
+  return {
+    name: product?.name || '',
+    price: product?.price ?? 0,
+    originalPrice: product?.originalPrice,
+    category: product?.category || '',
+    description: product?.description || '',
+    inStock: product?.inStock ?? 0,
+    seller: product?.seller || '',
+    image: product?.image || '',
+    images: normalizeStringArray(product?.images, product?.image),
+    sku: product?.sku || '',
+    warranty: product?.warranty || '',
+    specs: product?.specs || {},
+    features,
+    color: product?.color || '',
+    badge: product?.badge || undefined,
+  };
+};
 
 const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: ProductFormProps) => {
   const categories = useCategoryStore((s) => s.categories);
