@@ -252,23 +252,30 @@ const handleDeleteProduct = async (productId: string) => {
             <h3 className="font-semibold text-sm">Filters</h3>
           </div>
 
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-3">
-            {/* Search */}
-            <div>
-              <Label htmlFor="search" className="text-xs mb-2 block">
-                Search Product
-              </Label>
-              <div className="relative">
-                <Search className="absolute left-2 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                <Input
-                  id="search"
-                  placeholder="Product name..."
-                  value={filter.searchTerm || ''}
-                  onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
-                  className="pl-8"
-                />
-              </div>
+          {/* Search - full width on all screens */}
+          <div className="mb-3">
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                id="search"
+                placeholder="Search by name, category, brand, SKU..."
+                value={filter.searchTerm || ''}
+                onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
+                className="pl-9 pr-8 h-10"
+              />
+              {filter.searchTerm && (
+                <button
+                  type="button"
+                  onClick={() => handleFilterChange('searchTerm', '')}
+                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
+                >
+                  Clear
+                </button>
+              )}
             </div>
+          </div>
+
+          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
 
             {/* Category Filter */}
             <div>

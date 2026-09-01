@@ -174,7 +174,7 @@ const Header = () => {
               to="/solar"
               className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors whitespace-nowrap text-champagne/70 hover:text-gold"
             >
-              <Sun className="w-3 h-3" /> Renewable Energy
+              <Sun className="w-3 h-3" /> Solar
             </Link>
 
             <Link

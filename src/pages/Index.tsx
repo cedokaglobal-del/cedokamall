@@ -317,23 +317,21 @@ const Index = () => {
             <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
-        <div className="grid grid-cols-3 gap-3 sm:grid-cols-3 lg:grid-cols-3">
+        <div className="grid grid-cols-3 gap-3">
           {MAJOR_CATEGORIES.map((category) => (
             <Link
               key={category.slug}
               to={category.href}
-              className="group rounded-md bg-white border border-gold-antique/10 p-3 sm:p-4 transition-all hover:border-gold/30"
+              className="group flex flex-col rounded-md bg-white border border-gold-antique/10 p-3 sm:p-4 transition-all hover:border-gold/30"
             >
-              <div className="flex items-center gap-2">
-                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ivory">
-                  <category.icon className="h-4 w-4 text-navy" />
-                </div>
-                <h3 className="text-xs sm:text-sm font-bold text-navy leading-tight">{category.name}</h3>
+              <div className="mb-2 flex h-8 w-8 items-center justify-center rounded-full bg-ivory">
+                <category.icon className="h-4 w-4 text-navy" />
               </div>
-              <p className="mt-1.5 text-[11px] text-navy/50 leading-relaxed line-clamp-2">{category.tagline}</p>
-              <span className="mt-2 flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-gold">
+              <h3 className="text-[11px] sm:text-xs font-bold text-navy leading-snug">{category.name}</h3>
+              <p className="mt-1 text-[10px] text-navy/50 leading-relaxed line-clamp-2">{category.tagline}</p>
+              <span className="mt-auto pt-2 flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-gold">
                 Shop now
-                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </span>

@@ -72,8 +72,8 @@ export const MAJOR_CATEGORIES: MajorCategory[] = [
   },
   {
     slug: 'renewable-energy',
-    name: 'Renewable Energy',
-    tagline: 'Solar panels, inverters, batteries and complete power systems.',
+    name: 'Solar',
+    tagline: 'Panels, inverters, batteries and complete power systems.',
     description:
       'Build a reliable solar power system with panels, inverters, lithium batteries, charge controllers and accessories. Use our calculator to size the right solution.',
     href: '/solar',
@@ -140,7 +140,7 @@ export const resolveMajorCategory = (productCategory: string): MajorCategory | u
   );
 };
 
-/** Categories (major + subcategories) that are part of the Renewable Energy group. */
+/** Categories (major + subcategories) that are part of the Solar group. */
 export const RENEWABLE_ENERGY_CATEGORIES = MAJOR_CATEGORY_MAP[
   'renewable-energy'
 ].productCategories;

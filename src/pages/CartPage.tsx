@@ -270,7 +270,7 @@ Payment: ${invoiceData.paymentMethod}
             </Link>
             <div className="mt-6 flex flex-wrap items-center justify-center gap-3">
               <Link to="/solar" className="rounded-full border border-gold-antique/20 px-4 py-2 text-xs font-bold uppercase tracking-widest text-navy transition-colors hover:border-gold hover:text-gold">
-                Renewable Energy
+                Solar
               </Link>
               <Link to="/farms" className="rounded-full border border-gold-antique/20 px-4 py-2 text-xs font-bold uppercase tracking-widest text-navy transition-colors hover:border-gold hover:text-gold">
                 Farms

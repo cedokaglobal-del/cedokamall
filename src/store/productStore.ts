@@ -630,7 +630,10 @@ export const useProductStore = create<ProductState>((set, get) => ({
         return (
           product.name.toLowerCase().includes(term) ||
           product.description.toLowerCase().includes(term) ||
-          product.seller.toLowerCase().includes(term)
+          product.seller.toLowerCase().includes(term) ||
+          product.category.toLowerCase().includes(term) ||
+          (product.sku && product.sku.toLowerCase().includes(term)) ||
+          (product.badge && product.badge.toLowerCase().includes(term))
         );
       }
       return true;
