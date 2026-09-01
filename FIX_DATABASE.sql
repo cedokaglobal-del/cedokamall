@@ -217,3 +217,9 @@ SET features = (specs->'features')
 WHERE features = '[]'::jsonb
   AND specs ? 'features'
   AND jsonb_array_length(specs->'features') > 0;
+
+-- ============================================
+-- 9. ADD out_of_stock column
+-- ============================================
+ALTER TABLE public.products
+ADD COLUMN IF NOT EXISTS out_of_stock boolean DEFAULT false;
