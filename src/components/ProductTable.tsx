@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { Product } from '@/types/product';
 import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Edit2, Trash2, AlertCircle } from 'lucide-react';
+import { Edit2, Trash2, AlertCircle, Eye, EyeOff } from 'lucide-react';
 import PaginationControls from '@/components/PaginationControls';
 
 interface ProductTableProps {
   products: Product[];
   onEdit: (product: Product) => void;
   onDelete: (productId: string) => void;
+  onToggleOutOfStock?: (productId: string) => void;
   isLoading?: boolean;
   pageSize?: number;
 }
@@ -19,7 +20,7 @@ const ngnFormatter = new Intl.NumberFormat('en-NG', {
   minimumFractionDigits: 0,
 });
 
-const ProductTable = ({ products, onEdit, onDelete, isLoading = false, pageSize = 20 }: ProductTableProps) => {
+const ProductTable = ({ products, onEdit, onDelete, onToggleOutOfStock, isLoading = false, pageSize = 20 }: ProductTableProps) => {
   const [page, setPage] = useState(1);
 
   const formatPrice = (price: number) => ngnFormatter.format(price);
@@ -59,6 +60,7 @@ const ProductTable = ({ products, onEdit, onDelete, isLoading = false, pageSize 
               <th className="text-right px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Price</th>
               <th className="text-right px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Stock</th>
               <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Brand</th>
+              <th className="text-center px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Stock</th>
               <th className="text-center px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Actions</th>
             </tr>
           </thead>
@@ -87,6 +89,22 @@ const ProductTable = ({ products, onEdit, onDelete, isLoading = false, pageSize 
                     <span className={stockStatus.color}>{product.inStock} units</span>
                   </td>
                   <td className="px-4 py-3 max-w-[120px] truncate text-muted-foreground">{product.seller}</td>
+                  <td className="px-4 py-3 text-center">
+                    <button
+                      type="button"
+                      onClick={() => onToggleOutOfStock?.(product.id)}
+                      disabled={isLoading}
+                      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-xs font-semibold transition-colors ${
+                        product.outOfStock
+                          ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                          : 'bg-green-100 text-green-700 hover:bg-green-200'
+                      }`}
+                      title={product.outOfStock ? 'Mark as in stock' : 'Mark as out of stock'}
+                    >
+                      {product.outOfStock ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                      {product.outOfStock ? 'Out of Stock' : 'In Stock'}
+                    </button>
+                  </td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex justify-center gap-1">
                       <Button variant="ghost" size="sm" onClick={() => onEdit(product)} disabled={isLoading} className="h-8 w-8 p-0">
@@ -127,6 +145,19 @@ const ProductTable = ({ products, onEdit, onDelete, isLoading = false, pageSize 
                 </div>
               </div>
               <div className="flex justify-end gap-1.5 mt-2">
+                <button
+                  type="button"
+                  onClick={() => onToggleOutOfStock?.(product.id)}
+                  disabled={isLoading}
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-semibold transition-colors ${
+                    product.outOfStock
+                      ? 'bg-red-100 text-red-700 hover:bg-red-200'
+                      : 'bg-green-100 text-green-700 hover:bg-green-200'
+                  }`}
+                >
+                  {product.outOfStock ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
+                  {product.outOfStock ? 'Out of Stock' : 'In Stock'}
+                </button>
                 <Button variant="outline" size="sm" onClick={() => onEdit(product)} disabled={isLoading} className="h-7 px-2 text-xs gap-1">
                   <Edit2 className="w-3 h-3" /> Edit
                 </Button>

@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Sprout, ChevronRight, ArrowLeft, Leaf, MessageSquare } from 'lucide-react';
+import { Sprout, MessageSquare } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
@@ -74,51 +74,30 @@ const FarmsPage = () => {
     <div className="min-h-screen bg-ivory">
       <Header />
 
-      <section className="relative overflow-hidden bg-navy text-champagne">
-        <div className="container relative z-10 py-10 sm:py-14">
-          <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-champagne/50 mb-4">
-            <Link to="/" className="transition-colors hover:text-gold">Home</Link>
-            <ChevronRight className="h-3 w-3" />
-            <span className="text-gold">Farms</span>
+      <div className="container py-6 sm:py-12">
+        {/* Title + Subcategory Tabs */}
+        <div className="mb-8 flex flex-col items-center justify-between gap-4 md:flex-row">
+          <div>
+            <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-navy">Farms</h1>
+            <div className="mt-2 h-1 w-16 bg-gold" />
           </div>
-          <div className="flex items-center gap-4 mb-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gold/15">
-              <Sprout className="h-5 w-5 text-gold" />
-            </div>
-            <span className="rounded-full bg-gold/15 px-4 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-gold">
-              Farms
-            </span>
-          </div>
-          <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-white max-w-2xl leading-tight">
-            Farm produce, equipment and supplies
-          </h1>
-          <p className="mt-3 max-w-xl text-sm leading-relaxed text-champagne/70">
-            A growing section for Nigerian farmers and households. Browse categories below, or reach out
-            for seasonal and bulk orders.
-          </p>
-        </div>
-      </section>
-
-      <div className="container py-8">
-        {/* Subcategory navigation */}
-        <div className="mb-8">
-          <div className="flex gap-3 overflow-x-auto pb-2 no-scrollbar">
+          <div className="flex gap-2 overflow-x-auto no-scrollbar">
             <button
               type="button"
               onClick={() => handleTabChange('all')}
-              className={`flex-shrink-0 whitespace-nowrap rounded-md px-5 py-2.5 text-sm font-bold uppercase tracking-widest transition-all ${
-                urlCategory === 'all' ? 'bg-gold text-navy shadow-md' : 'bg-white text-navy/60 hover:text-navy'
+              className={`flex-shrink-0 whitespace-nowrap rounded-md px-4 py-2 text-xs font-bold uppercase tracking-widest transition-all ${
+                urlCategory === 'all' ? 'bg-gold text-navy' : 'bg-white text-navy/60 hover:text-navy'
               }`}
             >
-              All Farms
+              All
             </button>
             {farms.subcategories.map((sub) => (
               <button
                 key={sub.slug}
                 type="button"
                 onClick={() => handleTabChange(sub.slug)}
-                className={`flex-shrink-0 whitespace-nowrap rounded-md px-5 py-2.5 text-sm font-bold uppercase tracking-widest transition-all ${
-                  urlCategory === sub.slug ? 'bg-gold text-navy shadow-md' : 'bg-white text-navy/60 hover:text-navy'
+                className={`flex-shrink-0 whitespace-nowrap rounded-md px-4 py-2 text-xs font-bold uppercase tracking-widest transition-all ${
+                  urlCategory === sub.slug ? 'bg-gold text-navy' : 'bg-white text-navy/60 hover:text-navy'
                 }`}
               >
                 {sub.name}
@@ -127,39 +106,11 @@ const FarmsPage = () => {
           </div>
         </div>
 
-        {/* Category explainer */}
-        <section className="mb-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {farms.subcategories.map((sub) => (
-            <Link
-              key={sub.slug}
-              to={sub.href}
-              className="group flex items-start gap-3 rounded-md border border-gold-antique/10 bg-white p-5 shadow-sm transition-all hover:border-gold/40"
-            >
-              <div className="flex h-10 w-10 items-center justify-center rounded-full bg-ivory text-gold">
-                <Leaf className="h-5 w-5" />
-              </div>
-              <div>
-                <p className="text-sm font-bold text-navy">{sub.name}</p>
-                <p className="mt-1 text-xs leading-5 text-navy/55">
-                  Browse {sub.name.toLowerCase()} available on Cedokamall.
-                </p>
-              </div>
-            </Link>
-          ))}
-        </section>
-
         {/* Products */}
         <div className="mb-6 flex items-center justify-between">
           <h2 className="font-serif text-2xl font-bold text-navy">
             {activeCategory ? activeCategory : 'Farm Products'}
           </h2>
-          <Link
-            to="/"
-            className="flex items-center gap-2 rounded-md bg-navy px-4 py-2 text-xs font-bold uppercase tracking-widest text-gold transition-all hover:bg-gold hover:text-navy"
-          >
-            <ArrowLeft className="h-4 w-4" />
-            Home
-          </Link>
         </div>
 
         {isLoading && products.length === 0 ? (

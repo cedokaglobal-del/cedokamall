@@ -16,6 +16,7 @@ interface ProductState {
   fetchProducts: (force?: boolean) => Promise<void>;
   addProduct: (product: ProductFormData) => Promise<void>;
   updateProduct: (id: string, updates: Partial<ProductFormData>) => Promise<void>;
+  toggleOutOfStock: (id: string) => Promise<void>;
   deleteProduct: (id: string) => Promise<void>;
   clearAllProducts: () => Promise<void>;
   rateProduct: (id: string, rating: number) => Promise<void>;
@@ -116,6 +117,7 @@ const mapSupabaseToProduct = (row: Record<string, unknown>): Product => {
     images,
     category: String(row.category ?? ''),
     inStock: Number(row.stock ?? 0),
+    outOfStock: Boolean(row.out_of_stock),
     seller: String(row.seller ?? ''),
     rating: Number(row.rating ?? 0),
     reviews: Number(row.reviews ?? 0),
@@ -219,6 +221,7 @@ const buildProductPayload = (productData: ProductFormData) => {
     images,
     category: productData.category,
     stock: productData.inStock,
+    out_of_stock: productData.outOfStock ?? false,
     seller: productData.seller,
     sku: productData.sku || null,
     warranty: productData.warranty || null,
@@ -444,6 +447,29 @@ export const useProductStore = create<ProductState>((set, get) => ({
       }
     } catch (error) {
       console.error('Error updating product:', error);
+      throw error;
+    }
+  },
+
+  toggleOutOfStock: async (id) => {
+    try {
+      const current = get().products.find((product) => product.id === id);
+      if (!current) return;
+      const next = !current.outOfStock;
+      const { error } = await supabase
+        .from('products')
+        .update({ out_of_stock: next })
+        .eq('id', id);
+      if (error) throw error;
+      set((state) => {
+        const products = state.products.map((product) =>
+          product.id === id ? { ...product, outOfStock: next } : product
+        );
+        persistProducts(products);
+        return { products, lastSyncedAt: new Date().toISOString() };
+      });
+    } catch (error) {
+      console.error('Error toggling out-of-stock:', error);
       throw error;
     }
   },

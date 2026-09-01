@@ -26,6 +26,7 @@ const AdminProducts = () => {
   const setFilter = useProductStore((s) => s.setFilter);
   const addProduct = useProductStore((s) => s.addProduct);
   const updateProduct = useProductStore((s) => s.updateProduct);
+  const toggleOutOfStock = useProductStore((s) => s.toggleOutOfStock);
   const deleteProduct = useProductStore((s) => s.deleteProduct);
   const clearAllProducts = useProductStore((s) => s.clearAllProducts);
   const getFilteredProducts = useProductStore((s) => s.getFilteredProducts);
@@ -358,6 +359,7 @@ const handleDeleteProduct = async (productId: string) => {
            products={filteredProducts}
            onEdit={handleEditProduct}
            onDelete={handleDeleteWithPassword}
+           onToggleOutOfStock={toggleOutOfStock}
            isLoading={isLoading}
          />
       </div>

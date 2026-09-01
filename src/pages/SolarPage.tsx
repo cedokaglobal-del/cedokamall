@@ -1,11 +1,10 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Sun, ChevronRight, SlidersHorizontal, ArrowLeft } from 'lucide-react';
+import { Sun, SlidersHorizontal, ArrowLeft } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import SolarPlanCard from '@/components/SolarPlanCard';
-import EnergyCalculator from '@/components/EnergyCalculator';
 import { useProductStore } from '@/store/productStore';
 import { useSolarCategoryStore } from '@/store/solarCategoryStore';
 import { useSolarPlanStore } from '@/store/solarPlanStore';
@@ -135,100 +134,13 @@ const SolarPage = () => {
     <div className="min-h-screen bg-ivory">
       <Header />
 
-      {/* Hero */}
-      <section className="relative flex items-center border-b border-gold-antique/20 bg-navy text-champagne min-h-[240px] sm:min-h-[320px]">
-        <div className="container relative z-10 py-10 sm:py-14">
-          <div className="flex flex-wrap items-center gap-2 text-[11px] font-bold uppercase tracking-widest text-champagne/50 mb-4">
-            <Link to="/" className="transition-colors hover:text-gold">Home</Link>
-            <ChevronRight className="h-3 w-3" />
-            <span className="text-gold">Solar Energy</span>
-          </div>
-          <div className="flex items-center gap-4 mb-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gold/20">
-              <Sun className="h-5 w-5 text-gold" />
-            </div>
-            <span className="rounded-full bg-gold/15 px-4 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-gold">
-              Clean Energy
-            </span>
-          </div>
-          <h1 className="font-serif text-2xl sm:text-3xl md:text-4xl font-bold text-white max-w-2xl leading-tight">
-            Power Your World with Clean Solar Energy
-          </h1>
-          <p className="mt-3 text-sm text-champagne/70 max-w-xl leading-relaxed">
-            Premium solar panels, inverters, batteries, and accessories at the best prices in Nigeria.
-            Find the perfect system for your home or business.
-          </p>
-          <div className="mt-6 flex flex-wrap gap-3">
-            <a
-              href="#solar-products"
-              className="inline-flex items-center gap-2 rounded-md bg-gold px-6 py-3 text-xs font-bold uppercase tracking-widest text-navy transition-all hover:bg-gold-antique hover:text-white shadow-lg"
-            >
-              Shop Solar Products
-            </a>
-            <a
-              href="#solar-calculator"
-              className="inline-flex items-center gap-2 rounded-md border border-gold/30 bg-white/5 px-6 py-3 text-xs font-bold uppercase tracking-widest text-champagne transition-all hover:bg-white/10"
-            >
-              Calculate My Energy Needs
-            </a>
-          </div>
-      </div>
-    </section>
-
-      {/* Guided shopping */}
-      <section className="border-b border-gold-antique/10 bg-white">
-        <div className="container py-10 sm:py-14">
-          <div className="grid items-center gap-8 lg:grid-cols-[1.1fr_1fr]">
-            <div>
-              <span className="text-xs font-bold uppercase tracking-[0.2em] text-gold">Choose with confidence</span>
-              <h2 className="mt-3 font-serif text-2xl font-bold text-navy sm:text-3xl">
-                Find the right solar solution
-              </h2>
-              <p className="mt-3 max-w-xl text-sm leading-7 text-navy/65">
-                Sizing a system starts with your daily power needs. Use our calculator to estimate the panel,
-                battery and inverter capacity for your home or office, then shop the matching components.
-              </p>
-              <div className="mt-6 flex flex-wrap gap-3">
-                <a
-                  href="#solar-calculator"
-                  className="inline-flex items-center gap-2 rounded-md bg-gold px-6 py-3 text-xs font-bold uppercase tracking-widest text-navy transition-all hover:bg-gold-antique hover:text-white"
-                >
-                  Use the energy calculator
-                </a>
-                <Link
-                  to="/solar"
-                  className="inline-flex items-center gap-2 rounded-md border border-gold/30 px-6 py-3 text-xs font-bold uppercase tracking-widest text-navy transition-all hover:bg-navy hover:text-gold"
-                >
-                  Browse all products
-                </Link>
-              </div>
-            </div>
-            <div className="grid gap-3 sm:grid-cols-3">
-              {[
-                { step: '1', title: 'List your loads', text: 'Note the appliances you want to run and their wattage.' },
-                { step: '2', title: 'Size the system', text: 'The calculator suggests panel, battery and inverter ratings.' },
-                { step: '3', title: 'Shop & install', text: 'Buy the components and arrange installation with our team.' },
-              ].map((item) => (
-                <div key={item.step} className="rounded-md border border-gold-antique/10 bg-ivory p-5">
-                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-navy text-gold font-bold">
-                    {item.step}
-                  </div>
-                  <p className="mt-3 text-sm font-bold text-navy">{item.title}</p>
-                  <p className="mt-1 text-xs leading-5 text-navy/60">{item.text}</p>
-                </div>
-              ))}
-            </div>
-          </div>
-        </div>
-      </section>
-
-      <div className="container py-8">
+      <div className="container py-6 sm:py-12">
         {/* Title + Sort Bar */}
         <div className="mb-10 flex flex-col items-center justify-between gap-6 md:flex-row">
           <div>
-            <h2 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-navy">
-              Solar Energy Collection
-            </h2>
+            <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-navy">
+              Solar Energy
+            </h1>
             <div className="mt-2 h-1 w-16 bg-gold" />
             <p className="mt-4 max-w-2xl text-sm leading-6 text-navy/60">
               Premium solar panels, inverters, batteries and accessories at the best prices in Nigeria.
@@ -395,10 +307,6 @@ const SolarPage = () => {
           </section>
         )}
 
-        {/* Energy Calculator */}
-        <div id="solar-calculator" className="mt-16">
-          <EnergyCalculator />
-        </div>
       </div>
 
       <Footer />

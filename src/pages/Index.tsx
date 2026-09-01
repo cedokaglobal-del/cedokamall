@@ -317,23 +317,23 @@ const Index = () => {
             <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
           </Link>
         </div>
-        <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        <div className="grid grid-cols-3 gap-3 sm:grid-cols-3 lg:grid-cols-3">
           {MAJOR_CATEGORIES.map((category) => (
             <Link
               key={category.slug}
               to={category.href}
-              className="group relative rounded-md bg-white border border-gold-antique/10 p-5 sm:p-6 transition-all hover:border-gold/30"
+              className="group rounded-md bg-white border border-gold-antique/10 p-3 sm:p-4 transition-all hover:border-gold/30"
             >
-              <div className="flex items-center gap-3">
-                <div className="flex h-10 w-10 items-center justify-center rounded-bg bg-ivory">
-                  <category.icon className="h-5 w-5" />
+              <div className="flex items-center gap-2">
+                <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ivory">
+                  <category.icon className="h-4 w-4 text-navy" />
                 </div>
-                <h3 className="font-serif text-base font-bold text-navy sm:text-lg">{category.name}</h3>
+                <h3 className="text-xs sm:text-sm font-bold text-navy truncate">{category.name}</h3>
               </div>
-              <p className="mt-2 text-sm text-navy/50 leading-relaxed">{category.tagline}</p>
-              <span className="mt-3 flex items-center gap-1.5 text-xs font-bold uppercase tracking-widest text-gold">
+              <p className="mt-1.5 text-[11px] text-navy/50 leading-relaxed line-clamp-2">{category.tagline}</p>
+              <span className="mt-2 flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-gold">
                 Shop now
-                <svg className="h-3.5 w-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
+                <svg className="h-3 w-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M5 12h14M12 5l7 7-7 7" />
                 </svg>
               </span>
@@ -384,16 +384,12 @@ const Index = () => {
 
       {/* Solar System Plans */}
       {plans.filter((p) => p.isActive).length > 0 && (
-        <section className="bg-white border-y border-gold-antique/10 py-16 sm:py-20">
+        <section className="bg-white border-y border-gold-antique/10 py-12">
           <div className="container">
-            <div className="mb-10 text-center">
-              <div className="inline-flex items-center gap-2 rounded-full bg-gold/10 px-4 py-1.5">
-                <Sun className="h-3.5 w-3.5 text-gold" />
-                <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold">Solar Energy</span>
-              </div>
-              <h2 className="mt-4 font-serif text-2xl sm:text-3xl font-bold text-navy">Power Your Home with Solar</h2>
-              <p className="mx-auto mt-3 max-w-lg text-sm leading-7 text-navy/60">
-                Pre-designed solar plans for every need. Tap any plan for full specs or get a custom quote.
+            <div className="mb-8 text-center">
+              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-navy">Solar System Plans</h2>
+              <p className="mx-auto mt-2 max-w-lg text-sm text-navy/60">
+                Pre-designed solar plans for every need.
               </p>
             </div>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
@@ -490,14 +486,13 @@ const Index = () => {
         </div>
       </section>
 
-      {/* Recommended Section - Premium Highlight */}
-      <section className="bg-navy py-24 text-champagne relative overflow-hidden">
-        <div className="absolute top-0 right-0 w-1/3 h-full bg-gold/5 -skew-x-12 transform translate-x-1/2" />
-        <div className="container relative z-10">
-          <div className="mb-16 text-center">
-            <h2 className="font-serif text-4xl font-bold mb-4">Recommended for you</h2>
-            <p className="text-champagne/60 font-sans tracking-widest uppercase text-xs">Popular picks across the store</p>
-            <div className="h-1 w-24 bg-gold mx-auto mt-6" />
+      {/* Recommended Section */}
+      <section className="bg-navy py-16 text-champagne">
+        <div className="container">
+          <div className="mb-10 text-center">
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold mb-2">Recommended for you</h2>
+            <p className="text-champagne/60 text-xs uppercase tracking-widest">Popular picks across the store</p>
+            <div className="h-0.5 w-16 bg-gold mx-auto mt-4" />
           </div>
           {isLoading && products.length === 0 ? (
             <div className="grid grid-cols-2 gap-6 md:grid-cols-3 lg:grid-cols-6">
@@ -512,13 +507,13 @@ const Index = () => {
               ))}
             </div>
           )}
-          <div className="mt-16 text-center">
+          <div className="mt-10 text-center">
             <Link
               to="/shop"
-              className="inline-flex items-center gap-3 rounded-md bg-gold px-12 py-4 text-lg font-bold text-navy transition-all duration-300 hover:bg-gold-antique hover:text-white shadow-xl transform hover:-translate-y-1 active:scale-95 will-change-transform"
+              className="inline-flex items-center gap-2 rounded-md bg-gold px-8 py-3 text-xs font-bold uppercase tracking-widest text-navy transition-all hover:bg-gold-antique hover:text-white"
             >
               Browse Full Catalog
-              <ArrowRight className="h-5 w-5 transition-transform group-hover:translate-x-1" />
+              <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
         </div>
@@ -548,16 +543,14 @@ const Index = () => {
 
       {/* Flash Deals */}
       {(flashDeals.length > 0 || (isLoading && products.length === 0)) && (
-        <section className="bg-white border-y border-gold-antique/10 py-24">
+        <section className="bg-white border-y border-gold-antique/10 py-12">
           <div className="container">
-            <div className="mb-16 flex flex-col md:flex-row items-center justify-between gap-8">
-              <div className="flex flex-col md:flex-row items-center gap-8">
-                <div className="flex h-16 w-16 items-center justify-center rounded-full bg-gold/10">
-                  <Timer className="h-8 w-8 text-gold animate-pulse" />
-                </div>
-                <div className="text-center md:text-left">
-                  <h2 className="font-serif text-4xl font-bold text-navy mb-2">Flash Deals</h2>
-                  <p className="text-navy/40 font-sans text-xs uppercase tracking-widest">Limited-time price drops</p>
+            <div className="mb-8 flex flex-col md:flex-row items-center justify-between gap-4">
+              <div className="flex items-center gap-3">
+                <Timer className="h-5 w-5 text-gold" />
+                <div>
+                  <h2 className="font-serif text-xl sm:text-2xl font-bold text-navy">Flash Deals</h2>
+                  <p className="text-navy/40 text-xs uppercase tracking-widest">Limited-time price drops</p>
                 </div>
               </div>
               <CountdownTimer />
@@ -578,13 +571,13 @@ const Index = () => {
       )}
 
       {/* Testimonials */}
-      <section className="bg-ivory py-16 relative overflow-hidden">
-        <div className="container relative z-10">
-          <div className="mb-16 text-center">
-            <h2 className="font-serif text-4xl font-bold text-navy mb-4">What our customers say</h2>
-            <div className="h-1 w-20 bg-gold mx-auto" />
+      <section className="bg-ivory py-12">
+        <div className="container">
+          <div className="mb-10 text-center">
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-navy mb-2">What our customers say</h2>
+            <div className="h-0.5 w-16 bg-gold mx-auto" />
           </div>
-          <div className="grid gap-8 md:grid-cols-3">
+          <div className="grid gap-6 md:grid-cols-3">
             {[
               {
                 name: 'Chioma A.',
@@ -601,32 +594,27 @@ const Index = () => {
                 loc: 'Victoria Island',
                 text: 'The consistency and quality of products have been consistently strong. A truly high-end experience.',
               },
-            ].map((testimonial, index) => (
-              <motion.div
+            ].map((testimonial) => (
+              <div
                 key={testimonial.name}
-                initial={{ opacity: 0, y: 30 }}
-                whileInView={{ opacity: 1, y: 0 }}
-                viewport={{ once: true, margin: "50px" }}
-                transition={{ delay: index * 0.1, duration: 0.5 }}
-                className="rounded-md bg-white p-10 shadow-premium border border-gold-antique/5 relative group will-change-transform"
+                className="rounded-md bg-white p-6 border border-gold-antique/5"
               >
-                <div className="absolute top-6 left-6 text-gold/10 text-6xl font-serif leading-none group-hover:text-gold/20 transition-colors">"</div>
-                <div className="mb-6 flex items-center gap-1">
+                <div className="mb-4 flex items-center gap-1">
                   {[...Array(5)].map((_, starIndex) => (
-                    <Star key={starIndex} className="h-4 w-4 fill-gold text-gold" />
+                    <Star key={starIndex} className="h-3.5 w-3.5 fill-gold text-gold" />
                   ))}
                 </div>
-                <p className="mb-8 text-base text-navy/70 font-sans italic leading-relaxed">&quot;{testimonial.text}&quot;</p>
-                <div className="flex items-center gap-4 border-t border-gold-antique/10 pt-6">
-                  <div className="flex h-12 w-12 items-center justify-center rounded-md bg-navy text-gold font-serif font-bold">
+                <p className="mb-6 text-sm text-navy/70 leading-relaxed">&quot;{testimonial.text}&quot;</p>
+                <div className="flex items-center gap-3 border-t border-gold-antique/10 pt-4">
+                  <div className="flex h-9 w-9 items-center justify-center rounded-full bg-navy text-gold text-sm font-bold">
                     {testimonial.name[0]}
                   </div>
                   <div>
-                    <p className="text-sm font-bold text-navy uppercase tracking-widest">{testimonial.name}</p>
-                    <p className="text-xs text-navy/40 uppercase tracking-tighter">{testimonial.loc}</p>
+                    <p className="text-xs font-bold text-navy">{testimonial.name}</p>
+                    <p className="text-[10px] text-navy/40">{testimonial.loc}</p>
                   </div>
                 </div>
-              </motion.div>
+              </div>
             ))}
           </div>
         </div>

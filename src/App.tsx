@@ -28,6 +28,7 @@ const CartPage     = safeLazy(() => import("./pages/CartPage"));
 const SolarPage    = safeLazy(() => import("./pages/SolarPage"));
 const FarmsPage    = safeLazy(() => import("./pages/FarmsPage"));
 const BrandsPage   = safeLazy(() => import("./pages/BrandsPage"));
+const CalculatorPage = safeLazy(() => import("./pages/CalculatorPage"));
 const NotFound     = safeLazy(() => import("./pages/NotFound"));
 
 // Admin pages (heavy, only loaded when admin visits)
@@ -195,6 +196,7 @@ const App = () => {
                   <Route path="/solar" element={<SolarPage />} />
                   <Route path="/farms" element={<FarmsPage />} />
                   <Route path="/brands" element={<BrandsPage />} />
+                  <Route path="/calculator" element={<CalculatorPage />} />
 
                   {/* Admin Routes - Login (no protection needed) */}
                   <Route path="/admin/login" element={<AdminLogin />} />

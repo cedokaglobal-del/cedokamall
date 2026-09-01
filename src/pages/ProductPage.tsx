@@ -701,24 +701,33 @@ const ProductPage = () => {
                     </div>
 
                     <div className="mt-6 grid gap-3">
-                      <button
-                        type="button"
-                        onClick={handleAddToCart}
-                        className="flex items-center justify-center gap-3 rounded-2xl bg-gold py-4 text-sm font-bold uppercase tracking-widest text-navy transition-all duration-300 hover:bg-gold-antique hover:text-white"
-                      >
-                        <ShoppingCart className="h-5 w-5" />
-                        Add to cart
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => {
-                          handleAddToCart();
-                          navigate('/cart');
-                        }}
-                        className="flex items-center justify-center gap-3 rounded-2xl border border-gold/40 bg-transparent py-4 text-sm font-bold uppercase tracking-widest text-gold transition-all duration-300 hover:bg-gold hover:text-navy"
-                      >
-                        Buy now
-                      </button>
+                      {product.outOfStock ? (
+                        <div className="flex items-center justify-center gap-2 rounded-2xl bg-red-50 border border-red-200 py-4 text-sm font-bold uppercase tracking-widest text-red-700">
+                          <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
+                          Out of Stock
+                        </div>
+                      ) : (
+                        <>
+                          <button
+                            type="button"
+                            onClick={handleAddToCart}
+                            className="flex items-center justify-center gap-3 rounded-2xl bg-gold py-4 text-sm font-bold uppercase tracking-widest text-navy transition-all duration-300 hover:bg-gold-antique hover:text-white"
+                          >
+                            <ShoppingCart className="h-5 w-5" />
+                            Add to cart
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => {
+                              handleAddToCart();
+                              navigate('/cart');
+                            }}
+                            className="flex items-center justify-center gap-3 rounded-2xl border border-gold/40 bg-transparent py-4 text-sm font-bold uppercase tracking-widest text-gold transition-all duration-300 hover:bg-gold hover:text-navy"
+                          >
+                            Buy now
+                          </button>
+                        </>
+                      )}
                     </div>
 
                     <div className="mt-5 flex items-center gap-5 text-[10px] font-bold uppercase tracking-[0.16em] text-champagne/60 md:text-[11px]">
