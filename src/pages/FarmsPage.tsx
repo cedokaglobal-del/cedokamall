@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Sprout, MessageSquare } from 'lucide-react';
+import { Sprout, MessageSquare, Leaf } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
@@ -104,6 +104,32 @@ const FarmsPage = () => {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Subcategory info cards */}
+        <div className="mb-8 grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+          {farms.subcategories.map((sub) => (
+            <button
+              key={sub.slug}
+              type="button"
+              onClick={() => handleTabChange(sub.slug)}
+              className={`group flex items-start gap-3 rounded-md border p-4 text-left transition-all ${
+                urlCategory === sub.slug
+                  ? 'border-gold bg-gold/5'
+                  : 'border-gold-antique/10 bg-white hover:border-gold/30'
+              }`}
+            >
+              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ivory">
+                <Leaf className="h-4 w-4 text-gold" />
+              </div>
+              <div className="min-w-0">
+                <p className="text-sm font-bold text-navy">{sub.name}</p>
+                <p className="mt-0.5 text-[11px] leading-4 text-navy/50">
+                  Browse {sub.name.toLowerCase()} on Cedokamall.
+                </p>
+              </div>
+            </button>
+          ))}
         </div>
 
         {/* Products */}

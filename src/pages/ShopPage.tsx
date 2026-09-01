@@ -24,6 +24,7 @@ const ShopPage = () => {
   const categoryParam = searchParams.get('category')?.toLowerCase();
   const searchTerm = searchParams.get('q') || searchParams.get('search');
   const dealsOnly = searchParams.get('deals') === 'true';
+  const viewAll = searchParams.get('view') === 'all';
 
   useEffect(() => { if (searchTerm) trackSearch(searchTerm); }, [searchTerm]);
 
@@ -85,9 +86,11 @@ const ShopPage = () => {
   }, [sliderMax]);
 
   const filteredProducts = useMemo(() => {
-    let next = products.filter(
-      (product) => !isRenewableEnergyCategory(product.category) && !solarCategories.includes(product.category)
-    );
+    let next = viewAll
+      ? [...products]
+      : products.filter(
+          (product) => !isRenewableEnergyCategory(product.category) && !solarCategories.includes(product.category)
+        );
 
     if (dealsOnly) {
       next = next.filter((product) => product.badge === 'FLASH DEAL');
@@ -132,15 +135,19 @@ const ShopPage = () => {
           return scoreB - scoreA;
         });
     }
-  }, [dealsOnly, priceRange, products, searchTerm, selectedCategory, solarCategories, sortBy]);
+  }, [dealsOnly, priceRange, products, searchTerm, selectedCategory, solarCategories, sortBy, viewAll]);
 
-  const pageTitle = activeCategory
-    ? `${activeCategory.name} in Nigeria - Cedokamall`
-    : dealsOnly
-      ? 'Flash Deals on Electricals and Gadgets - Cedokamall'
-      : 'Shop Electrical Equipment, Gadgets and Appliances - Cedokamall';
+  const pageTitle = viewAll
+    ? 'All Products - Cedokamall'
+    : activeCategory
+      ? `${activeCategory.name} in Nigeria - Cedokamall`
+      : dealsOnly
+        ? 'Flash Deals on Electricals and Gadgets - Cedokamall'
+        : 'Shop Electrical Equipment, Gadgets and Appliances - Cedokamall';
 
-  const pageDescription = activeCategory
+  const pageDescription = viewAll
+    ? 'Browse all products on Cedokamall - electronics, solar, farm products and more with warranty support and nationwide delivery.'
+    : activeCategory
     ? `Shop original ${activeCategory.name.toLowerCase()} in Nigeria with warranty support, trusted brands and nationwide delivery from Cedokamall.`
     : dealsOnly
       ? 'Explore flash deals on original electrical equipment, home appliances and gadgets with warranties and nationwide delivery.'
@@ -214,7 +221,7 @@ const ShopPage = () => {
         <div className="mb-10 flex flex-col items-center justify-between gap-6 md:flex-row">
           <div>
             <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-navy">
-              {activeCategory?.name || (dealsOnly ? 'Deals' : 'All Products')}
+              {viewAll ? 'All Products' : activeCategory?.name || (dealsOnly ? 'Deals' : 'Electronics')}
             </h1>
             <div className="mt-2 h-1 w-16 bg-gold" />
             <p className="mt-4 max-w-2xl break-words text-sm leading-6 text-navy/60">{pageDescription}</p>

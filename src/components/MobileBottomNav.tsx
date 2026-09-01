@@ -5,7 +5,7 @@ import { cn } from '@/lib/utils';
 
 const NAV_ITEMS = [
   { label: 'Home', icon: Home, href: '/' },
-  { label: 'General', icon: LayoutGrid, href: '/shop' },
+  { label: 'General', icon: LayoutGrid, href: '/shop?view=all' },
   { label: 'Electronics', icon: LayoutGrid, href: '/shop' },
   { label: 'Solar', icon: Sun, href: '/solar' },
   { label: 'Farm', icon: Sprout, href: '/farms' },
@@ -17,12 +17,13 @@ const MobileBottomNav = () => {
 
   const isActive = useCallback((item: typeof NAV_ITEMS[number]) => {
     if (item.href === '/') return location.pathname === '/';
-    if (item.href === '/shop') return location.pathname === '/shop' || location.pathname.startsWith('/shop');
+    if (item.href === '/shop?view=all') return location.pathname === '/shop' && location.search.includes('view=all');
+    if (item.href === '/shop') return location.pathname === '/shop' && !location.search.includes('view=all');
     if (item.href === '/solar') return location.pathname === '/solar';
     if (item.href === '/farms') return location.pathname === '/farms';
     if (item.href === '/calculator') return location.pathname === '/calculator';
     return location.pathname.startsWith(item.href);
-  }, [location.pathname]);
+  }, [location.pathname, location.search]);
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-gold-antique/20 bg-navy md:hidden" aria-label="Mobile navigation">

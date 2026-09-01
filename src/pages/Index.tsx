@@ -328,7 +328,7 @@ const Index = () => {
                 <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ivory">
                   <category.icon className="h-4 w-4 text-navy" />
                 </div>
-                <h3 className="text-xs sm:text-sm font-bold text-navy truncate">{category.name}</h3>
+                <h3 className="text-xs sm:text-sm font-bold text-navy leading-tight">{category.name}</h3>
               </div>
               <p className="mt-1.5 text-[11px] text-navy/50 leading-relaxed line-clamp-2">{category.tagline}</p>
               <span className="mt-2 flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-gold">
