@@ -356,51 +356,51 @@ const EnergyCalculator = () => {
     <div className="rounded-[1.5rem] border border-gold-antique/10 bg-white shadow-premium overflow-hidden">
 
       {/* Header */}
-      <div className="px-6 py-5 md:px-8 md:py-6 bg-navy">
-        <div className="flex items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-gold/20">
-              <Calculator className="h-5 w-5 text-gold" />
+      <div className="px-4 py-4 md:px-8 md:py-6 bg-navy">
+        <div className="flex items-center justify-between gap-2">
+          <div className="flex items-center gap-2.5 min-w-0">
+            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-gold/20">
+              <Calculator className="h-4 w-4 text-gold" />
             </div>
-            <div>
-              <h2 className="font-serif text-xl sm:text-2xl font-bold text-champagne">Solar System Calculator</h2>
-              <p className="text-xs text-champagne/60 mt-0.5 hidden sm:block">Tap appliances to add them, then calculate your solar needs.</p>
+            <div className="min-w-0">
+              <h2 className="font-serif text-lg sm:text-2xl font-bold text-champagne truncate">Solar Calculator</h2>
+              <p className="text-[11px] text-champagne/60 mt-0.5 hidden sm:block">Add appliances, then calculate your solar needs.</p>
             </div>
           </div>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-1.5 shrink-0">
             <button type="button" onClick={resetCalculator} className="rounded-lg p-2 text-champagne/60 hover:bg-white/10 hover:text-gold" aria-label="Reset calculator" title="Reset calculator">
               <RotateCcw className="h-4 w-4" />
             </button>
-            <div className="flex items-center gap-1 bg-white/10 rounded-lg p-0.5">
-            <button
-              type="button"
-              onClick={() => setMode('basic')}
-              className={`px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-md transition-all ${
-                mode === 'basic' ? 'bg-gold text-navy shadow-sm' : 'text-champagne/60 hover:text-champagne'
-              }`}
-            >
-              Basic
-            </button>
-            <button
-              type="button"
-              onClick={() => setMode('advanced')}
-              className={`px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider rounded-md transition-all ${
-                mode === 'advanced' ? 'bg-gold text-navy shadow-sm' : 'text-champagne/60 hover:text-champagne'
-              }`}
-            >
-              Advanced
-            </button>
+            <div className="flex items-center gap-0.5 bg-white/10 rounded-lg p-0.5">
+              <button
+                type="button"
+                onClick={() => setMode('basic')}
+                className={`px-2.5 py-1.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider rounded-md transition-all ${
+                  mode === 'basic' ? 'bg-gold text-navy shadow-sm' : 'text-champagne/60 hover:text-champagne'
+                }`}
+              >
+                Basic
+              </button>
+              <button
+                type="button"
+                onClick={() => setMode('advanced')}
+                className={`px-2.5 py-1.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider rounded-md transition-all ${
+                  mode === 'advanced' ? 'bg-gold text-navy shadow-sm' : 'text-champagne/60 hover:text-champagne'
+                }`}
+              >
+                Advanced
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      <div className="p-4 md:p-6 space-y-6">
+      <div className="p-4 md:p-6 space-y-5">
 
         {/* Quick-add presets */}
         <div>
-          <p className="text-xs font-bold uppercase tracking-[0.2em] text-navy/50 mb-3">Quick Add Appliances</p>
-          <div className="flex flex-wrap gap-2">
+          <p className="text-xs font-bold uppercase tracking-[0.2em] text-navy/50 mb-2.5">Quick Add</p>
+          <div className="flex flex-wrap gap-1.5">
             {QUICK_ADD_PRESETS.map((preset) => {
               const alreadyAdded = applianceNames.has(preset.name);
               return (
@@ -416,10 +416,10 @@ const EnergyCalculator = () => {
                     }
                   }}
                   className={cn(
-                    'inline-flex items-center gap-1.5 rounded-full px-3.5 py-2 text-xs font-bold uppercase tracking-wider transition-all',
+                    'inline-flex items-center gap-1 rounded-full px-3 py-1.5 text-[11px] font-bold uppercase tracking-wider transition-all active:scale-95',
                     alreadyAdded
-                      ? 'bg-green-100 text-green-700 border border-green-300 hover:bg-red-100 hover:text-red-600 hover:border-red-300 cursor-pointer'
-                      : 'bg-ivory text-navy/70 border border-gold-antique/20 hover:bg-gold hover:text-navy hover:border-gold active:scale-95'
+                      ? 'bg-green-100 text-green-700 border border-green-300 hover:bg-red-100 hover:text-red-600 hover:border-red-300'
+                      : 'bg-ivory text-navy/70 border border-gold-antique/20 hover:bg-gold hover:text-navy hover:border-gold'
                   )}
                 >
                   {alreadyAdded ? <Check className="h-3 w-3" /> : <Plus className="h-3 w-3" />}
@@ -802,18 +802,16 @@ const EnergyCalculator = () => {
 
         {/* Calculate Button */}
         {appliances.length > 0 && (
-          <div className="space-y-3">
+          <div className="space-y-2">
             {inputIssue && <p className="text-center text-sm font-medium text-destructive" role="alert">{inputIssue}</p>}
-            <div className="flex justify-center">
             <button
               type="button"
               onClick={handleCalculate}
-              className="inline-flex items-center gap-3 rounded-xl bg-navy px-10 py-4 text-sm font-bold uppercase tracking-widest text-gold shadow-lg transition-all hover:bg-gold hover:text-navy hover:scale-105 active:scale-95"
+              className="w-full flex items-center justify-center gap-3 rounded-xl bg-navy px-8 py-4 text-sm font-bold uppercase tracking-widest text-gold shadow-lg transition-all hover:bg-gold hover:text-navy active:scale-[0.98]"
             >
               <Calculator className="h-5 w-5" />
-              Calculate
+              Calculate My Solar Needs
             </button>
-            </div>
           </div>
         )}
 
@@ -1011,6 +1009,26 @@ const EnergyCalculator = () => {
               className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-5 py-3 text-xs font-bold uppercase tracking-widest text-white transition-all hover:bg-emerald-600">
               <MessageSquare className="h-4 w-4" />
               Get Quote
+            </a>
+          </div>
+
+          {/* Disclaimer */}
+          <div className="mt-4 rounded-lg bg-white/5 border border-white/10 p-3">
+            <p className="text-[11px] leading-5 text-champagne/50">
+              <strong className="text-champagne/70">Disclaimer:</strong> This is an estimate based on the appliances you listed. Your actual solar needs may vary depending on usage patterns, appliance efficiency, weather conditions, and system losses. We recommend consulting with a technician for a precise assessment.
+            </p>
+          </div>
+
+          {/* Talk to a Technician */}
+          <div className="mt-4">
+            <a
+              href={`https://wa.me/2349128817136?text=${encodeURIComponent('Hi Cedokamall! I used your solar calculator and would like to speak with a technician about my solar needs.')}`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center justify-center gap-2 w-full rounded-xl bg-[#25D366] px-5 py-3.5 text-xs font-bold uppercase tracking-widest text-white transition-all hover:bg-emerald-600 active:scale-[0.98]"
+            >
+              <MessageSquare className="h-4 w-4" />
+              Talk to a Technician
             </a>
           </div>
         </div>
