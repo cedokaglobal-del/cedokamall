@@ -3,6 +3,7 @@ import { Calculator, Plus, Trash2, Sun, Zap, Battery, BarChart3, ShoppingCart, M
 import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useCartStore } from '@/store/cartStore';
+import { useProductStore } from '@/store/productStore';
 
 const PLACEHOLDER_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgdmlld0JveD0iMCAwIDQwMCA0MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9IiNFNkUwREIiLz48cGF0aCBkPSJNMjAwIDExMEwxMjAgMjUwaDE2MEwyMDAgMTEweiIgZmlsbD0iI0M5QTg0QyIvPjwvc3ZnPg==';
 
@@ -37,6 +38,8 @@ interface SystemComponent {
   specs: string;
   quantity: number;
   unitPrice: number;
+  image?: string;
+  productId?: string;
 }
 
 interface StorageData { appliances: ApplianceRow[]; autonomy: number; dod: number; peakSunHours: number; inverterEff: number; batteryEff: number; batteryType: string; mode?: string; tempDerating?: number; systemLosses?: number; }
@@ -141,7 +144,7 @@ const computeResults = (appliances: ApplianceRow[], autonomy: number, dod: numbe
   };
 };
 
-const calcSystemComponents = (results: CalculatorResults): SystemComponent[] => {
+const calcSystemComponents = (results: CalculatorResults, products: Array<{ id: string; name: string; category: string; image: string }>): SystemComponent[] => {
   const panelWattage = 300;
   const panelQuantity = Math.max(1, Math.ceil(results.solarPanelW / panelWattage));
 
@@ -153,6 +156,23 @@ const calcSystemComponents = (results: CalculatorResults): SystemComponent[] => 
 
   const invQty = Math.max(1, Math.ceil(results.inverterW / 2000));
 
+  const findProduct = (type: string, specs: string) => {
+    const lowerSpecs = specs.toLowerCase();
+    const match = products.find((p) => {
+      const cat = p.category.toLowerCase();
+      const name = p.name.toLowerCase();
+      if (type === 'panel') return cat.includes('solar') && (name.includes('panel') || name.includes('solar')) && name.includes('300');
+      if (type === 'battery') return cat.includes('solar') && name.includes('battery') && (name.includes('200') || name.includes(lowerSpecs));
+      if (type === 'inverter') return cat.includes('solar') && name.includes('inverter');
+      return false;
+    });
+    return match;
+  };
+
+  const panelProduct = findProduct('panel', `${panelWattage}W`);
+  const batteryProduct = findProduct('battery', `${batteryCapacity}Ah`);
+  const inverterProduct = findProduct('inverter', `${results.inverterW}W`);
+
   return [
     {
       id: generateId(),
@@ -160,7 +180,9 @@ const calcSystemComponents = (results: CalculatorResults): SystemComponent[] => 
       label: 'Solar Panel',
       specs: `${panelWattage}W`,
       quantity: panelQuantity,
-      unitPrice: 150000,
+      unitPrice: panelProduct?.price || 150000,
+      image: panelProduct?.image,
+      productId: panelProduct?.id,
     },
     {
       id: generateId(),
@@ -168,7 +190,9 @@ const calcSystemComponents = (results: CalculatorResults): SystemComponent[] => 
       label: 'Battery',
       specs: `${batteryCapacity}Ah ${batteryVoltage}V`,
       quantity: batteryQuantity,
-      unitPrice: 300000,
+      unitPrice: batteryProduct?.price || 300000,
+      image: batteryProduct?.image,
+      productId: batteryProduct?.id,
     },
     {
       id: generateId(),
@@ -176,7 +200,9 @@ const calcSystemComponents = (results: CalculatorResults): SystemComponent[] => 
       label: 'Inverter',
       specs: `${results.inverterW}W`,
       quantity: invQty,
-      unitPrice: results.inverterW * 500,
+      unitPrice: inverterProduct?.price || results.inverterW * 500,
+      image: inverterProduct?.image,
+      productId: inverterProduct?.id,
     },
   ];
 };
@@ -213,6 +239,7 @@ const EnergyCalculator = () => {
 
   const addItem = useCartStore((s) => s.addItem);
   const toggleCart = useCartStore((s) => s.toggleCart);
+  const products = useProductStore((s) => s.products);
 
   useEffect(() => {
     saveToStorage({ appliances, autonomy, dod, peakSunHours, inverterEff, batteryEff, batteryType, mode, tempDerating, systemLosses });
@@ -266,11 +293,11 @@ const EnergyCalculator = () => {
       setCalculated(false);
       return;
     }
-    const comps = calcSystemComponents(results);
+    const comps = calcSystemComponents(results, products);
     setSystemComponents(comps);
     setCustomizing(false);
     setCalculated(true);
-  }, [inputIssue, results]);
+  }, [inputIssue, results, products]);
 
   const resetCalculator = useCallback(() => {
     sessionStorage.removeItem(STORAGE_KEY);
@@ -291,12 +318,13 @@ const EnergyCalculator = () => {
   const handleBuySystem = useCallback(() => {
     systemComponents.forEach((comp) => {
       addItem({
-        id: `solar-${comp.type}-${Date.now()}`,
+        id: comp.productId || `solar-${comp.type}-${Date.now()}`,
         name: `${comp.label} (${comp.specs})`,
         price: comp.unitPrice,
-        image: PLACEHOLDER_IMAGE,
+        image: comp.image || PLACEHOLDER_IMAGE,
         inStock: 99,
         quantity: comp.quantity,
+        category: 'Solar',
       });
     });
     toggleCart();
@@ -306,12 +334,13 @@ const EnergyCalculator = () => {
     systemComponents.forEach((comp) => {
       if (comp.quantity > 0) {
         addItem({
-          id: `solar-${comp.type}-${Date.now()}`,
+          id: comp.productId || `solar-${comp.type}-${Date.now()}`,
           name: `${comp.label} (${comp.specs})`,
           price: comp.unitPrice,
-          image: PLACEHOLDER_IMAGE,
+          image: comp.image || PLACEHOLDER_IMAGE,
           inStock: 99,
           quantity: comp.quantity,
+          category: 'Solar',
         });
       }
     });
@@ -905,11 +934,11 @@ const EnergyCalculator = () => {
                   </div>
                 </div>
 
-                <div className="flex flex-wrap gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
                   <button
                     type="button"
                     onClick={handleBuySystem}
-                    className="inline-flex items-center gap-2 rounded-xl bg-gold px-5 py-3 text-xs font-bold uppercase tracking-widest text-navy transition-all hover:bg-gold-antique hover:text-white"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-gold px-5 py-3 text-xs font-bold uppercase tracking-widest text-navy transition-all hover:bg-gold-antique hover:text-white"
                   >
                     <ShoppingCart className="h-4 w-4" />
                     Buy This System
@@ -917,14 +946,14 @@ const EnergyCalculator = () => {
                   <button
                     type="button"
                     onClick={() => setCustomizing(true)}
-                    className="inline-flex items-center gap-2 rounded-xl border border-gold/40 px-5 py-3 text-xs font-bold uppercase tracking-widest text-gold transition-all hover:bg-gold hover:text-navy"
+                    className="inline-flex items-center justify-center gap-2 rounded-xl border border-gold/40 px-5 py-3 text-xs font-bold uppercase tracking-widest text-gold transition-all hover:bg-gold hover:text-navy"
                   >
                     <Edit3 className="h-4 w-4" />
                     Customize
                   </button>
                   <a href={`https://wa.me/2349128817136?text=${encodeURIComponent(`Hi Cedokamall! I need a solar quote. My daily consumption is ${results.totalKwh}kWh, battery bank: ${results.batteryCapacityAh}Ah @ ${results.systemVoltage}V, solar array: ${results.solarPanelW}Wp, inverter: ${results.inverterW}W.`)}`}
                     target="_blank" rel="noopener noreferrer"
-                    className="inline-flex items-center gap-2 rounded-xl bg-[#25D366] px-5 py-3 text-xs font-bold uppercase tracking-widest text-white transition-all hover:bg-emerald-600">
+                    className="inline-flex items-center justify-center gap-2 rounded-xl bg-[#25D366] px-5 py-3 text-xs font-bold uppercase tracking-widest text-white transition-all hover:bg-emerald-600">
                     <MessageSquare className="h-4 w-4" />
                     Get Quote
                   </a>

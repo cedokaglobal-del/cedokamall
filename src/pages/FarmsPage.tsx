@@ -74,7 +74,7 @@ const FarmsPage = () => {
     <div className="min-h-screen bg-ivory">
       <Header />
 
-      <div className="container py-6 sm:py-12">
+      <div className="container py-6 pb-24 sm:py-12">
         {/* Title + Subcategory Tabs */}
         <div className="mb-8 flex flex-col items-center justify-between gap-4 md:flex-row">
           <div>

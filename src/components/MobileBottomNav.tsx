@@ -26,7 +26,7 @@ const MobileBottomNav = () => {
   }, [location.pathname, location.search]);
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-gold-antique/20 bg-navy md:hidden" aria-label="Mobile navigation">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-gold-antique/20 bg-navy shadow-[0_-2px_10px_rgba(0,0,0,0.3)] md:hidden" aria-label="Mobile navigation">
       <div className="grid grid-cols-6 h-14 px-1">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
