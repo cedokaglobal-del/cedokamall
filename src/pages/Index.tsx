@@ -284,39 +284,33 @@ const Index = () => {
       </section>
 
       {/* Trust Bar */}
-      <div className="overflow-hidden border-y border-gold-antique/10 bg-white py-6 shadow-sm">
-        <div className="container flex flex-nowrap justify-start gap-8 overflow-x-auto whitespace-nowrap text-sm no-scrollbar md:flex-wrap md:justify-center md:gap-16">
-          <span className="flex flex-shrink-0 items-center gap-3 font-semibold text-navy/80 uppercase tracking-widest text-xs">
-            <ShieldCheck className="h-4 w-4 text-gold" />
-            Warranty-backed products
-          </span>
-          <span className="flex flex-shrink-0 items-center gap-3 font-semibold text-navy/80 uppercase tracking-widest text-xs">
-            <Truck className="h-4 w-4 text-gold" />
-            Delivery across Nigeria
-          </span>
-          <span className="flex flex-shrink-0 items-center gap-3 font-semibold text-navy/80 uppercase tracking-widest text-xs">
-            <Star className="h-4 w-4 fill-gold text-gold" />
-            Original &amp; trusted brands
-          </span>
-          <span className="flex flex-shrink-0 items-center gap-3 font-semibold text-navy/80 uppercase tracking-widest text-xs">
-            <Users className="h-4 w-4 text-gold" />
-            Friendly support
-          </span>
+      <div className="overflow-hidden border-y border-gold-antique/10 bg-white py-5 shadow-sm" aria-label="Cedokamall promises">
+        <div className="marquee-track flex w-max whitespace-nowrap" aria-hidden="true">
+          {[0, 1].map((copy) => (
+            <div key={copy} className="flex shrink-0 items-center gap-8 pr-8 md:gap-16 md:pr-16">
+              <span className="flex items-center gap-3 font-semibold uppercase tracking-widest text-xs text-navy/80">
+                <ShieldCheck className="h-4 w-4 shrink-0 text-gold" />
+                Warranty-backed products
+              </span>
+              <span className="flex items-center gap-3 font-semibold uppercase tracking-widest text-xs text-navy/80">
+                <Truck className="h-4 w-4 shrink-0 text-gold" />
+                Delivery across Nigeria
+              </span>
+              <span className="flex items-center gap-3 font-semibold uppercase tracking-widest text-xs text-navy/80">
+                <Star className="h-4 w-4 shrink-0 fill-gold text-gold" />
+                Original &amp; trusted brands
+              </span>
+              <span className="flex items-center gap-3 font-semibold uppercase tracking-widest text-xs text-navy/80">
+                <Users className="h-4 w-4 shrink-0 text-gold" />
+                Friendly support
+              </span>
+            </div>
+          ))}
         </div>
       </div>
 
       {/* Major Categories */}
-      <section className="container py-8 sm:py-12">
-        <div className="mb-6 sm:mb-8 flex flex-col sm:flex-row items-end justify-between gap-2">
-          <h2 className="font-serif text-2xl font-bold text-navy sm:text-3xl">Shop by category</h2>
-          <Link
-            to="/shop"
-            className="flex items-center gap-2 text-sm font-medium uppercase tracking-wider text-gold hover:text-gold-antique transition-colors"
-          >
-            View all
-            <ChevronRight className="h-3 w-3 transition-transform group-hover:translate-x-1" />
-          </Link>
-        </div>
+      <section className="container py-6 sm:py-10">
         <div className="grid grid-cols-3 gap-3">
           {MAJOR_CATEGORIES.map((category) => (
             <Link
