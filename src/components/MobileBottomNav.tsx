@@ -25,9 +25,11 @@ const MobileBottomNav = () => {
     return location.pathname.startsWith(item.href);
   }, [location.pathname, location.search]);
 
+  if (location.pathname.startsWith('/admin')) return null;
+
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 border-t border-gold-antique/20 bg-navy shadow-[0_-2px_10px_rgba(0,0,0,0.3)] md:hidden" aria-label="Mobile navigation">
-      <div className="grid grid-cols-6 h-14 px-1">
+    <nav className="fixed bottom-0 left-0 right-0 z-[60] border-t-2 border-gold bg-navy pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_rgba(0,0,0,0.4)] md:hidden" aria-label="Mobile navigation">
+      <div className="grid h-16 grid-cols-6 px-1">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
           const active = isActive(item);

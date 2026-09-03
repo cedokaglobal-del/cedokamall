@@ -214,6 +214,29 @@ const Header = () => {
           </div>
         </div>
       </header>
+      {mobileMenuOpen && (
+        <div className="border-b border-gold-antique/30 bg-navy-deep px-4 py-3 shadow-lg md:hidden">
+          <nav className="container grid grid-cols-2 gap-2" aria-label="Mobile menu">
+            {[
+              { label: 'Home', href: '/' },
+              { label: 'Shop', href: '/shop' },
+              { label: 'Solar', href: '/solar' },
+              { label: 'Farms', href: '/farms' },
+              { label: 'Brands', href: '/brands' },
+              { label: 'Calculator', href: '/calculator' },
+            ].map((item) => (
+              <Link
+                key={item.href}
+                to={item.href}
+                onClick={() => setMobileMenuOpen(false)}
+                className="rounded-md px-3 py-3 text-sm font-semibold text-champagne/80 hover:bg-gold-antique/20 hover:text-gold"
+              >
+                {item.label}
+              </Link>
+            ))}
+          </nav>
+        </div>
+      )}
       <Suspense fallback={null}>
         <MiniCart />
       </Suspense>

@@ -461,7 +461,7 @@ const Index = () => {
       </section>
 
       {/* SEO Category Links */}
-      <section className="container pb-6">
+      <section className="container pb-24 sm:pb-6">
         <div className="rounded-md border border-gold-antique/10 bg-white p-6 sm:p-8 shadow-sm">
           <h2 className="font-serif text-xl sm:text-3xl font-bold text-navy">Shop by category</h2>
           <p className="mt-4 max-w-4xl text-xs sm:text-sm leading-7 text-navy/70">

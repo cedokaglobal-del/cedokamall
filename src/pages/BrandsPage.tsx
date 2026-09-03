@@ -39,7 +39,7 @@ const BrandsPage = () => {
   return (
     <div className="min-h-screen bg-ivory">
       <Header />
-      <div className="container py-8 sm:py-12">
+      <div className="container py-8 pb-24 sm:py-12 sm:pb-32">
         <nav className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-navy/40 mb-8">
           <Link to="/" className="transition-colors hover:text-gold">Home</Link>
           <ChevronRight className="h-3 w-3" />

@@ -134,7 +134,7 @@ const SolarPage = () => {
     <div className="min-h-screen bg-ivory">
       <Header />
 
-      <div className="container py-6 sm:py-12">
+      <div className="container py-6 pb-24 sm:py-12 sm:pb-32">
         {/* Title + Sort Bar */}
         <div className="mb-10 flex flex-col items-center justify-between gap-6 md:flex-row">
           <div>

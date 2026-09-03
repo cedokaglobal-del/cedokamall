@@ -22,6 +22,7 @@ const DEFAULT_PRICE_RANGE: [number, number] = [0, 0];
 const ShopPage = () => {
   const [searchParams] = useSearchParams();
   const categoryParam = searchParams.get('category')?.toLowerCase();
+  const brandParam = searchParams.get('brand')?.trim();
   const searchTerm = searchParams.get('q') || searchParams.get('search');
   const dealsOnly = searchParams.get('deals') === 'true';
   const viewAll = searchParams.get('view') === 'all';
@@ -100,6 +101,11 @@ const ShopPage = () => {
       next = next.filter((product) => slugifyCategory(product.category) === selectedCategory);
     }
 
+    if (brandParam) {
+      const normalizedBrand = brandParam.toLowerCase();
+      next = next.filter((product) => product.seller?.toLowerCase() === normalizedBrand);
+    }
+
     if (searchTerm) {
       const normalizedTerm = searchTerm.toLowerCase();
       next = next.filter(
@@ -135,7 +141,7 @@ const ShopPage = () => {
           return scoreB - scoreA;
         });
     }
-  }, [dealsOnly, priceRange, products, searchTerm, selectedCategory, solarCategories, sortBy, viewAll]);
+  }, [brandParam, dealsOnly, priceRange, products, searchTerm, selectedCategory, solarCategories, sortBy, viewAll]);
 
   const pageTitle = viewAll
     ? 'All Products - Cedokamall'
@@ -217,7 +223,7 @@ const ShopPage = () => {
   return (
     <div className="min-h-screen bg-ivory">
       <Header />
-      <div className="container py-6 sm:py-12">
+      <div className="container py-6 pb-24 sm:py-12 sm:pb-32">
         <div className="mb-10 flex flex-col items-center justify-between gap-6 md:flex-row">
           <div>
             <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-navy">

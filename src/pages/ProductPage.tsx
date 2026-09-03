@@ -259,7 +259,7 @@ const ProductPage = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="container py-20 text-center">
+        <div className="container py-20 pb-32 text-center">
           <div className="mx-auto mb-4 h-10 w-10 animate-spin rounded-full border-2 border-primary/20 border-t-primary" />
           <h1 className="font-display text-2xl font-bold">Loading product</h1>
           <p className="mt-2 text-muted-foreground">Please wait while we load the latest product details.</p>
@@ -273,7 +273,7 @@ const ProductPage = () => {
     return (
       <div className="min-h-screen bg-background">
         <Header />
-        <div className="container py-20 text-center">
+        <div className="container py-20 pb-32 text-center">
           <h1 className="font-display text-2xl font-bold">Product not found</h1>
           <Link to={backTo || "/shop"} className="mt-4 block text-primary underline">
             Back to shop
@@ -334,7 +334,7 @@ const ProductPage = () => {
     <div className="min-h-screen bg-ivory">
       <Header />
 
-        <div className="container py-6">
+        <div className="container py-6 pb-24 sm:pb-32">
           <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
           <nav className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-navy/40">
             <Link to="/" className="transition-colors hover:text-gold">

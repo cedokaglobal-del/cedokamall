@@ -23,7 +23,7 @@ const CalculatorPage = () => {
   return (
     <div className="min-h-screen bg-ivory">
       <Header />
-      <div className="container py-8">
+      <div className="container py-8 pb-24 sm:pb-32">
         <EnergyCalculator />
       </div>
       <Footer />
