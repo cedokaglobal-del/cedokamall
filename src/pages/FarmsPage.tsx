@@ -74,18 +74,18 @@ const FarmsPage = () => {
     <div className="min-h-screen bg-ivory">
       <Header />
 
-      <div className="container py-6 pb-24 sm:py-12">
+      <div className="container py-6 pb-28 sm:py-12">
         {/* Title + Subcategory Tabs */}
         <div className="mb-8 flex flex-col items-center justify-between gap-4 md:flex-row">
           <div>
             <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-navy">Farms</h1>
             <div className="mt-2 h-1 w-16 bg-gold" />
           </div>
-          <div className="flex gap-2 overflow-x-auto no-scrollbar">
+          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
             <button
               type="button"
               onClick={() => handleTabChange('all')}
-              className={`flex-shrink-0 whitespace-nowrap rounded-md px-4 py-2 text-xs font-bold uppercase tracking-widest transition-all ${
+              className={`flex-shrink-0 whitespace-nowrap rounded-md px-4 py-2.5 text-xs font-bold uppercase tracking-widest transition-all touch-manipulation ${
                 urlCategory === 'all' ? 'bg-gold text-navy' : 'bg-white text-navy/60 hover:text-navy'
               }`}
             >
@@ -96,7 +96,7 @@ const FarmsPage = () => {
                 key={sub.slug}
                 type="button"
                 onClick={() => handleTabChange(sub.slug)}
-                className={`flex-shrink-0 whitespace-nowrap rounded-md px-4 py-2 text-xs font-bold uppercase tracking-widest transition-all ${
+                className={`flex-shrink-0 whitespace-nowrap rounded-md px-4 py-2.5 text-xs font-bold uppercase tracking-widest transition-all touch-manipulation ${
                   urlCategory === sub.slug ? 'bg-gold text-navy' : 'bg-white text-navy/60 hover:text-navy'
                 }`}
               >
@@ -113,18 +113,18 @@ const FarmsPage = () => {
               key={sub.slug}
               type="button"
               onClick={() => handleTabChange(sub.slug)}
-              className={`group flex items-start gap-3 rounded-md border p-4 text-left transition-all ${
+              className={`group flex flex-col items-center text-center gap-3 rounded-lg border p-4 sm:p-5 text-left transition-all touch-manipulation ${
                 urlCategory === sub.slug
                   ? 'border-gold bg-gold/5'
                   : 'border-gold-antique/10 bg-white hover:border-gold/30'
               }`}
             >
-              <div className="flex h-8 w-8 shrink-0 items-center justify-center rounded-full bg-ivory">
-                <Leaf className="h-4 w-4 text-gold" />
+              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-ivory">
+                <Leaf className="h-5 w-5 text-gold" />
               </div>
               <div className="min-w-0">
-                <p className="text-sm font-bold text-navy">{sub.name}</p>
-                <p className="mt-0.5 text-[11px] leading-4 text-navy/50">
+                <p className="text-sm sm:text-base font-bold text-navy">{sub.name}</p>
+                <p className="mt-0.5 text-[11px] sm:text-xs leading-4 text-navy/50">
                   Browse {sub.name.toLowerCase()} on Cedokamall.
                 </p>
               </div>
@@ -134,7 +134,7 @@ const FarmsPage = () => {
 
         {/* Products */}
         <div className="mb-6 flex items-center justify-between">
-          <h2 className="font-serif text-2xl font-bold text-navy">
+          <h2 className="font-serif text-xl sm:text-2xl font-bold text-navy">
             {activeCategory ? activeCategory : 'Farm Products'}
           </h2>
         </div>
@@ -150,9 +150,9 @@ const FarmsPage = () => {
             ))}
           </div>
         ) : (
-          <div className="rounded-md border border-gold-antique/10 bg-white py-16 text-center">
-            <Sprout className="mx-auto h-12 w-12 text-gold/30" />
-            <p className="mt-4 font-serif text-2xl font-bold text-navy">Farm listings are being prepared</p>
+          <div className="rounded-lg border border-gold-antique/10 bg-white py-12 sm:py-16 text-center px-4">
+            <Sprout className="mx-auto h-10 w-10 sm:h-12 sm:w-12 text-gold/30" />
+            <p className="mt-3 font-serif text-xl sm:text-2xl font-bold text-navy">Farm listings are being prepared</p>
             <p className="mx-auto mt-2 max-w-md text-sm text-navy/55">
               We are adding farm produce, equipment and supplies to this section. In the meantime, tell us
               what you need and our team will help with seasonal and bulk availability.
@@ -161,7 +161,7 @@ const FarmsPage = () => {
               href="https://wa.me/2349128817136"
               target="_blank"
               rel="noopener noreferrer"
-              className="mt-6 inline-flex items-center gap-2 rounded-md bg-gold px-6 py-3 text-xs font-bold uppercase tracking-widest text-navy transition-all hover:bg-gold-antique hover:text-white"
+              className="mt-5 inline-flex items-center gap-2 rounded-md bg-gold px-5 py-2.5 text-xs font-bold uppercase tracking-widest text-navy transition-all hover:bg-gold-antique hover:text-white touch-manipulation"
             >
               <MessageSquare className="h-4 w-4" />
               Ask about farm products
