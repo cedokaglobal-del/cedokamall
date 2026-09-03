@@ -15,7 +15,7 @@ interface ApplianceRow {
   quantity: number;
   minutes: number;
   enabled: boolean;
-  night: boolean;
+  usage: 'day' | 'night' | 'all-day';
 }
 
 interface CalculatorResults {
@@ -82,7 +82,7 @@ const loadFromStorage = () => {
       if (parsed.appliances?.length) {
         parsed.appliances = parsed.appliances.map((a) => ({
           ...a,
-          night: a.night ?? !a.night,
+          usage: a.usage ?? ((a as ApplianceRow & { night?: boolean }).night ? 'night' : 'day'),
           minutes: typeof a.minutes === 'number' ? a.minutes : 0,
           hours: undefined,
         }));
@@ -110,10 +110,15 @@ const computeResults = (appliances: ApplianceRow[], autonomy: number, dod: numbe
   let dayWh = 0;
   let nightWh = 0;
   for (const a of enabled) {
-    const wh = a.watts * a.quantity * (a.minutes / 60);
+    const hours = a.minutes / 60;
+    const wh = a.watts * a.quantity * hours;
     totalWh += wh;
-    if (a.night) nightWh += wh;
-    else dayWh += wh;
+    if (a.usage === 'night') nightWh += wh;
+    else if (a.usage === 'all-day') {
+      const directHours = Math.min(hours, peakSunHours);
+      dayWh += a.watts * a.quantity * directHours;
+      nightWh += a.watts * a.quantity * Math.max(0, hours - directHours);
+    } else dayWh += wh;
   }
 
   const systemVoltage = totalWh <= 1000 ? 12 : totalWh <= 3000 ? 24 : 48;
@@ -125,10 +130,7 @@ const computeResults = (appliances: ApplianceRow[], autonomy: number, dod: numbe
   const adjustedTotalWh = dayWh + (nightWh / (inverterEff * batteryEff));
   const solarPanelW = (adjustedTotalWh / Math.max(peakSunHours, 1)) / systemLosses;
 
-  const inverterW = enabled.reduce((peak, a) => {
-    const surge = a.watts * a.quantity * 1.25;
-    return surge > peak ? surge : peak;
-  }, 0);
+  const inverterW = enabled.reduce((total, a) => total + (a.watts * a.quantity), 0) * 1.25;
 
   return {
     totalWh: Math.round(totalWh),
@@ -144,8 +146,22 @@ const computeResults = (appliances: ApplianceRow[], autonomy: number, dod: numbe
   };
 };
 
-const calcSystemComponents = (results: CalculatorResults, products: Array<{ id: string; name: string; category: string; image: string }>): SystemComponent[] => {
-  const panelWattage = 300;
+const calcSystemComponents = (results: CalculatorResults, products: Array<{ id: string; name: string; category: string; image: string; price?: number; specs?: Record<string, string> }>): SystemComponent[] => {
+  const panelProducts = products
+    .map((product) => {
+      const searchable = `${product.name} ${Object.values(product.specs ?? {}).join(' ')}`;
+      const match = searchable.match(/(?:^|\D)(\d{3,4})\s*(?:w|watt|watts|wp)\b/i);
+      return match ? { product, wattage: Number(match[1]) } : null;
+    })
+    .filter((entry): entry is { product: typeof products[number]; wattage: number } => Boolean(entry))
+    .filter(({ product }) => {
+      const category = product.category.toLowerCase();
+      const name = product.name.toLowerCase();
+      return category.includes('solar') && (category.includes('panel') || name.includes('panel'));
+    })
+    .sort((a, b) => a.wattage - b.wattage);
+  const panelOption = panelProducts.find(({ wattage }) => wattage >= results.solarPanelW) ?? panelProducts.at(-1);
+  const panelWattage = panelOption?.wattage ?? 620;
   const panelQuantity = Math.max(1, Math.ceil(results.solarPanelW / panelWattage));
 
   const batteryCapacity = 200;
@@ -161,7 +177,7 @@ const calcSystemComponents = (results: CalculatorResults, products: Array<{ id: 
     const match = products.find((p) => {
       const cat = p.category.toLowerCase();
       const name = p.name.toLowerCase();
-      if (type === 'panel') return cat.includes('solar') && (name.includes('panel') || name.includes('solar')) && name.includes('300');
+      if (type === 'panel') return panelOption?.product.id === p.id;
       if (type === 'battery') return cat.includes('solar') && name.includes('battery') && (name.includes('200') || name.includes(lowerSpecs));
       if (type === 'inverter') return cat.includes('solar') && name.includes('inverter');
       return false;
@@ -269,7 +285,7 @@ const EnergyCalculator = () => {
       quantity: 1,
       minutes: 60,
       enabled: true,
-      night: true,
+      usage: 'night',
     }]);
   }, []);
 
@@ -498,19 +514,16 @@ const EnergyCalculator = () => {
                         className="min-w-0 flex-1 bg-transparent text-sm font-bold text-navy placeholder:text-navy/30 focus:outline-none truncate"
                         placeholder="Appliance"
                       />
-                      <button
-                        type="button"
-                        onClick={() => updateAppliance(appliance.id, 'night', !appliance.night)}
-                        className={`shrink-0 text-xs font-bold uppercase tracking-wider px-2 py-1 rounded-md border transition-all ${
-                          appliance.night
-                            ? 'bg-indigo-100 text-indigo-700 border-indigo-300 hover:bg-amber-100 hover:text-amber-700 hover:border-amber-300'
-                            : 'bg-amber-100 text-amber-700 border-amber-300 hover:bg-indigo-100 hover:text-indigo-700 hover:border-indigo-300'
-                        }`}
-                        aria-label={appliance.night ? 'Switch to day use' : 'Switch to night use'}
-                        title={appliance.night ? 'Night use (battery powered)' : 'Day use (direct solar)'}
+                      <select
+                        value={appliance.usage}
+                        onChange={(e) => updateAppliance(appliance.id, 'usage', e.target.value)}
+                        className="w-[6.4rem] shrink-0 rounded-md border border-gold-antique/20 bg-ivory px-1.5 py-1 text-[10px] font-bold uppercase tracking-wider text-navy focus:border-gold focus:outline-none"
+                        aria-label={`${appliance.name || 'Appliance'} time of use`}
                       >
-                        {appliance.night ? '\u{1F319}' : '\u{2600}\u{FE0F}'}
-                      </button>
+                        <option value="day">Day use</option>
+                        <option value="night">Night use</option>
+                        <option value="all-day">All day</option>
+                      </select>
                       <button type="button" onClick={() => setInfoApplianceId(appliance.id)} className="shrink-0 text-navy/30 hover:text-gold transition-colors" aria-label="Energy details">
                         <Info className="h-4 w-4" />
                       </button>
@@ -1131,8 +1144,8 @@ const EnergyCalculator = () => {
                 </div>
                 <div className="flex items-center justify-between px-4 py-2.5">
                   <span className="text-xs font-semibold text-navy/60">Time of Use</span>
-                  <span className={`text-sm font-bold ${app.night ? 'text-indigo-600' : 'text-amber-600'}`}>
-                    {app.night ? '\u{1F319} Night (battery)' : '\u{2600}\u{FE0F} Day (direct solar)'}
+                  <span className={`text-sm font-bold ${app.usage === 'night' ? 'text-indigo-600' : 'text-amber-600'}`}>
+                    {app.usage === 'night' ? 'Night (battery)' : app.usage === 'all-day' ? 'All day (solar + battery)' : 'Day (direct solar)'}
                   </span>
                 </div>
               </div>
@@ -1159,10 +1172,12 @@ const EnergyCalculator = () => {
                 <strong className="text-champagne">{info.dailyWh.toLocaleString()} Wh</strong>{' '}({info.monthlyKwh.toFixed(2)} kWh/month).
                 {' '}This draws <strong className="text-champagne">{info.dailyAh.toFixed(2)} Ah</strong> from your battery bank daily.
                 {' '}{info.dailyAh > 0 && (Math.round(200 / info.dailyAh) > 0) ? `A standard 200Ah battery could power it for about ${Math.round(200 / info.dailyAh)} days alone.` : ''}
-                {' '}<strong className="text-champagne">Time of use:</strong> Marked as <strong className="text-champagne">{app.night ? 'night' : 'day'}</strong> &mdash;
-                {app.night
+                {' '}<strong className="text-champagne">Time of use:</strong> Marked as <strong className="text-champagne">{app.usage}</strong> &mdash;
+                {app.usage === 'night'
                   ? ' runs through the battery (includes inverter &amp; battery losses).'
-                  : ' runs directly from solar panels when the sun is shining.'}
+                  : app.usage === 'all-day'
+                    ? ` uses up to ${peakSunHours}h of direct sunlight, with the remaining hours supplied by the battery.`
+                    : ' runs directly from solar panels when the sun is shining.'}
               </p>
             </div>
           </div>

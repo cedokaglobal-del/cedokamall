@@ -71,17 +71,17 @@ const FarmsPage = () => {
   ]);
 
   return (
-    <div className="min-h-screen bg-ivory">
+    <div className="min-h-screen overflow-x-hidden bg-ivory">
       <Header />
 
-      <div className="container py-6 pb-28 sm:py-12">
+      <div className="container min-w-0 py-6 pb-28 sm:py-12">
         {/* Title + Subcategory Tabs */}
-        <div className="mb-8 flex flex-col items-center justify-between gap-4 md:flex-row">
-          <div>
+        <div className="mb-8 flex min-w-0 flex-col items-stretch justify-between gap-4 md:flex-row md:items-center">
+          <div className="shrink-0">
             <h1 className="font-serif text-2xl sm:text-3xl lg:text-4xl font-bold text-navy">Farms</h1>
             <div className="mt-2 h-1 w-16 bg-gold" />
           </div>
-          <div className="flex gap-2 overflow-x-auto no-scrollbar pb-2">
+          <div className="-mx-1 flex min-w-0 gap-2 overflow-x-auto px-1 pb-2 no-scrollbar md:max-w-[70%]">
             <button
               type="button"
               onClick={() => handleTabChange('all')}
@@ -144,7 +144,7 @@ const FarmsPage = () => {
             <div className="h-12 w-12 animate-spin rounded-full border-4 border-gold/10 border-t-gold" />
           </div>
         ) : filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-2 gap-4 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="grid grid-cols-1 gap-4 min-[430px]:grid-cols-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
