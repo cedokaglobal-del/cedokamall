@@ -85,20 +85,20 @@ function writeStaticSitemap(products) {
     <priority>0.95</priority>
   </url>`;
 
-  const categories = [
-    'accessories', 'air-conditioners', 'audio-sound', 'cameras', 'fans',
-    'freezers', 'gaming', 'generators', 'kitchen-accessories', 'laptops',
-    'refrigerators', 'smart-home', 'smartphones', 'solar', 'sound-systems',
-    'tablets', 'tv', 'washing-machines',
+  const publicRoutes = [
+    { path: '/solar', priority: '0.9' },
+    { path: '/farms', priority: '0.8' },
+    { path: '/brands', priority: '0.8' },
+    { path: '/calculator', priority: '0.8' },
   ];
 
-  categories.forEach((cat) => {
+  publicRoutes.forEach(({ path, priority }) => {
     xml += `
   <url>
-    <loc>${baseUrl}/shop?category=${cat}</loc>
+    <loc>${baseUrl}${path}</loc>
     <lastmod>${today}</lastmod>
     <changefreq>weekly</changefreq>
-    <priority>0.9</priority>
+    <priority>${priority}</priority>
   </url>`;
   });
 
