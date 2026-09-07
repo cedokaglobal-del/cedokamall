@@ -193,6 +193,24 @@
     <priority>0.75</priority>
   </url>
   <url>
+    <loc>https://cedokamall.com/farms</loc>
+    <lastmod>2026-09-07</lastmod>
+    <changefreq>weekly</changefreq>
+    <priority>0.85</priority>
+  </url>
+  <url>
+    <loc>https://cedokamall.com/calculator</loc>
+    <lastmod>2026-09-07</lastmod>
+    <changefreq>monthly</changefreq>
+    <priority>0.7</priority>
+  </url>
+  <url>
+    <loc>https://cedokamall.com/shop?view=all</loc>
+    <lastmod>2026-09-07</lastmod>
+    <changefreq>daily</changefreq>
+    <priority>0.9</priority>
+  </url>
+  <url>
     <loc>https://cedokamall.com/brands</loc>
     <lastmod>2026-06-22</lastmod>
     <changefreq>weekly</changefreq>

@@ -1,9 +1,10 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowLeft, SlidersHorizontal } from 'lucide-react';
+import { ArrowLeft } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
+import { FilterSidebar, FilterMobileBar, type FilterOption } from '@/components/CategoryFilter';
 import { buildCategories, slugifyCategory } from '@/data/products';
 import { isRenewableEnergyCategory } from '@/data/catalog';
 import {
@@ -53,6 +54,24 @@ const ShopPage = () => {
   );
   const sliderMax = maxProductPrice > 0 ? maxProductPrice : 100000;
   const sliderStep = Math.max(1000, Math.ceil(sliderMax / 100));
+
+  const filterOptions: FilterOption[] = useMemo(
+    () => [
+      { slug: 'all', label: 'All Collections' },
+      ...categories.map((category) => ({
+        slug: category.slug,
+        label: category.name,
+        icon: category.icon,
+        count: category.count,
+      })),
+    ],
+    [categories]
+  );
+  const hasActiveFilters = selectedCategory !== 'all' || priceRange[1] < sliderMax;
+  const resetFilters = () => {
+    setSelectedCategory('all');
+    setPriceRange([0, sliderMax]);
+  };
   const activeCategory = useMemo(
     () => categories.find((category) => category.slug === (categoryParam || selectedCategory)),
     [categories, categoryParam, selectedCategory]
@@ -221,7 +240,7 @@ const ShopPage = () => {
   useStructuredData(structuredDataSchemas);
 
   return (
-    <div className="min-h-screen bg-ivory">
+    <main className="min-h-screen bg-ivory">
       <Header />
       <div className="container py-6 pb-24 sm:py-12 sm:pb-32">
         <div className="mb-10 flex flex-col items-center justify-between gap-6 md:flex-row">
@@ -254,100 +273,32 @@ const ShopPage = () => {
           </div>
         </div>
 
-        <div className="mb-10 lg:hidden">
-          <div className="relative">
-            <div
-              className="flex gap-3 overflow-x-auto pb-4 no-scrollbar"
-            >
-              <button
-                onClick={() => setSelectedCategory('all')}
-                className={`flex-shrink-0 whitespace-nowrap rounded-md px-6 py-3 text-sm font-bold uppercase tracking-widest transition-all ${
-                  selectedCategory === 'all'
-                    ? 'bg-gold text-navy shadow-lg'
-                    : 'bg-white text-navy/60 hover:text-navy'
-                }`}
-              >
-                All Collections
-              </button>
-              {categories.map((category) => (
-                <button
-                  key={category.slug}
-                  onClick={() => setSelectedCategory(category.slug)}
-                  className={`flex-shrink-0 whitespace-nowrap rounded-md px-6 py-3 text-sm font-bold uppercase tracking-widest transition-all ${
-                    selectedCategory === category.slug
-                      ? 'bg-gold text-navy shadow-lg'
-                      : 'bg-white text-navy/60 hover:text-navy'
-                  }`}
-                >
-                  {category.name}
-                </button>
-              ))}
-            </div>
-            <p className="mt-2 text-xs font-medium text-navy/45">Swipe left or right to view more categories.</p>
-          </div>
-        </div>
+        <FilterMobileBar
+          options={filterOptions}
+          activeSlug={selectedCategory}
+          onSelect={setSelectedCategory}
+          priceMax={sliderMax}
+          priceStep={sliderStep}
+          priceValue={priceRange[1]}
+          onPriceChange={(max) => setPriceRange([0, max])}
+          resultCount={filteredProducts.length}
+          onReset={resetFilters}
+          hasActiveFilters={hasActiveFilters}
+        />
 
         <div className="flex gap-10">
-          <aside className="hidden w-64 flex-shrink-0 lg:block sticky top-20 self-start max-h-[calc(100vh-6rem)] overflow-y-auto space-y-10">
-            <div>
-              <h3 className="mb-6 flex items-center gap-3 font-serif text-xl font-bold text-navy">
-                <SlidersHorizontal className="h-5 w-5 text-gold" />
-                Collections
-              </h3>
-              <div className="space-y-2">
-                <button
-                  onClick={() => setSelectedCategory('all')}
-                  className={`block w-full rounded-md px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] transition-all ${
-                    selectedCategory === 'all'
-                      ? 'bg-navy text-gold shadow-md translate-x-2'
-                      : 'text-navy/60 hover:bg-white hover:text-navy'
-                  }`}
-                >
-                  All Categories
-                </button>
-                {categories.map((category) => (
-                  <button
-                    key={category.slug}
-                    onClick={() => setSelectedCategory(category.slug)}
-                    className={`block w-full rounded-md px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] transition-all ${
-                      selectedCategory === category.slug
-                        ? 'bg-navy text-gold shadow-md translate-x-2'
-                        : 'text-navy/60 hover:bg-white hover:text-navy'
-                    }`}
-                  >
-                    <span className="inline-flex items-center gap-3">
-                      <category.icon
-                        className={`h-4 w-4 ${
-                          selectedCategory === category.slug ? 'text-gold' : 'text-navy/40'
-                        }`}
-                      />
-                      {category.name}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div className="rounded-md border border-gold-antique/10 bg-white p-6">
-              <h3 className="mb-4 font-serif text-lg font-bold text-navy">Price range</h3>
-              <input
-                type="range"
-                min={0}
-                max={sliderMax}
-                step={sliderStep}
-                value={priceRange[1]}
-                onChange={(event) => setPriceRange([0, Number(event.target.value)])}
-                className="w-full cursor-pointer appearance-none rounded-full bg-ivory accent-gold"
-              />
-              <div className="mt-4 flex justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-tighter text-navy/40">
-                  Budget
-                </span>
-                <span className="text-sm font-bold text-navy">{`₦${priceRange[1].toLocaleString()}`}</span>
-              </div>
-            </div>
-
-          </aside>
+          <FilterSidebar
+            options={filterOptions}
+            activeSlug={selectedCategory}
+            onSelect={setSelectedCategory}
+            priceMax={sliderMax}
+            priceStep={sliderStep}
+            priceValue={priceRange[1]}
+            onPriceChange={(max) => setPriceRange([0, max])}
+            resultCount={filteredProducts.length}
+            onReset={resetFilters}
+            hasActiveFilters={hasActiveFilters}
+          />
 
           <div className="w-full flex-1">
             {isLoading && products.length === 0 ? (
@@ -415,7 +366,7 @@ const ShopPage = () => {
         )}
       </div>
       <Footer />
-    </div>
+    </main>
   );
 };
 

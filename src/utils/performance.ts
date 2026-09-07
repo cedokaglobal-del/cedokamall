@@ -100,7 +100,7 @@ export function generateSrcSet(
 export function generateSizes(context: 'hero' | 'product' | 'thumbnail' | 'banner'): string {
   const sizeMap = {
     hero: '(max-width: 640px) 100vw, (max-width: 1024px) 90vw, 80vw',
-    product: '(max-width: 640px) 50vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw',
+    product: '(max-width: 640px) 33vw, (max-width: 1024px) 33vw, (max-width: 1280px) 25vw, 20vw',
     thumbnail: '(max-width: 640px) 100px, (max-width: 1024px) 120px, 150px',
     banner: '(max-width: 640px) 100vw, (max-width: 1024px) 100vw, 100vw'
   };

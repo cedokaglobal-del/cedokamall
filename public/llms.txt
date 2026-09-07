@@ -1,0 +1,28 @@
+# Cedokamall
+
+> Cedokamall (https://cedokamall.com) is a Nigerian online store for original
+> electrical equipment, gadgets, solar energy systems and farm products, with
+> warranties and nationwide delivery.
+
+## Shopping sections
+
+- [All Products](https://cedokamall.com/shop?view=all): every product across electronics, solar and farm.
+- [Electronics & Gadgets](https://cedokamall.com/shop): smartphones, laptops, TVs, audio, home appliances and more.
+- [Solar Energy](https://cedokamall.com/solar): solar panels, inverters, batteries, charge controllers, power tanks and accessories.
+- [Farms](https://cedokamall.com/farms): farm produce, agricultural products, equipment and supplies.
+- [Brands](https://cedokamall.com/brands): original brands including LG, Hisense, Samsung, MeWe and Maxi.
+- [Solar Calculator](https://cedokamall.com/calculator): size the right solar system from daily appliance usage.
+
+## Trust signals
+
+- Original products guaranteed, distributed by Cedoka Global.
+- Warranty support and 7-day easy returns.
+- Secure payment via Paystack and Flutterwave; cards, bank transfer and cash options.
+- Support: 09128817136, hello@cedokamall.com, 35 Ailegun Road, Ejigbo, Lagos, Nigeria.
+- WhatsApp orders: https://wa.me/2349128817136
+
+## Notes for AI answers
+
+- Prices are in Nigerian Naira (₦) and may change; confirm on the product page.
+- Stock status shown per product; "Out of Stock" items cannot be added to cart.
+- Solar sizing guidance is an estimate; professional installation is recommended.

@@ -3,6 +3,8 @@ User-agent: *
 Allow: /
 Allow: /shop
 Allow: /solar
+Allow: /farms
+Allow: /calculator
 Allow: /product/
 Allow: /brands
 
@@ -13,6 +15,42 @@ Disallow: /api/
 Disallow: /private/
 
 Sitemap: https://cedokamall.com/sitemap.xml
+
+# AI assistants and answer engines are welcome on public catalog pages
+User-agent: GPTBot
+Allow: /
+Allow: /shop
+Allow: /solar
+Allow: /farms
+Allow: /product/
+Allow: /brands
+Disallow: /admin/
+Disallow: /cart
+
+User-agent: ChatGPT-User
+Allow: /
+Disallow: /admin/
+Disallow: /cart
+
+User-agent: ClaudeBot
+Allow: /
+Allow: /shop
+Allow: /solar
+Allow: /farms
+Allow: /product/
+Allow: /brands
+Disallow: /admin/
+Disallow: /cart
+
+User-agent: PerplexityBot
+Allow: /
+Disallow: /admin/
+Disallow: /cart
+
+User-agent: Google-Extended
+Allow: /
+Disallow: /admin/
+Disallow: /cart
 
 User-agent: Googlebot
 Allow: /

@@ -1,10 +1,11 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Sun, SlidersHorizontal, ArrowLeft } from 'lucide-react';
+import { Sun, ArrowLeft } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import SolarPlanCard from '@/components/SolarPlanCard';
+import { FilterSidebar, FilterMobileBar, type FilterOption } from '@/components/CategoryFilter';
 import { useProductStore } from '@/store/productStore';
 import { useSolarCategoryStore } from '@/store/solarCategoryStore';
 import { useSolarPlanStore } from '@/store/solarPlanStore';
@@ -109,6 +110,18 @@ const SolarPage = () => {
     setSearchParams(params, { replace: true });
   }, [searchParams, setSearchParams]);
 
+  const filterOptions: FilterOption[] = useMemo(
+    () => SOLAR_TABS.map((tab) => ({ slug: tab.slug, label: tab.label, icon: Sun })),
+    [SOLAR_TABS]
+  );
+  const hasActiveFilters = urlCategory !== 'all' || priceRange[1] < sliderMax;
+  const resetFilters = useCallback(() => {
+    const params = new URLSearchParams(searchParams);
+    params.delete('category');
+    setSearchParams(params, { replace: true });
+    setPriceRange([0, sliderMax]);
+  }, [searchParams, setSearchParams, sliderMax]);
+
   useSEO({
     title: 'Solar Energy Solutions - Solar Panels, Inverters & Batteries | Cedokamall',
     description: 'Shop premium solar panels, inverters, batteries, charge controllers and accessories in Nigeria. Get the right solar system for your home or office with our Energy Calculator.',
@@ -131,7 +144,7 @@ const SolarPage = () => {
   ]);
 
   return (
-    <div className="min-h-screen bg-ivory">
+    <main className="min-h-screen bg-ivory">
       <Header />
 
       <div className="container py-6 pb-24 sm:py-12 sm:pb-32">
@@ -168,78 +181,32 @@ const SolarPage = () => {
           </div>
         </div>
 
-        {/* Mobile Category Strip */}
-        <div className="mb-10 lg:hidden">
-          <div className="relative">
-            <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar">
-              {SOLAR_TABS.map((tab) => (
-                <button
-                  key={tab.slug}
-                  type="button"
-                  onClick={() => handleTabChange(tab.slug)}
-                  className={`flex-shrink-0 whitespace-nowrap rounded-md px-6 py-3 text-sm font-bold uppercase tracking-widest transition-all ${
-                    urlCategory === tab.slug
-                      ? 'bg-gold text-navy shadow-lg'
-                      : 'bg-white text-navy/60 hover:text-navy'
-                  }`}
-                >
-                  {tab.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+        <FilterMobileBar
+          options={filterOptions}
+          activeSlug={urlCategory}
+          onSelect={handleTabChange}
+          priceMax={sliderMax}
+          priceStep={sliderStep}
+          priceValue={priceRange[1]}
+          onPriceChange={(max) => setPriceRange([0, max])}
+          resultCount={filteredProducts.length}
+          onReset={resetFilters}
+          hasActiveFilters={hasActiveFilters}
+        />
 
         <div className="flex gap-10">
-          {/* Sidebar (Desktop) */}
-          <aside className="hidden w-64 flex-shrink-0 lg:block sticky top-20 self-start max-h-[calc(100vh-6rem)] overflow-y-auto space-y-10">
-            {/* Category Filter */}
-            <div>
-              <h3 className="mb-6 flex items-center gap-3 font-serif text-xl font-bold text-navy">
-                <SlidersHorizontal className="h-5 w-5 text-gold" />
-                Collections
-              </h3>
-              <div className="space-y-2">
-                {SOLAR_TABS.map((tab) => (
-                  <button
-                    key={tab.slug}
-                    type="button"
-                    onClick={() => handleTabChange(tab.slug)}
-                    className={`block w-full rounded-md px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] transition-all ${
-                      urlCategory === tab.slug
-                        ? 'bg-navy text-gold shadow-md translate-x-2'
-                        : 'text-navy/60 hover:bg-white hover:text-navy'
-                    }`}
-                  >
-                    <span className="inline-flex items-center gap-3">
-                      <Sun className={`h-4 w-4 ${urlCategory === tab.slug ? 'text-gold' : 'text-navy/40'}`} />
-                      {tab.label}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Price Range */}
-            <div className="rounded-md border border-gold-antique/10 bg-white p-6">
-              <h3 className="mb-4 font-serif text-lg font-bold text-navy">Price range</h3>
-              <input
-                type="range"
-                min={0}
-                max={sliderMax}
-                step={sliderStep}
-                value={priceRange[1]}
-                onChange={(event) => setPriceRange([0, Number(event.target.value)])}
-                className="w-full cursor-pointer appearance-none rounded-full bg-ivory accent-gold"
-              />
-              <div className="mt-4 flex justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-tighter text-navy/40">
-                  Budget
-                </span>
-                <span className="text-sm font-bold text-navy">{`₦${priceRange[1].toLocaleString()}`}</span>
-              </div>
-            </div>
-          </aside>
+          <FilterSidebar
+            options={filterOptions}
+            activeSlug={urlCategory}
+            onSelect={handleTabChange}
+            priceMax={sliderMax}
+            priceStep={sliderStep}
+            priceValue={priceRange[1]}
+            onPriceChange={(max) => setPriceRange([0, max])}
+            resultCount={filteredProducts.length}
+            onReset={resetFilters}
+            hasActiveFilters={hasActiveFilters}
+          />
 
           {/* Main Content */}
           <div className="w-full flex-1">
@@ -310,7 +277,7 @@ const SolarPage = () => {
       </div>
 
       <Footer />
-    </div>
+    </main>
   );
 };
 

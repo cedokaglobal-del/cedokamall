@@ -12,20 +12,20 @@ const SolarPlanCard = ({ plan, compact = false }: SolarPlanCardProps) => {
       {plan.image && (
         <img src={plan.image} alt={plan.name} className="h-48 w-full object-cover" />
       )}
-      <div className="flex flex-1 flex-col p-6">
+      <div className="flex flex-1 flex-col p-4 sm:p-6">
         <div>
-          <h3 className="font-serif text-lg font-bold text-navy">{plan.name}</h3>
+          <h3 className="font-serif text-base sm:text-lg font-bold leading-snug text-navy line-clamp-2 min-h-[2.75rem] sm:min-h-[3.5rem]">{plan.name}</h3>
           {plan.capacity && (
-            <p className="mt-1 text-xs font-bold uppercase tracking-wider text-gold">{plan.capacity}</p>
+            <p className="mt-1 text-[11px] sm:text-xs font-bold uppercase tracking-wider text-gold line-clamp-1">{plan.capacity}</p>
           )}
         </div>
 
         {plan.price > 0 && (
-          <p className="mt-3 text-2xl font-bold text-navy">{'\u20A6'}{plan.price.toLocaleString()}</p>
+          <p className="mt-2 sm:mt-3 text-xl sm:text-2xl font-bold tabular-nums text-navy">{'\u20A6'}{plan.price.toLocaleString()}</p>
         )}
 
         {plan.description && (
-          <p className="mt-3 text-sm leading-6 text-navy/60">{plan.description}</p>
+          <p className="mt-2 sm:mt-3 text-[13px] sm:text-sm leading-6 text-navy/60 line-clamp-3">{plan.description}</p>
         )}
 
         {plan.bestFor && (
@@ -42,12 +42,15 @@ const SolarPlanCard = ({ plan, compact = false }: SolarPlanCardProps) => {
               <p className="text-[10px] font-bold uppercase tracking-wider text-navy/45">Can Power</p>
             </div>
             <ul className="space-y-1.5">
-              {plan.canPower.map((item) => (
-                <li key={item} className="flex items-center gap-2 text-[13px] text-navy/70">
+              {(compact ? plan.canPower.slice(0, 4) : plan.canPower).map((item) => (
+                <li key={item} className="flex items-center gap-2 text-xs sm:text-[13px] text-navy/70">
                   <span className="h-1.5 w-1.5 shrink-0 rounded-full bg-gold" />
-                  {item}
+                  <span className="truncate">{item}</span>
                 </li>
               ))}
+              {compact && plan.canPower.length > 4 && (
+                <li className="text-[11px] font-bold text-gold">+{plan.canPower.length - 4} more</li>
+              )}
             </ul>
           </div>
         )}

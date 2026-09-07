@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Sprout, MessageSquare, Leaf, SlidersHorizontal } from 'lucide-react';
+import { Sprout, MessageSquare, Leaf } from 'lucide-react';
+import { FilterSidebar, FilterMobileBar, type FilterOption } from '@/components/CategoryFilter';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
@@ -85,6 +86,30 @@ const FarmsPage = () => {
     setSearchParams(params, { replace: true });
   };
 
+  const filterOptions: FilterOption[] = useMemo(() => {
+    const counts: Record<string, number> = {};
+    for (const p of farmProducts) {
+      const key = slugify(p.category);
+      counts[key] = (counts[key] || 0) + 1;
+    }
+    return [
+      { slug: 'all', label: 'All Farm', icon: Leaf, count: farmProducts.length },
+      ...farms.subcategories.map((sub) => ({
+        slug: sub.slug,
+        label: sub.name,
+        icon: Leaf,
+        count: counts[sub.slug] || 0,
+      })),
+    ];
+  }, [farmProducts, farms.subcategories]);
+  const hasActiveFilters = urlCategory !== 'all' || priceRange[1] < sliderMax;
+  const resetFilters = () => {
+    const params = new URLSearchParams(searchParams);
+    params.delete('category');
+    setSearchParams(params, { replace: true });
+    setPriceRange([0, sliderMax]);
+  };
+
   useSEO({
     title: 'Farms - Fresh Produce, Agricultural Products & Equipment | Cedokamall',
     description:
@@ -114,7 +139,7 @@ const FarmsPage = () => {
   ]);
 
   return (
-    <div className="min-h-screen overflow-x-hidden bg-ivory">
+    <main className="min-h-screen overflow-x-hidden bg-ivory">
       <Header />
 
       <div className="container min-w-0 py-6 pb-28 sm:py-12">
@@ -149,104 +174,32 @@ const FarmsPage = () => {
           </div>
         </div>
 
-        {/* Mobile Category Strip */}
-        <div className="mb-10 lg:hidden">
-          <div className="relative">
-            <div className="flex gap-3 overflow-x-auto pb-4 no-scrollbar">
-              <button
-                type="button"
-                onClick={() => handleTabChange('all')}
-                className={`flex-shrink-0 whitespace-nowrap rounded-md px-6 py-3 text-sm font-bold uppercase tracking-widest transition-all touch-manipulation ${
-                  urlCategory === 'all'
-                    ? 'bg-gold text-navy shadow-lg'
-                    : 'bg-white text-navy/60 hover:text-navy'
-                }`}
-              >
-                All Farm
-              </button>
-              {farms.subcategories.map((sub) => (
-                <button
-                  key={sub.slug}
-                  type="button"
-                  onClick={() => handleTabChange(sub.slug)}
-                  className={`flex-shrink-0 whitespace-nowrap rounded-md px-6 py-3 text-sm font-bold uppercase tracking-widest transition-all touch-manipulation ${
-                    urlCategory === sub.slug
-                      ? 'bg-gold text-navy shadow-lg'
-                      : 'bg-white text-navy/60 hover:text-navy'
-                  }`}
-                >
-                  {sub.name}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
+        <FilterMobileBar
+          options={filterOptions}
+          activeSlug={urlCategory}
+          onSelect={handleTabChange}
+          priceMax={sliderMax}
+          priceStep={sliderStep}
+          priceValue={priceRange[1]}
+          onPriceChange={(max) => setPriceRange([0, max])}
+          resultCount={filteredProducts.length}
+          onReset={resetFilters}
+          hasActiveFilters={hasActiveFilters}
+        />
 
         <div className="flex gap-10">
-          {/* Sidebar (Desktop) */}
-          <aside className="hidden w-64 flex-shrink-0 lg:block sticky top-20 self-start max-h-[calc(100vh-6rem)] overflow-y-auto space-y-10">
-            {/* Category Filter */}
-            <div>
-              <h3 className="mb-6 flex items-center gap-3 font-serif text-xl font-bold text-navy">
-                <SlidersHorizontal className="h-5 w-5 text-gold" />
-                Collections
-              </h3>
-              <div className="space-y-2">
-                <button
-                  type="button"
-                  onClick={() => handleTabChange('all')}
-                  className={`block w-full rounded-md px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] transition-all ${
-                    urlCategory === 'all'
-                      ? 'bg-navy text-gold shadow-md translate-x-2'
-                      : 'text-navy/60 hover:bg-white hover:text-navy'
-                  }`}
-                >
-                  <span className="inline-flex items-center gap-3">
-                    <Leaf className={`h-4 w-4 ${urlCategory === 'all' ? 'text-gold' : 'text-navy/40'}`} />
-                    All Farm
-                  </span>
-                </button>
-                {farms.subcategories.map((sub) => (
-                  <button
-                    key={sub.slug}
-                    type="button"
-                    onClick={() => handleTabChange(sub.slug)}
-                    className={`block w-full rounded-md px-4 py-3 text-left text-xs font-bold uppercase tracking-[0.1em] transition-all ${
-                      urlCategory === sub.slug
-                        ? 'bg-navy text-gold shadow-md translate-x-2'
-                        : 'text-navy/60 hover:bg-white hover:text-navy'
-                    }`}
-                  >
-                    <span className="inline-flex items-center gap-3">
-                      <Leaf className={`h-4 w-4 ${urlCategory === sub.slug ? 'text-gold' : 'text-navy/40'}`} />
-                      {sub.name}
-                    </span>
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            {/* Price Range */}
-            <div className="rounded-md border border-gold-antique/10 bg-white p-6">
-              <h3 className="mb-4 font-serif text-lg font-bold text-navy">Price range</h3>
-              <input
-                type="range"
-                min={0}
-                max={sliderMax}
-                step={sliderStep}
-                value={priceRange[1]}
-                onChange={(event) => setPriceRange([0, Number(event.target.value)])}
-                className="w-full cursor-pointer appearance-none rounded-full bg-ivory accent-gold"
-                aria-label="Maximum price"
-              />
-              <div className="mt-4 flex justify-between">
-                <span className="text-[10px] font-bold uppercase tracking-tighter text-navy/40">
-                  Budget
-                </span>
-                <span className="text-sm font-bold text-navy">{`₦${priceRange[1].toLocaleString()}`}</span>
-              </div>
-            </div>
-          </aside>
+          <FilterSidebar
+            options={filterOptions}
+            activeSlug={urlCategory}
+            onSelect={handleTabChange}
+            priceMax={sliderMax}
+            priceStep={sliderStep}
+            priceValue={priceRange[1]}
+            onPriceChange={(max) => setPriceRange([0, max])}
+            resultCount={filteredProducts.length}
+            onReset={resetFilters}
+            hasActiveFilters={hasActiveFilters}
+          />
 
           {/* Main Content */}
           <div className="w-full min-w-0 flex-1">
@@ -290,7 +243,7 @@ const FarmsPage = () => {
       </div>
 
       <Footer />
-    </div>
+    </main>
   );
 };
 

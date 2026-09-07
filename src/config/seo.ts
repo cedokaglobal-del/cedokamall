@@ -333,6 +333,24 @@ export const PAGE_METAS: Record<string, PageMeta> = {
     keywords: ['electrical brands Nigeria', 'gadget brands', 'LG Nigeria', 'Hisense Nigeria', 'Cedokamall brands'],
     type: "website",
   },
+  farms: {
+    title: 'Farms - Fresh Produce, Agricultural Products & Equipment | Cedokamall',
+    description: 'Shop farm produce, agricultural products, equipment and supplies on Cedokamall. Bulk and seasonal availability with nationwide delivery across Nigeria.',
+    keywords: ['farm produce Nigeria', 'agricultural products Nigeria', 'farm equipment Nigeria', 'farm supplies Nigeria', 'buy farm products online Nigeria'],
+    type: 'website',
+  },
+  calculator: {
+    title: 'Solar Calculator - Size Your Solar System | Cedokamall',
+    description: 'Calculate the right solar panels, inverter and battery bank for your home or office from your daily appliance usage. Free solar sizing tool for Nigeria.',
+    keywords: ['solar calculator Nigeria', 'solar system sizing', 'how many solar panels do I need', 'inverter size calculator', 'battery bank calculator Nigeria'],
+    type: 'website',
+  },
+  product: {
+    title: 'Original Product with Warranty | Cedokamall',
+    description: 'Buy original products with warranty support and nationwide delivery across Nigeria from Cedokamall.',
+    keywords: ['original products Nigeria', 'products with warranty Nigeria', 'Cedokamall'],
+    type: 'website',
+  },
 };
 
 export const getCanonicalUrl = (pathname: string): string => `${SEO_CONFIG.siteUrl}${pathname}`;
