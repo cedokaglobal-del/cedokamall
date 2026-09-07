@@ -17,9 +17,12 @@ const DEFAULT_SOLAR_CATEGORIES = [
 interface SolarCategoryState {
   categories: string[];
   addCategory: (category: string) => void;
+  renameCategory: (oldName: string, newName: string) => void;
   removeCategory: (category: string) => void;
   resetCategories: () => void;
 }
+
+const PROTECTED_SOLAR_CATEGORIES = ['Solar Accessories'];
 
 export const useSolarCategoryStore = create<SolarCategoryState>()(
   persist(
@@ -30,6 +33,15 @@ export const useSolarCategoryStore = create<SolarCategoryState>()(
           const trimmed = category.trim();
           if (!trimmed || state.categories.includes(trimmed)) return state;
           return { categories: [...state.categories, trimmed].sort() };
+        }),
+      renameCategory: (oldName, newName) =>
+        set((state) => {
+          const trimmed = newName.trim();
+          if (!trimmed || state.categories.includes(trimmed)) return state;
+          if (PROTECTED_SOLAR_CATEGORIES.includes(oldName)) return state;
+          return {
+            categories: state.categories.map((c) => (c === oldName ? trimmed : c)).sort(),
+          };
         }),
       removeCategory: (category) =>
         set((state) => {

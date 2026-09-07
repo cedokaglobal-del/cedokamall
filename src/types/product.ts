@@ -49,5 +49,6 @@ export interface ProductFilter {
   minPrice?: number;
   maxPrice?: number;
   inStock?: boolean;
+  stockStatus?: 'in' | 'low' | 'out' | 'flagged';
   searchTerm?: string;
 }

@@ -176,7 +176,48 @@ const AdminSolarPlans = () => {
 
             <div className="mt-6 space-y-3">
               <div className="flex items-center justify-between"><h3 className="font-semibold">Plan items</h3><Button type="button" variant="outline" size="sm" onClick={() => setDraft({ ...draft, items: [...draft.items, createSolarPlanItem()] })}><Plus className="mr-1 h-4 w-4" /> Add item</Button></div>
-              {draft.items.map((item) => <div key={item.id} className="grid gap-2 rounded-lg border bg-muted/20 p-3 sm:grid-cols-[1fr_140px_90px_90px_90px_36px]"><Input value={item.name} onChange={(event) => updateItem(item.id, 'name', event.target.value)} placeholder="Item name" aria-label="Item name" /><select value={item.type} onChange={(event) => updateItem(item.id, 'type', event.target.value)} className="h-10 rounded-md border bg-background px-2 text-sm" aria-label="Item type">{itemTypes.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}</select><Input type="number" min="0" value={item.volts} onChange={(event) => updateItem(item.id, 'volts', Number(event.target.value))} placeholder="Volts" aria-label="Volts" /><Input type="number" min="0" value={item.watts} onChange={(event) => updateItem(item.id, 'watts', Number(event.target.value))} placeholder="Watts" aria-label="Watts" /><Input type="number" min="1" value={item.quantity} onChange={(event) => updateItem(item.id, 'quantity', Number(event.target.value))} placeholder="Qty" aria-label="Quantity" /><Button type="button" variant="ghost" size="icon" onClick={() => setDraft({ ...draft, items: draft.items.filter((entry) => entry.id !== item.id) })} disabled={draft.items.length === 1} aria-label="Remove item"><Trash2 className="h-4 w-4 text-destructive" /></Button></div>)}
+              <p className="text-xs text-muted-foreground">
+                Name each part, pick its type, then enter quantity and energy values (watts / volts).
+                Example: <em>Hybrid Inverter 3kW 24V MPPT 4.5kW</em> — Qty 1 — 3000W — 24V.
+              </p>
+              <div className="hidden sm:grid gap-2 px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground sm:grid-cols-[1fr_140px_90px_90px_90px_36px]">
+                <span>Item name</span><span>Type</span><span>Volts (V)</span><span>Watts (W)</span><span>Qty</span><span />
+              </div>
+              {draft.items.map((item, index) => (
+                <div key={item.id} className="space-y-1.5">
+                  <div className="grid gap-2 rounded-lg border bg-muted/20 p-3 sm:grid-cols-[1fr_140px_90px_90px_90px_36px]">
+                    <div className="space-y-1">
+                      <Label className="text-[11px] sm:hidden">Item name</Label>
+                      <Input value={item.name} onChange={(event) => updateItem(item.id, 'name', event.target.value)} placeholder={index === 0 ? 'e.g. Hybrid Inverter 3kW 24V MPPT 4.5kW' : index === 1 ? 'e.g. Lithium Battery 2.56kWh 24V 100Ah' : 'e.g. Solar Panel N-Type Bifacial 620W'} aria-label="Item name" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[11px] sm:hidden">Type</Label>
+                      <select value={item.type} onChange={(event) => updateItem(item.id, 'type', event.target.value)} className="h-10 w-full rounded-md border bg-background px-2 text-sm" aria-label="Item type">{itemTypes.map((type) => <option key={type.value} value={type.value}>{type.label}</option>)}</select>
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[11px] sm:hidden">Volts (V)</Label>
+                      <Input type="number" min="0" value={item.volts} onChange={(event) => updateItem(item.id, 'volts', Number(event.target.value))} placeholder="e.g. 24" aria-label="Volts" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[11px] sm:hidden">Watts (W)</Label>
+                      <Input type="number" min="0" value={item.watts} onChange={(event) => updateItem(item.id, 'watts', Number(event.target.value))} placeholder="e.g. 620" aria-label="Watts" />
+                    </div>
+                    <div className="space-y-1">
+                      <Label className="text-[11px] sm:hidden">Qty</Label>
+                      <Input type="number" min="1" value={item.quantity} onChange={(event) => updateItem(item.id, 'quantity', Number(event.target.value))} placeholder="e.g. 3" aria-label="Quantity" />
+                    </div>
+                    <Button type="button" variant="ghost" size="icon" onClick={() => setDraft({ ...draft, items: draft.items.filter((entry) => entry.id !== item.id) })} disabled={draft.items.length === 1} aria-label="Remove item"><Trash2 className="h-4 w-4 text-destructive" /></Button>
+                  </div>
+                  {item.name.trim() && (
+                    <p className="px-1 text-xs text-muted-foreground">
+                      Preview: <strong className="text-navy">{item.quantity} × {item.name.trim()}</strong>
+                      {(Number(item.watts) > 0 || Number(item.volts) > 0) && (
+                        <span> ({[Number(item.watts) > 0 ? `${item.watts}W` : null, Number(item.volts) > 0 ? `${item.volts}V` : null].filter(Boolean).join(' • ')})</span>
+                      )}
+                    </p>
+                  )}
+                </div>
+              ))}
             </div>
             {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
             <Button onClick={handleSubmit} className="mt-6">{editingId ? 'Save plan' : 'Create solar plan'}</Button>

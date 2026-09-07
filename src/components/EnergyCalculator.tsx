@@ -297,6 +297,34 @@ const EnergyCalculator = () => {
     setAppliances((prev) => prev.map((a) => (a.id === id ? { ...a, [field]: value } : a)));
   }, []);
 
+  // Task 9: "All day" means the appliance runs round the clock — lock it to
+  // 22h (minimum) automatically so the user never has to enter time manually.
+  const ALL_DAY_MINUTES = 22 * 60;
+  const setApplianceUsage = useCallback((id: string, usage: ApplianceRow['usage']) => {
+    setAppliances((prev) =>
+      prev.map((a) =>
+        a.id === id
+          ? { ...a, usage, minutes: usage === 'all-day' ? ALL_DAY_MINUTES : a.minutes }
+          : a
+      )
+    );
+  }, []);
+
+  // Tasks 11-12: engineer-grade shopping list derived from the raw results —
+  // standard inverter sizes, battery energy, panel count and controller rating.
+  const engineerVerdict = useMemo(() => {
+    const STANDARD_INVERTERS = [1000, 1500, 2500, 3500, 5000, 7500, 10000, 15000];
+    const recommendedInverter =
+      STANDARD_INVERTERS.find((size) => size >= results.inverterW) ??
+      Math.ceil(results.inverterW / 1000) * 1000;
+    const batteryKwh =
+      Math.round(((results.batteryCapacityAh * results.systemVoltage) / 1000) * 100) / 100;
+    const panelWattage = 620;
+    const panelCount = Math.max(1, Math.ceil(results.solarPanelW / panelWattage));
+    const controllerAmps = Math.ceil((panelCount * panelWattage) / results.systemVoltage * 1.25);
+    return { recommendedInverter, batteryKwh, panelWattage, panelCount, controllerAmps };
+  }, [results]);
+
   const applianceNames = useMemo(() => new Set(appliances.map((a) => a.name)), [appliances]);
 
   const clampNum = (val: number, min: number, max?: number) => {
@@ -516,13 +544,13 @@ const EnergyCalculator = () => {
                       />
                       <select
                         value={appliance.usage}
-                        onChange={(e) => updateAppliance(appliance.id, 'usage', e.target.value)}
+                        onChange={(e) => setApplianceUsage(appliance.id, e.target.value as ApplianceRow['usage'])}
                         className="w-[6.4rem] shrink-0 rounded-md border border-gold-antique/20 bg-ivory px-1.5 py-1 text-[10px] font-bold uppercase tracking-wider text-navy focus:border-gold focus:outline-none"
                         aria-label={`${appliance.name || 'Appliance'} time of use`}
                       >
                         <option value="day">Day use</option>
                         <option value="night">Night use</option>
-                        <option value="all-day">All day</option>
+                        <option value="all-day">All day (22h auto)</option>
                       </select>
                       <button type="button" onClick={() => setInfoApplianceId(appliance.id)} className="shrink-0 text-navy/30 hover:text-gold transition-colors" aria-label="Energy details">
                         <Info className="h-4 w-4" />
@@ -539,17 +567,51 @@ const EnergyCalculator = () => {
                       <label className="text-[10px] font-bold uppercase tracking-wider text-navy/40 block mb-1">
                         Hours per day
                       </label>
-                      <div className="flex items-center gap-2">
-                        <input type="range" min={0.25} max={24} step={0.5}
-                          value={Math.round((appliance.minutes / 60) * 2) / 2}
-                          onChange={(e) => updateAppliance(appliance.id, 'minutes', Math.round(Number(e.target.value) * 60))}
-                          className="flex-1 accent-gold h-1.5" />
-                        <span className="text-sm font-bold text-navy w-10 text-right">
-                          {appliance.minutes >= 60
-                            ? `${Math.round(appliance.minutes / 60)}h`
-                            : `${appliance.minutes}min`}
-                        </span>
-                      </div>
+                      {appliance.usage === 'all-day' ? (
+                        <div className="flex items-center gap-2 rounded-md bg-gold/10 border border-gold/30 px-3 py-2">
+                          <span className="text-sm font-bold text-navy">22h auto</span>
+                          <span className="text-[10px] text-navy/50">All-day appliances run round the clock — no time entry needed.</span>
+                        </div>
+                      ) : (
+                        <>
+                          <div className="flex items-center gap-2">
+                            <input type="range" min={0.25} max={24} step={0.25}
+                              value={Math.round((appliance.minutes / 60) * 4) / 4}
+                              onChange={(e) => updateAppliance(appliance.id, 'minutes', Math.round(Number(e.target.value) * 60))}
+                              className="flex-1 accent-gold h-1.5"
+                              aria-label={`${appliance.name || 'Appliance'} hours per day`} />
+                            <span className="text-sm font-bold text-navy w-14 text-right">
+                              {appliance.minutes >= 60
+                                ? `${Math.round((appliance.minutes / 60) * 4) / 4}h`
+                                : `${appliance.minutes}min`}
+                            </span>
+                          </div>
+                          <div className="mt-1.5 flex flex-wrap gap-1.5">
+                            {[
+                              { label: '15min', minutes: 15 },
+                              { label: '30min', minutes: 30 },
+                              { label: '45min', minutes: 45 },
+                              { label: '1h', minutes: 60 },
+                              { label: '4h', minutes: 240 },
+                              { label: '8h', minutes: 480 },
+                            ].map((chip) => (
+                              <button
+                                key={chip.label}
+                                type="button"
+                                onClick={() => updateAppliance(appliance.id, 'minutes', chip.minutes)}
+                                className={cn(
+                                  'rounded-full px-2.5 py-1 text-[10px] font-bold transition-all active:scale-95',
+                                  appliance.minutes === chip.minutes
+                                    ? 'bg-navy text-gold'
+                                    : 'bg-ivory text-navy/60 border border-gold-antique/20 hover:border-gold hover:text-navy'
+                                )}
+                              >
+                                {chip.label}
+                              </button>
+                            ))}
+                          </div>
+                        </>
+                      )}
                     </div>
                     <div>
                       <label className="text-[10px] font-bold uppercase tracking-wider text-navy/40 block mb-1">Qty</label>
@@ -632,11 +694,15 @@ const EnergyCalculator = () => {
                     </div>
                     <div>
                       <label className="text-[10px] font-bold uppercase tracking-wider text-navy/40">Hours</label>
-                      <input type="number" min={0.25} max={24} step={0.5}
-                        value={Math.round((appliance.minutes / 60) * 2) / 2 || ''}
-                        onChange={(e) => updateAppliance(appliance.id, 'minutes', Math.round(Number(e.target.value) * 60))}
-                        onBlur={(e) => { const v = Number(e.target.value); if (!v || v < 0.25) updateAppliance(appliance.id, 'minutes', 60); if (v > 24) updateAppliance(appliance.id, 'minutes', 1440); }}
-                        className="w-full bg-ivory rounded-md border border-gold-antique/10 px-2 py-1.5 text-sm text-navy focus:border-gold focus:outline-none" />
+                      {appliance.usage === 'all-day' ? (
+                        <p className="mt-1.5 rounded-md bg-gold/10 border border-gold/30 px-2 py-1.5 text-sm font-bold text-navy">22h auto</p>
+                      ) : (
+                        <input type="number" min={0.25} max={24} step={0.25}
+                          value={Math.round((appliance.minutes / 60) * 4) / 4 || ''}
+                          onChange={(e) => updateAppliance(appliance.id, 'minutes', Math.round(Number(e.target.value) * 60))}
+                          onBlur={(e) => { const v = Number(e.target.value); if (!v || v < 0.25) updateAppliance(appliance.id, 'minutes', 15); if (v > 24) updateAppliance(appliance.id, 'minutes', 1440); }}
+                          className="w-full bg-ivory rounded-md border border-gold-antique/10 px-2 py-1.5 text-sm text-navy focus:border-gold focus:outline-none" />
+                      )}
                     </div>
                     <div>
                       <label className="text-[10px] font-bold uppercase tracking-wider text-navy/40">Wh</label>
@@ -913,6 +979,42 @@ const EnergyCalculator = () => {
                 High-Voltage System
               </span>
             )}
+          </div>
+
+          {/* Engineer's Verdict — master-level shopping list */}
+          <div className="rounded-xl bg-gold/10 border border-gold/30 p-4 md:p-5 mb-5">
+            <div className="flex items-center gap-2 mb-3">
+              <span className="text-base">👷</span>
+              <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-gold">Engineer&apos;s Verdict</h4>
+            </div>
+            <ul className="space-y-2 text-sm text-champagne/90">
+              <li>
+                <strong className="text-champagne">Inverter:</strong> go for a{' '}
+                <strong className="text-gold">{engineerVerdict.recommendedInverter.toLocaleString()}W</strong>{' '}
+                pure sine wave inverter (next standard size above your {results.inverterW.toLocaleString()}W peak + 25% surge buffer).
+              </li>
+              <li>
+                <strong className="text-champagne">Battery bank:</strong>{' '}
+                <strong className="text-gold">{engineerVerdict.batteryKwh}kWh</strong> usable
+                ({results.batteryCapacityAh.toLocaleString()}Ah @ {results.systemVoltage}V) — covers {autonomy} cloudy
+                day{autonomy === 1 ? '' : 's'} at your depth of discharge.
+              </li>
+              <li>
+                <strong className="text-champagne">Panels:</strong>{' '}
+                <strong className="text-gold">{engineerVerdict.panelCount} × {engineerVerdict.panelWattage}W</strong>{' '}
+                ({(engineerVerdict.panelCount * engineerVerdict.panelWattage).toLocaleString()}Wp total) for {peakSunHours}h
+                of Nigerian sunshine, dust and heat losses included.
+              </li>
+              <li>
+                <strong className="text-champagne">Charge controller:</strong> MPPT rated at least{' '}
+                <strong className="text-gold">{engineerVerdict.controllerAmps}A</strong> @ {results.systemVoltage}V
+                (array current + 25% safety margin).
+              </li>
+            </ul>
+            <p className="mt-3 text-[11px] leading-relaxed text-champagne/60">
+              Rule of thumb: keep heavy loads (iron, AC, pump, microwave) on daytime sun, give batteries one full
+              sunny day to recover after cloudy spells, and always use a certified installer for wiring and protection.
+            </p>
           </div>
 
           {/* Professional Advised Solar System */}

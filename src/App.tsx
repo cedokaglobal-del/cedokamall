@@ -39,6 +39,7 @@ const AdminAnalytics  = safeLazy(() => import("./pages/AdminAnalytics"));
 const AdminFlashDeals = safeLazy(() => import("./pages/AdminFlashDeals"));
 const AdminSales      = safeLazy(() => import("./pages/AdminSales"));
 const AdminSolarPlans = safeLazy(() => import("./pages/AdminSolarPlans"));
+const AdminCategories = safeLazy(() => import("./pages/AdminCategories"));
 
 // Lightweight page spinner shown while a chunk is loading
 const PageLoader = () => (
@@ -247,6 +248,14 @@ const App = () => {
                     element={
                       <ProtectedRoute>
                         <AdminSolarPlans />
+                      </ProtectedRoute>
+                    }
+                  />
+                  <Route
+                    path="/admin/categories"
+                    element={
+                      <ProtectedRoute>
+                        <AdminCategories />
                       </ProtectedRoute>
                     }
                   />

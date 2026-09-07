@@ -625,6 +625,20 @@ export const useProductStore = create<ProductState>((set, get) => ({
       if (filter.inStock !== undefined && filter.inStock && product.inStock === 0) {
         return false;
       }
+      if (filter.stockStatus) {
+        if (filter.stockStatus === 'in' && (product.inStock === 0 || product.outOfStock)) {
+          return false;
+        }
+        if (filter.stockStatus === 'low' && (product.inStock === 0 || product.inStock >= 10)) {
+          return false;
+        }
+        if (filter.stockStatus === 'out' && product.inStock !== 0) {
+          return false;
+        }
+        if (filter.stockStatus === 'flagged' && !product.outOfStock) {
+          return false;
+        }
+      }
       if (filter.searchTerm) {
         const term = filter.searchTerm.toLowerCase();
         return (

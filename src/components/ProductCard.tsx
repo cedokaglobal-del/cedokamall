@@ -45,10 +45,10 @@ const ProductCard = ({ product, priority = false }: { product: Product, priority
       </div>
 
       {/* Content */}
-      <div className="p-4 sm:p-5 flex flex-col gap-3">
+      <div className="p-2 sm:p-5 flex flex-col gap-2 sm:gap-3">
         {/* Product Name */}
         <Link to={`/product/${product.id}`} state={{ from }}>
-          <h3 className="font-serif text-base sm:text-lg font-bold leading-tight text-charcoal transition-colors duration-200 hover:text-gold line-clamp-2 group-hover:text-gold">
+          <h3 className="font-serif text-xs sm:text-lg font-bold leading-tight text-charcoal transition-colors duration-200 hover:text-gold line-clamp-2 group-hover:text-gold">
             {product.name}
           </h3>
         </Link>
@@ -70,13 +70,13 @@ const ProductCard = ({ product, priority = false }: { product: Product, priority
         </div>
 
         {/* Price Section */}
-        <div className="flex items-center justify-between pt-3 border-t border-gold-antique/10">
+        <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-gold-antique/10">
           <div className="flex min-w-0 flex-col">
-            <span className="break-words text-base sm:text-lg font-bold tracking-tight text-gold transition-colors duration-200">
+            <span className="break-words text-sm sm:text-lg font-bold tracking-tight text-gold transition-colors duration-200">
               {formatPrice(product.price)}
             </span>
             {product.originalPrice && (
-              <span className="text-xs text-charcoal/40 line-through">
+              <span className="text-[10px] sm:text-xs text-charcoal/40 line-through">
                 {formatPrice(product.originalPrice)}
               </span>
             )}
@@ -101,10 +101,10 @@ const ProductCard = ({ product, priority = false }: { product: Product, priority
                 duration: 2000,
               });
             }}
-            className="flex h-10 w-10 items-center justify-center rounded-md bg-navy text-gold shadow-premium-sm transition-all duration-200 hover:scale-110 hover:bg-gold hover:text-navy active:scale-95 focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:bg-navy disabled:hover:text-gold"
+            className="flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-md bg-navy text-gold shadow-premium-sm transition-all duration-200 hover:scale-110 hover:bg-gold hover:text-navy active:scale-95 focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:bg-navy disabled:hover:text-gold"
             aria-label={product.outOfStock ? 'Out of stock' : 'Add to cart'}
           >
-            <ShoppingCart className="h-5 w-5 transition-transform duration-200 pointer-events-none" />
+            <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 transition-transform duration-200 pointer-events-none" />
           </button>
         </div>
       </div>

@@ -5,6 +5,7 @@ import { DEFAULT_CATEGORY_NAMES } from '@/data/products';
 interface CategoryState {
   categories: string[];
   addCategory: (category: string) => void;
+  renameCategory: (oldName: string, newName: string) => void;
   removeCategory: (category: string) => void;
   resetCategories: () => void;
 }
@@ -18,6 +19,14 @@ export const useCategoryStore = create<CategoryState>()(
           const trimmed = category.trim();
           if (!trimmed || state.categories.includes(trimmed)) return state;
           return { categories: [...state.categories, trimmed].sort() };
+        }),
+      renameCategory: (oldName, newName) =>
+        set((state) => {
+          const trimmed = newName.trim();
+          if (!trimmed || state.categories.includes(trimmed)) return state;
+          return {
+            categories: state.categories.map((c) => (c === oldName ? trimmed : c)).sort(),
+          };
         }),
       removeCategory: (category) =>
         set((state) => {

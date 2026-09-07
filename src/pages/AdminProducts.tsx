@@ -47,6 +47,10 @@ const [isFormOpen, setIsFormOpen] = useState(false);
 
   const filteredProducts = useMemo(() => getFilteredProducts(), [getFilteredProducts]);
   const categories = useMemo(() => getCategoryOptions(products), [products]);
+  const brands = useMemo(
+    () => Array.from(new Set(products.map((p) => p.seller).filter(Boolean))).sort(),
+    [products]
+  );
 
   const handleAddProduct = () => {
     setEditingProduct(undefined);
@@ -275,7 +279,7 @@ const handleDeleteProduct = async (productId: string) => {
             </div>
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
 
             {/* Category Filter */}
             <div>
@@ -296,6 +300,54 @@ const handleDeleteProduct = async (productId: string) => {
                       {cat}
                     </SelectItem>
                   ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Brand Filter */}
+            <div>
+              <Label htmlFor="brand" className="text-xs mb-2 block">
+                Brand / Seller
+              </Label>
+              <Select
+                value={filter.brands?.[0] || 'all'}
+                onValueChange={(value) => handleFilterChange('brands', value === 'all' ? undefined : [value])}
+              >
+                <SelectTrigger id="brand">
+                  <SelectValue placeholder="All brands" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Brands</SelectItem>
+                  {brands.map((brand) => (
+                    <SelectItem key={brand} value={brand}>
+                      {brand}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+
+            {/* Stock Status Filter */}
+            <div>
+              <Label htmlFor="stockStatus" className="text-xs mb-2 block">
+                Stock Status
+              </Label>
+              <Select
+                value={filter.stockStatus || 'all'}
+                onValueChange={(value) => {
+                  handleFilterChange('stockStatus', value === 'all' ? undefined : (value as NonNullable<typeof filter.stockStatus>));
+                  if (value !== 'all') handleFilterChange('inStock', undefined);
+                }}
+              >
+                <SelectTrigger id="stockStatus">
+                  <SelectValue placeholder="All items" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="all">All Items</SelectItem>
+                  <SelectItem value="in">In Stock</SelectItem>
+                  <SelectItem value="low">Low Stock (&lt; 10 units)</SelectItem>
+                  <SelectItem value="out">Out of Stock (0 units)</SelectItem>
+                  <SelectItem value="flagged">Flagged Out of Stock</SelectItem>
                 </SelectContent>
               </Select>
             </div>
@@ -328,14 +380,17 @@ const handleDeleteProduct = async (productId: string) => {
               />
             </div>
 
-            {/* In Stock Filter */}
+            {/* In Stock (legacy quick toggle) */}
             <div>
               <Label htmlFor="inStock" className="text-xs mb-2 block">
-                Stock Status
+                Availability
               </Label>
               <Select
                 value={filter.inStock ? 'true' : 'all'}
-                onValueChange={(value) => handleFilterChange('inStock', value === 'true' ? true : undefined)}
+                onValueChange={(value) => {
+                  handleFilterChange('inStock', value === 'true' ? true : undefined);
+                  if (value === 'true') handleFilterChange('stockStatus', undefined);
+                }}
               >
                 <SelectTrigger id="inStock">
                   <SelectValue placeholder="All items" />

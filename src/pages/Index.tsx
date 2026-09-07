@@ -415,7 +415,7 @@ const Index = () => {
           </Link>
         </div>
         {isLoading && products.length === 0 ? (
-          <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          <div className="grid grid-cols-3 gap-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {[...Array(10)].map((_, i) => (
               <div key={i} className="aspect-[4/5] animate-pulse rounded-lg bg-gray-100" />
             ))}
@@ -446,7 +446,7 @@ const Index = () => {
             </button>
           </div>
         ) : (
-          <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          <div className="grid grid-cols-3 gap-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {homepageProducts.map((product, idx) => (
               <ProductCard key={product.id} product={product} priority={idx < 4} />
             ))}
@@ -520,7 +520,7 @@ const Index = () => {
             <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
-        <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        <div className="grid grid-cols-3 gap-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {isLoading && products.length === 0 ? (
             [...Array(5)].map((_, i) => (
               <div key={i} className="aspect-[4/5] animate-pulse rounded-lg bg-gray-100" />
@@ -547,7 +547,7 @@ const Index = () => {
               </div>
               <CountdownTimer />
             </div>
-            <div className="grid grid-cols-2 gap-4 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            <div className="grid grid-cols-3 gap-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {isLoading && products.length === 0 ? (
                 [...Array(5)].map((_, i) => (
                   <div key={i} className="aspect-[4/5] animate-pulse rounded-lg bg-gray-100" />
