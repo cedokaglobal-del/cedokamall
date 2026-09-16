@@ -30,7 +30,7 @@ import { useSEO, useStructuredData } from '@/hooks/useSEO';
 import { cn } from '@/lib/utils';
 import { useCartStore } from '@/store/cartStore';
 import { useProductStore } from '@/store/productStore';
-import { useReviewStore, subscribeToProductReviews } from '@/store/reviewStore';
+import { useReviewStore, subscribeToProductReviews, type StoreReview } from '@/store/reviewStore';
 import { toast } from 'sonner';
 import { getOptimizedImageUrl, generateSrcSet, generateSizes } from '@/utils/performance';
 import { RENEWABLE_ENERGY_CATEGORIES } from '@/data/catalog';
@@ -97,6 +97,8 @@ const getPowerGuidance = (product: Product): PowerGuidance | null => {
 
 type SortOption = 'newest' | 'highest' | 'lowest' | 'helpful';
 
+const EMPTY_REVIEW_LIST: StoreReview[] = [];
+
 const ProductPage = () => {
   const { id } = useParams();
   const navigate = useNavigate();
@@ -127,9 +129,9 @@ const ProductPage = () => {
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
 
-  // Server-persisted reviews
-  const storeReviews = useReviewStore((s) => s.reviewsByProduct[id || ''] || []);
-  const isLoadingReviews = useReviewStore((s) => s.loadingByProduct[id || ''] || false);
+  // Server-persisted reviews — use ?? with a stable empty array to avoid re-render loops
+  const storeReviews = useReviewStore((s) => s.reviewsByProduct[id || ''] ?? EMPTY_REVIEW_LIST);
+  const isLoadingReviews = useReviewStore((s) => s.loadingByProduct[id || ''] ?? false);
   const fetchReviews = useReviewStore((s) => s.fetchReviews);
   const addReview = useReviewStore((s) => s.addReview);
   const markHelpful = useReviewStore((s) => s.markHelpful);
