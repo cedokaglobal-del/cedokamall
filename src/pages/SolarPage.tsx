@@ -41,6 +41,7 @@ const SolarPage = () => {
   const urlCategory = searchParams.get('category') || 'all';
   const [sortBy, setSortBy] = useState('popular');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 0]);
+  const [searchTerm, setSearchTerm] = useState('');
   const hasInitializedPriceRange = useRef(false);
 
   const maxProductPrice = useMemo(
@@ -81,6 +82,16 @@ const SolarPage = () => {
 
     next = next.filter((p) => p.price >= priceRange[0] && p.price <= priceRange[1]);
 
+    if (searchTerm) {
+      const normalizedTerm = searchTerm.toLowerCase();
+      next = next.filter(
+        (p) =>
+          p.name.toLowerCase().includes(normalizedTerm) ||
+          p.description.toLowerCase().includes(normalizedTerm) ||
+          p.seller.toLowerCase().includes(normalizedTerm)
+      );
+    }
+
     switch (sortBy) {
       case 'price-low':
         return next.sort((a, b) => a.price - b.price);
@@ -100,15 +111,18 @@ const SolarPage = () => {
     }
   }, [solarProducts, activeCategory, priceRange, sortBy]);
 
-  const handleTabChange = useCallback((slug: string) => {
-    const params = new URLSearchParams(searchParams);
-    if (slug === 'all') {
-      params.delete('category');
-    } else {
-      params.set('category', slug);
-    }
-    setSearchParams(params, { replace: true });
-  }, [searchParams, setSearchParams]);
+  const handleSearchChange = useCallback(
+    (term: string) => {
+      const params = new URLSearchParams(searchParams);
+      if (term.trim()) {
+        params.set('q', term.trim());
+      } else {
+        params.delete('q');
+      }
+      setSearchParams(params, { replace: true });
+    },
+    [searchParams, setSearchParams]
+  );
 
   const filterOptions: FilterOption[] = useMemo(
     () => SOLAR_TABS.map((tab) => ({ slug: tab.slug, label: tab.label, icon: Sun })),
@@ -178,6 +192,15 @@ const SolarPage = () => {
               <ArrowLeft className="h-4 w-4" />
               Home
             </Link>
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search products…"
+              value={searchInput}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearchChange(searchInput)}
+              className="pl-10 py-1.5 bg-transparent text-sm text-navy placeholder:text-navy/30 focus:outline-none focus:ring-1 focus:ring-gold"
+            />
           </div>
         </div>
 
@@ -189,7 +212,7 @@ const SolarPage = () => {
           priceStep={sliderStep}
           priceValue={priceRange[1]}
           onPriceChange={(max) => setPriceRange([0, max])}
-          resultCount={filteredProducts.length}
+          onSearchChange={handleSearchChange}
           onReset={resetFilters}
           hasActiveFilters={hasActiveFilters}
         />
@@ -203,7 +226,7 @@ const SolarPage = () => {
             priceStep={sliderStep}
             priceValue={priceRange[1]}
             onPriceChange={(max) => setPriceRange([0, max])}
-            resultCount={filteredProducts.length}
+            onSearchChange={handleSearchChange}
             onReset={resetFilters}
             hasActiveFilters={hasActiveFilters}
           />

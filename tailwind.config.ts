@@ -8,8 +8,8 @@ export default {
     container: { center: true, padding: "1rem", screens: { "2xl": "1400px" } },
     extend: {
       fontFamily: {
-        sans: ["Work Sans", "system-ui", "sans-serif"],
-        serif: ["Libre Baskerville", "Georgia", "serif"],
+        sans: ["system-ui", "sans-serif"],
+        serif: ["Georgia", "serif"],
         mono: ["Menlo", "Monaco", "Consolas", "monospace"],
       },
       fontSize: {

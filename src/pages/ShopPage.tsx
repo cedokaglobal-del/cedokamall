@@ -46,6 +46,7 @@ const ShopPage = () => {
   const [selectedCategory, setSelectedCategory] = useState(categoryParam || 'all');
   const [sortBy, setSortBy] = useState('popular');
   const [priceRange, setPriceRange] = useState<[number, number]>(DEFAULT_PRICE_RANGE);
+  const [searchInput, setSearchInput] = useState('');
   const hasInitializedPriceRange = useRef(false);
 
   const maxProductPrice = useMemo(
@@ -71,7 +72,22 @@ const ShopPage = () => {
   const resetFilters = () => {
     setSelectedCategory('all');
     setPriceRange([0, sliderMax]);
+    const params = new URLSearchParams();
+    setSearchParams(params, { replace: true });
   };
+
+  const handleSearchChange = useCallback(
+    (term: string) => {
+      const params = new URLSearchParams();
+      if (term.trim()) {
+        params.set('q', term.trim());
+      } else {
+        params.delete('q');
+      }
+      setSearchParams(params, { replace: true });
+    },
+    [setSearchParams]
+  );
   const activeCategory = useMemo(
     () => categories.find((category) => category.slug === (categoryParam || selectedCategory)),
     [categories, categoryParam, selectedCategory]
@@ -270,6 +286,15 @@ const ShopPage = () => {
               <ArrowLeft className="h-4 w-4" />
               Home
             </Link>
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <input
+              type="text"
+              placeholder="Search products…"
+              value={searchInput}
+              onChange={(e) => handleSearchChange(e.target.value)}
+              onKeyDown={(e) => e.key === 'Enter' && handleSearchChange(searchInput)}
+              className="pl-10 py-1.5 bg-transparent text-sm text-navy placeholder:text-navy/30 focus:outline-none focus:ring-1 focus:ring-gold"
+            />
           </div>
         </div>
 
@@ -281,7 +306,7 @@ const ShopPage = () => {
           priceStep={sliderStep}
           priceValue={priceRange[1]}
           onPriceChange={(max) => setPriceRange([0, max])}
-          resultCount={filteredProducts.length}
+          onSearchChange={handleSearchChange}
           onReset={resetFilters}
           hasActiveFilters={hasActiveFilters}
         />
@@ -295,7 +320,7 @@ const ShopPage = () => {
             priceStep={sliderStep}
             priceValue={priceRange[1]}
             onPriceChange={(max) => setPriceRange([0, max])}
-            resultCount={filteredProducts.length}
+            onSearchChange={handleSearchChange}
             onReset={resetFilters}
             hasActiveFilters={hasActiveFilters}
           />

@@ -6,8 +6,6 @@ import {
   ChevronRight,
   Heart,
   MessageSquare,
-  Minus,
-  Plus,
   RotateCcw,
   Send,
   Share2,
@@ -128,7 +126,6 @@ const ProductPage = () => {
 
   const product = useMemo(() => products.find((p) => p.id === id), [products, id]);
   const powerInfo = useMemo(() => (product ? getPowerGuidance(product) : null), [product]);
-  const [quantity, setQuantity] = useState(1);
   const [activeImage, setActiveImage] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [isRating, setIsRating] = useState(false);
@@ -146,7 +143,6 @@ const ProductPage = () => {
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
 
   useEffect(() => {
-    setQuantity(1);
     setActiveImage(0);
   }, [product?.id]);
 
@@ -247,7 +243,15 @@ const ProductPage = () => {
             },
             { name: product.name, url: `${SEO_CONFIG.siteUrl}/product/${product.id}` },
           ]),
-          getProductSchema(product),
+          getProductSchema({
+            ...product,
+            reviewList: reviews.map((review) => ({
+              author: review.name,
+              rating: review.rating,
+              text: review.text,
+              date: review.date,
+            })),
+          }),
         ]
       : getBreadcrumbSchema([
           { name: 'Home', url: SEO_CONFIG.siteUrl },
@@ -325,7 +329,7 @@ const ProductPage = () => {
       price: product.price,
       image: product.image,
       inStock: product.inStock,
-      quantity,
+      quantity: 1,
     });
     toast.success(`${product.name} added to cart`);
   };
@@ -334,7 +338,7 @@ const ProductPage = () => {
     <div className="min-h-screen bg-ivory">
       <Header />
 
-        <div className="container py-6 pb-24 sm:pb-32">
+        <div className="container py-6 pb-0 sm:pb-0">
           <div className="flex flex-wrap items-center justify-between gap-3 sm:gap-4">
           <nav className="flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-navy/40">
             <Link to="/" className="transition-colors hover:text-gold">
@@ -357,7 +361,7 @@ const ProductPage = () => {
         </div>
       </div>
 
-      <div className="container py-8">
+      <div className="container pb-24 pt-2 sm:pb-32">
         <div className="grid gap-10 lg:grid-cols-[minmax(0,1.05fr)_minmax(0,1fr)]">
           <div className="space-y-6 lg:sticky lg:top-28 lg:self-start">
             <div className="relative aspect-square overflow-hidden rounded-[1.5rem] border border-gold-antique/10 bg-white shadow-premium group">
@@ -460,7 +464,7 @@ const ProductPage = () => {
                             Product Features
                           </h2>
                         </div>
-                        <ul className="grid gap-3">
+                        <ul className="grid gap-3 sm:grid-cols-2">
                           {product.features.map((feature, index) => (
                             <li
                               key={index}
@@ -504,7 +508,7 @@ const ProductPage = () => {
                             What can this power?
                           </h2>
                         </div>
-                        <ul className="grid gap-3">
+                        <ul className="grid gap-3 sm:grid-cols-2">
                           {powerInfo.bullets.map((bullet, index) => (
                             <li
                               key={index}
@@ -580,6 +584,28 @@ const ProductPage = () => {
                           </div>
                         ))}
                       </div>
+                    ) : product.reviews ? (
+                      <div className="mb-6 rounded-2xl border border-gold-antique/10 bg-ivory/50 p-4 text-center">
+                        <div className="mb-2 flex items-center justify-center gap-1">
+                          {[1, 2, 3, 4, 5].map((star) => (
+                            <Star
+                              key={star}
+                              className={cn(
+                                'h-4 w-4',
+                                star <= Math.round(product.rating || 0)
+                                  ? 'fill-gold text-gold'
+                                  : 'fill-gray-200 text-gray-200'
+                              )}
+                            />
+                          ))}
+                        </div>
+                        <p className="text-[13px] font-bold text-navy">
+                          {(product.rating || 0).toFixed(1)} from {product.reviews} verified ratings
+                        </p>
+                        <p className="mt-1 text-[12px] text-navy/50">
+                          Share your experience to help other shoppers — your review appears here.
+                        </p>
+                      </div>
                     ) : (
                       <p className="mb-6 text-center text-[13px] text-navy/50">
                         No reviews yet. Be the first to review this product!
@@ -646,13 +672,13 @@ const ProductPage = () => {
                   </div>
                   </div>
 
-                  <aside className="space-y-4 order-1 xl:order-2">
-                  <div className="overflow-hidden rounded-[1.5rem] border border-gold-antique/10 bg-navy p-5 text-champagne shadow-xl md:p-6">
-                    <p className="text-[11px] font-bold uppercase tracking-[0.24em] text-champagne/70">
+                  <aside className="space-y-3 order-1 xl:order-2">
+                  <div className="overflow-hidden rounded-[1.5rem] border border-gold-antique/10 bg-navy p-3 text-champagne shadow-sm">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-champagne/70">
                       Today&apos;s Price
                     </p>
-                    <div className="mt-3 flex flex-wrap items-end gap-3">
-                      <span className="break-words text-4xl font-bold tracking-tight text-gold">{formatPrice(product.price)}</span>
+                    <div className="mt-2 flex flex-wrap items-end gap-2">
+                      <span className="break-words text-2xl font-bold tracking-tight text-gold">{formatPrice(product.price)}</span>
                       {product.originalPrice && (
                         <span className="text-base text-champagne/50 line-through">
                           {formatPrice(product.originalPrice)}
@@ -660,12 +686,12 @@ const ProductPage = () => {
                       )}
                     </div>
                     {product.originalPrice && discount > 0 && (
-                      <p className="mt-2 break-words text-sm text-champagne/75">
+                      <p className="mt-1 break-words text-xs text-champagne/75">
                         You save {formatPrice(product.originalPrice - product.price)} today.
                       </p>
                     )}
 
-                    <div className="mt-6 flex items-center gap-3 rounded-2xl bg-white/5 px-4 py-3">
+                    <div className="mt-4 flex items-center gap-3 rounded-2xl bg-white/5 px-3 py-2.5">
                       <div
                         className={cn(
                           'h-3 w-3 rounded-full shadow-inner',
@@ -677,32 +703,9 @@ const ProductPage = () => {
                     </span>
                     </div>
 
-                    <div className="mt-6 grid grid-cols-[auto_1fr_auto] items-center gap-3 rounded-2xl border border-white/10 bg-white/5 p-2">
-                      <button
-                        type="button"
-                        onClick={() => setQuantity((current) => Math.max(1, current - 1))}
-                        className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 text-champagne transition-colors hover:bg-white/20"
-                        aria-label="Decrease quantity"
-                      >
-                        <Minus className="h-4 w-4" />
-                      </button>
-                      <div className="text-center">
-                        <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-champagne/60">Quantity</p>
-                        <p className="text-lg font-bold text-white">{quantity}</p>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => setQuantity((current) => Math.min(Math.max(product.inStock, 1), current + 1))}
-                        className="flex h-11 w-11 items-center justify-center rounded-xl bg-white/10 text-champagne transition-colors hover:bg-white/20"
-                        aria-label="Increase quantity"
-                      >
-                        <Plus className="h-4 w-4" />
-                      </button>
-                    </div>
-
-                    <div className="mt-6 grid gap-3">
+                    <div className="mt-4 grid gap-2">
                       {product.outOfStock ? (
-                        <div className="flex items-center justify-center gap-2 rounded-2xl bg-red-50 border border-red-200 py-4 text-sm font-bold uppercase tracking-widest text-red-700">
+                        <div className="flex items-center justify-center gap-2 rounded-2xl bg-red-50 border border-red-200 py-3 text-xs font-bold uppercase tracking-widest text-red-700">
                           <span className="h-2 w-2 rounded-full bg-red-500 animate-pulse" />
                           Out of Stock
                         </div>
@@ -711,9 +714,9 @@ const ProductPage = () => {
                           <button
                             type="button"
                             onClick={handleAddToCart}
-                            className="flex items-center justify-center gap-3 rounded-2xl bg-gold py-4 text-sm font-bold uppercase tracking-widest text-navy transition-all duration-300 hover:bg-gold-antique hover:text-white"
+                            className="flex items-center justify-center gap-2 rounded-2xl bg-gold py-3 text-xs font-bold uppercase tracking-widest text-navy transition-all duration-300 hover:bg-gold-antique hover:text-white"
                           >
-                            <ShoppingCart className="h-5 w-5" />
+                            <ShoppingCart className="h-4 w-4" />
                             Add to cart
                           </button>
                           <button
@@ -722,7 +725,7 @@ const ProductPage = () => {
                               handleAddToCart();
                               navigate('/cart');
                             }}
-                            className="flex items-center justify-center gap-3 rounded-2xl border border-gold/40 bg-transparent py-4 text-sm font-bold uppercase tracking-widest text-gold transition-all duration-300 hover:bg-gold hover:text-navy"
+                            className="flex items-center justify-center gap-2 rounded-2xl border border-gold/40 bg-transparent py-3 text-xs font-bold uppercase tracking-widest text-gold transition-all duration-300 hover:bg-gold hover:text-navy"
                           >
                             Buy now
                           </button>
@@ -730,7 +733,7 @@ const ProductPage = () => {
                       )}
                     </div>
 
-                    <div className="mt-5 flex items-center gap-5 text-[10px] font-bold uppercase tracking-[0.16em] text-champagne/60 md:text-[11px]">
+                    <div className="mt-4 flex items-center gap-5 text-[10px] font-bold uppercase tracking-[0.16em] text-champagne/60 md:text-[11px]">
                       <button type="button" className="group flex items-center gap-2 transition-colors hover:text-gold">
                         <Heart className="h-4 w-4 transition-transform group-hover:scale-110" />
                         Wishlist

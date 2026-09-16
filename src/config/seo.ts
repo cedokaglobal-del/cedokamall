@@ -146,6 +146,13 @@ export const getStoreSchema = (): StructuredDataNode => ({
   },
 });
 
+interface ReviewSchema {
+  author: string;
+  rating: number;
+  text: string;
+  date?: string;
+}
+
 interface ProductData {
   name: string;
   description: string;
@@ -157,6 +164,7 @@ interface ProductData {
   rating?: number;
   reviews?: number;
   category?: string;
+  reviewList?: ReviewSchema[];
 }
 
 export const getProductSchema = (product: ProductData): StructuredDataNode => {
@@ -197,6 +205,23 @@ export const getProductSchema = (product: ProductData): StructuredDataNode => {
       bestRating: "5",
       worstRating: "1",
     };
+  }
+
+  if (product.reviewList && product.reviewList.length > 0) {
+    schema.review = product.reviewList.map((review) => ({
+      "@type": "Review",
+      ...(review.date ? { datePublished: review.date } : {}),
+      reviewRating: {
+        "@type": "Rating",
+        ratingValue: review.rating,
+        bestRating: "5",
+        worstRating: "1",
+      },
+      author: {
+        "@type": "Person",
+        name: review.author,
+      },
+    }));
   }
 
   return schema;
