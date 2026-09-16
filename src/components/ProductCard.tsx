@@ -48,7 +48,7 @@ const ProductCard = ({ product, priority = false }: { product: Product, priority
       <div className="p-2 sm:p-5 flex flex-col gap-2 sm:gap-3">
         {/* Product Name — fixed 2-line height so cards in a row stay aligned */}
         <Link to={`/product/${product.id}`} state={{ from }}>
-          <h3 className="font-serif text-sm sm:text-lg font-bold leading-snug text-charcoal transition-colors duration-200 hover:text-gold line-clamp-2 group-hover:text-gold min-h-[2rem] sm:min-h-[3.25rem]">
+          <h3 className="font-serif text-[12px] sm:text-base font-bold leading-snug text-charcoal transition-colors duration-200 hover:text-gold line-clamp-2 group-hover:text-gold min-h-[1.75rem] sm:min-h-[2.5rem]">
             {product.name}
           </h3>
         </Link>
@@ -59,12 +59,12 @@ const ProductCard = ({ product, priority = false }: { product: Product, priority
             <Star
               key={index}
               className={cn(
-                'h-2 w-2 sm:h-2.5 sm:w-2.5 transition-colors duration-200',
+                'h-[9px] w-[9px] sm:h-2 sm:w-2 transition-colors duration-200',
                 index < Math.round(product.rating || 0) ? 'fill-gold text-gold' : 'fill-gray-200 text-gray-200'
               )}
             />
           ))}
-          <span className="ml-1 text-xs sm:text-sm font-bold text-charcoal/60 tabular-nums">
+          <span className="ml-1 text-[10px] sm:text-xs font-bold text-charcoal/60 tabular-nums">
             ({product.reviews})
           </span>
         </div>
@@ -72,11 +72,11 @@ const ProductCard = ({ product, priority = false }: { product: Product, priority
         {/* Price Section */}
         <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-gold-antique/10">
           <div className="flex min-w-0 flex-col">
-            <span className="break-words text-sm sm:text-lg font-bold tracking-tight text-gold transition-colors duration-200">
+            <span className="break-words text-[12px] sm:text-base font-bold tracking-tight text-gold transition-colors duration-200">
               {formatPrice(product.price)}
             </span>
             {product.originalPrice && (
-              <span className="text-xs sm:text-sm text-charcoal/40 line-through">
+              <span className="text-[10px] sm:text-xs text-charcoal/40 line-through">
                 {formatPrice(product.originalPrice)}
               </span>
             )}
