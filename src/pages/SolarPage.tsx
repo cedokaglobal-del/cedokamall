@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState, useCallback } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Sun, ArrowLeft } from 'lucide-react';
+import { Sun, ArrowLeft, Search } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
@@ -41,7 +41,8 @@ const SolarPage = () => {
   const urlCategory = searchParams.get('category') || 'all';
   const [sortBy, setSortBy] = useState('popular');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 0]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const searchTerm = searchParams.get('q') || '';
+  const [searchInput, setSearchInput] = useState(searchTerm);
   const hasInitializedPriceRange = useRef(false);
 
   const maxProductPrice = useMemo(
@@ -109,15 +110,34 @@ const SolarPage = () => {
           return scoreB - scoreA;
         });
     }
-  }, [solarProducts, activeCategory, priceRange, sortBy]);
+  }, [solarProducts, activeCategory, priceRange, searchTerm, sortBy]);
 
   const handleSearchChange = useCallback(
     (term: string) => {
+      setSearchInput(term);
       const params = new URLSearchParams(searchParams);
       if (term.trim()) {
         params.set('q', term.trim());
       } else {
         params.delete('q');
+      }
+      setSearchParams(params, { replace: true });
+    },
+    [searchParams, setSearchParams]
+  );
+
+  // Keep the visible input aligned with the URL, but never fight active typing.
+  useEffect(() => {
+    setSearchInput((current) => (current.trim() === searchTerm ? current : searchTerm));
+  }, [searchTerm]);
+
+  const handleTabChange = useCallback(
+    (value: string) => {
+      const params = new URLSearchParams(searchParams);
+      if (value === 'all') {
+        params.delete('category');
+      } else {
+        params.set('category', value);
       }
       setSearchParams(params, { replace: true });
     },
@@ -132,7 +152,9 @@ const SolarPage = () => {
   const resetFilters = useCallback(() => {
     const params = new URLSearchParams(searchParams);
     params.delete('category');
+    params.delete('q');
     setSearchParams(params, { replace: true });
+    setSearchInput('');
     setPriceRange([0, sliderMax]);
   }, [searchParams, setSearchParams, sliderMax]);
 
@@ -192,15 +214,17 @@ const SolarPage = () => {
               <ArrowLeft className="h-4 w-4" />
               Home
             </Link>
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <div className="relative w-full md:w-56">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-navy/40" aria-hidden="true" />
             <input
               type="text"
               placeholder="Search products…"
               value={searchInput}
               onChange={(e) => handleSearchChange(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearchChange(searchInput)}
-              className="pl-10 py-1.5 bg-transparent text-sm text-navy placeholder:text-navy/30 focus:outline-none focus:ring-1 focus:ring-gold"
+              className="w-full rounded-md border border-gold-antique/20 bg-white py-2.5 pl-9 pr-3 text-sm text-navy placeholder:text-navy/30 focus:outline-none focus:ring-1 focus:ring-gold"
             />
+            </div>
           </div>
         </div>
 
@@ -260,12 +284,7 @@ const SolarPage = () => {
                         Try adjusting your filters or explore other categories
                       </p>
                       <button
-                        onClick={() => {
-                          const params = new URLSearchParams(searchParams);
-                          params.delete('category');
-                          setSearchParams(params, { replace: true });
-                          setPriceRange([0, sliderMax]);
-                        }}
+                        onClick={resetFilters}
                         className="mt-6 rounded-md bg-navy px-8 py-3 text-xs font-bold uppercase tracking-widest text-gold transition-all hover:bg-gold hover:text-navy"
                       >
                         Reset Filters

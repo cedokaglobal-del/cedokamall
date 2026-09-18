@@ -40,6 +40,7 @@ export interface ProductFormData {
   sku?: string;
   color?: string;
   badge?: string;
+  outOfStock?: boolean;
 }
 
 export interface ProductFilter {

@@ -48,7 +48,7 @@ const ProductCard = ({ product, priority = false }: { product: Product, priority
       <div className="p-2 sm:p-5 flex flex-col gap-2 sm:gap-3">
         {/* Product Name — fixed 2-line height so cards in a row stay aligned */}
         <Link to={`/product/${product.id}`} state={{ from }}>
-          <h3 className="font-serif text-[12px] sm:text-base font-bold leading-snug text-charcoal transition-colors duration-200 hover:text-gold line-clamp-2 group-hover:text-gold min-h-[1.75rem] sm:min-h-[2.5rem]">
+          <h3 className="font-serif text-[11px] sm:text-[15px] font-bold leading-snug text-charcoal transition-colors duration-200 hover:text-gold line-clamp-2 group-hover:text-gold min-h-[1.6rem] sm:min-h-[2.35rem]">
             {product.name}
           </h3>
         </Link>
@@ -72,7 +72,7 @@ const ProductCard = ({ product, priority = false }: { product: Product, priority
         {/* Price Section */}
         <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-gold-antique/10">
           <div className="flex min-w-0 flex-col">
-            <span className="break-words text-[12px] sm:text-base font-bold tracking-tight text-gold transition-colors duration-200">
+            <span className="break-words text-[11px] sm:text-[15px] font-bold tracking-tight text-gold transition-colors duration-200">
               {formatPrice(product.price)}
             </span>
             {product.originalPrice && (

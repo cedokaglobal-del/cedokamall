@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { Sprout, MessageSquare, Leaf } from 'lucide-react';
+import { Sprout, MessageSquare, Leaf, Search } from 'lucide-react';
 import { FilterSidebar, FilterMobileBar, type FilterOption } from '@/components/CategoryFilter';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
@@ -23,7 +23,8 @@ const FarmsPage = () => {
   const urlCategory = searchParams.get('category') || 'all';
   const [sortBy, setSortBy] = useState('popular');
   const [priceRange, setPriceRange] = useState<[number, number]>([0, 0]);
-  const [searchTerm, setSearchTerm] = useState('');
+  const [searchTerm, setSearchTerm] = useState(() => searchParams.get('q') || '');
+  const [searchInput, setSearchInput] = useState(() => searchParams.get('q') || '');
   const hasInitializedPriceRange = useRef(false);
 
   const activeCategory = useMemo(() => {
@@ -99,6 +100,7 @@ const FarmsPage = () => {
 
   const handleSearchChange = useCallback(
     (term: string) => {
+      setSearchInput(term);
       setSearchTerm(term);
       const params = new URLSearchParams(searchParams);
       if (term.trim()) {
@@ -108,8 +110,15 @@ const FarmsPage = () => {
       }
       setSearchParams(params, { replace: true });
     },
-    [searchTerm, setSearchParams]
+    [searchParams, setSearchParams]
   );
+
+  // Keep the input and the active filter in step with the URL (e.g. shared links).
+  useEffect(() => {
+    const urlQuery = searchParams.get('q') || '';
+    setSearchInput((current) => (current.trim() === urlQuery ? current : urlQuery));
+    setSearchTerm((current) => (current.trim() === urlQuery ? current : urlQuery));
+  }, [searchParams]);
 
   const filterOptions: FilterOption[] = useMemo(() => {
     const counts: Record<string, number> = {};
@@ -131,7 +140,10 @@ const FarmsPage = () => {
   const resetFilters = () => {
     const params = new URLSearchParams(searchParams);
     params.delete('category');
+    params.delete('q');
     setSearchParams(params, { replace: true });
+    setSearchInput('');
+    setSearchTerm('');
     setPriceRange([0, sliderMax]);
   };
 
@@ -196,15 +208,17 @@ const FarmsPage = () => {
             >
               Home
             </Link>
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <div className="relative w-full md:w-56">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-navy/40" aria-hidden="true" />
             <input
               type="text"
               placeholder="Search…"
               value={searchInput}
               onChange={(e) => handleSearchChange(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearchChange(searchInput)}
-              className="pl-10 py-1.5 bg-transparent text-sm text-navy placeholder:text-navy/30 focus:outline-none focus:ring-1 focus:ring-gold"
+              className="w-full rounded-md border border-gold-antique/20 bg-white py-2.5 pl-9 pr-3 text-sm text-navy placeholder:text-navy/30 focus:outline-none focus:ring-1 focus:ring-gold"
             />
+            </div>
           </div>
         </div>
 
@@ -225,7 +239,7 @@ const FarmsPage = () => {
 <FilterSidebar
             options={filterOptions}
             activeSlug={urlCategory}
-            onSelect={filterTab}
+            onSelect={handleTabChange}
             priceMax={sliderMax}
             priceStep={sliderStep}
             priceValue={priceRange[1]}

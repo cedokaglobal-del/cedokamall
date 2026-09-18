@@ -90,6 +90,7 @@ const buildInitialFormData = (product?: Product): ProductFormData => {
     features,
     color: product?.color || '',
     badge: product?.badge || undefined,
+    outOfStock: product?.outOfStock ?? false,
   };
 };
 

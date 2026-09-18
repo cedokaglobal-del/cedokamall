@@ -57,14 +57,14 @@ export const FilterSidebar = ({
           <SlidersHorizontal className="h-5 w-5 text-gold" aria-hidden="true" />
           Filter by
         </h2>
-        <div className="mt-3 rounded-xl border border-gold-antique/10 bg-white p-3">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+        <div className="relative mt-3 rounded-xl border border-gold-antique/10 bg-white p-3">
+          <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-navy/40" aria-hidden="true" />
           <input
             type="text"
             placeholder="Search products…"
             value={searchTerm}
             onChange={(e) => handleSearchChange(e.target.value)}
-            className="pl-10 py-1.5 bg-transparent text-sm text-navy placeholder:text-navy/30 focus:outline-none focus:ring-1 focus:ring-gold"
+            className="w-full rounded-lg border border-gold-antique/10 bg-ivory py-2 pl-9 pr-3 text-sm text-navy placeholder:text-navy/30 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold"
           />
         </div>
         <ul className="space-y-1.5 mt-3">
@@ -182,14 +182,14 @@ export const FilterMobileBar = ({
 
       {open && (
         <div className="mt-3 rounded-xl border border-gold-antique/10 bg-white p-4 shadow-sm">
-          <div className="mb-3">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+          <div className="relative mb-3">
+            <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-navy/40" aria-hidden="true" />
             <input
               type="text"
               placeholder="Search products…"
               value={searchTerm}
               onChange={(e) => handleSearchChange(e.target.value)}
-              className="pl-10 py-1.5 bg-transparent text-sm text-navy placeholder:text-navy/30 focus:outline-none focus:ring-1 focus:ring-gold"
+              className="w-full rounded-lg border border-gold-antique/10 bg-ivory py-2 pl-9 pr-3 text-sm text-navy placeholder:text-navy/30 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold"
             />
           </div>
           <p className="mb-2.5 text-[10px] font-bold uppercase tracking-widest text-navy/45">

@@ -4,6 +4,8 @@ import { Link } from 'react-router-dom';
 import { cn } from '@/lib/utils';
 import { useCartStore } from '@/store/cartStore';
 import { useProductStore } from '@/store/productStore';
+import { useSolarPlanStore } from '@/store/solarPlanStore';
+import type { SolarPlan, SolarPlanItem } from '@/types/solarPlan';
 
 const PLACEHOLDER_IMAGE = 'data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAwIiBoZWlnaHQ9IjQwMCIgdmlld0JveD0iMCAwIDQwMCA0MDAiIGZpbGw9Im5vbmUiIHhtbG5zPSJodHRwOi8vd3d3LnczLm9yZy8yMDAwL3N2ZyI+PHJlY3Qgd2lkdGg9IjQwMCIgaGVpZ2h0PSI0MDAiIGZpbGw9IiNFNkUwREIiLz48cGF0aCBkPSJNMjAwIDExMEwxMjAgMjUwaDE2MEwyMDAgMTEweiIgZmlsbD0iI0M5QTg0QyIvPjwvc3ZnPg==';
 
@@ -223,6 +225,91 @@ const calcSystemComponents = (results: CalculatorResults, products: Array<{ id: 
   ];
 };
 
+/* ------------------------------------------------------------------------- *
+ * Drafted-package matching
+ * The calculator sizes a system from real appliances; these helpers read the
+ * capacity we drafted into each solar plan (items first, text as fallback) so
+ * the result can be pointed at the closest ready-made package.
+ * ------------------------------------------------------------------------- */
+const numberFromText = (text: string, pattern: RegExp) => {
+  const match = text.match(pattern);
+  return match ? Number(match[1]) || 0 : 0;
+};
+
+interface PlanMetrics {
+  panelW: number;
+  inverterW: number;
+  batteryWh: number;
+}
+
+const getPlanMetrics = (plan: SolarPlan): PlanMetrics => {
+  const items: SolarPlanItem[] = Array.isArray(plan.items) ? plan.items : [];
+  const quantityOf = (item: SolarPlanItem) => Math.max(1, Number(item.quantity) || 1);
+  const sumWatts = (type: SolarPlanItem['type']) =>
+    items
+      .filter((item) => item.type === type)
+      .reduce((total, item) => total + (Number(item.watts) || 0) * quantityOf(item), 0);
+
+  const text = [
+    plan.name,
+    plan.capacity,
+    plan.description,
+    plan.bestFor,
+    plan.notes,
+    ...(plan.canPower ?? []),
+    ...items.map((item) => item.name),
+  ]
+    .filter(Boolean)
+    .join(' ');
+
+  const batteryFromItems = items
+    .filter((item) => item.type === 'battery')
+    .reduce((total, item) => {
+      const direct = (Number(item.watts) || 0) * quantityOf(item);
+      if (direct > 0) return total + direct;
+      const ampHours = numberFromText(item.name, /(\d+(?:\.\d+)?)\s*ah\b/i);
+      return total + ampHours * (Number(item.volts) || 0) * quantityOf(item);
+    }, 0);
+
+  const kwhFromText = numberFromText(text, /(\d+(?:\.\d+)?)\s*kwh\b/i) * 1000;
+  const kvaFromText = numberFromText(text, /(\d+(?:\.\d+)?)\s*kva\b/i) * 1000;
+  const kwFromText = numberFromText(text, /(\d+(?:\.\d+)?)\s*kw(?!h)\b/i) * 1000;
+  const panelWFromText = numberFromText(text, /(\d{3,4})\s*(?:w|wp|watt|watts)\b/i);
+  const ahFromText = numberFromText(text, /(\d+(?:\.\d+)?)\s*ah\b/i);
+  const voltsFromText = numberFromText(text, /(\d+(?:\.\d+)?)\s*v\b/i) || 12;
+
+  return {
+    panelW: sumWatts('panel') || Math.max(kwFromText, panelWFromText),
+    inverterW: sumWatts('inverter') || Math.max(kvaFromText, kwFromText),
+    batteryWh: batteryFromItems || Math.max(kwhFromText, ahFromText * voltsFromText),
+  };
+};
+
+interface RankedPlan {
+  plan: SolarPlan;
+  metrics: PlanMetrics;
+  coverage: number | null;
+}
+
+const describeLoadProfile = (dailyKwh: number) => {
+  if (dailyKwh <= 1) {
+    return { label: 'Apartment basic plan', detail: 'lights, fans, TV, decoder, WiFi and phone charging' };
+  }
+  if (dailyKwh <= 2.5) {
+    return { label: 'Basic home plan', detail: 'apartment essentials plus a fridge and laptop' };
+  }
+  if (dailyKwh <= 5) {
+    return { label: 'Economy home plan', detail: 'fridge, freezer, pumping machine and entertainment' };
+  }
+  if (dailyKwh <= 10) {
+    return { label: 'Standard family plan', detail: 'full family home with occasional iron, microwave or AC' };
+  }
+  if (dailyKwh <= 20) {
+    return { label: 'Premium family plan', detail: 'large home or small office running heavy loads' };
+  }
+  return { label: 'Commercial plan', detail: 'business-scale load with heavy daytime equipment' };
+};
+
 const energyIconMap: Record<string, React.ReactNode> = {
   panel: <Sun className="h-4 w-4" />,
   battery: <Battery className="h-4 w-4" />,
@@ -256,6 +343,19 @@ const EnergyCalculator = () => {
   const addItem = useCartStore((s) => s.addItem);
   const toggleCart = useCartStore((s) => s.toggleCart);
   const products = useProductStore((s) => s.products);
+  const solarPlans = useSolarPlanStore((s) => s.plans);
+  const fetchSolarPlans = useSolarPlanStore((s) => s.fetchPlans);
+  const plansRequestedRef = useRef(false);
+  const [plansLoading, setPlansLoading] = useState(false);
+
+  // Drafted packages power the recommendation — load them once, even when the
+  // calculator is opened from a drawer instead of the solar page.
+  useEffect(() => {
+    if (plansRequestedRef.current) return;
+    plansRequestedRef.current = true;
+    setPlansLoading(true);
+    void fetchSolarPlans().finally(() => setPlansLoading(false));
+  }, [fetchSolarPlans]);
 
   useEffect(() => {
     saveToStorage({ appliances, autonomy, dod, peakSunHours, inverterEff, batteryEff, batteryType, mode, tempDerating, systemLosses });
@@ -324,6 +424,51 @@ const EnergyCalculator = () => {
     const controllerAmps = Math.ceil((panelCount * panelWattage) / results.systemVoltage * 1.25);
     return { recommendedInverter, batteryKwh, panelWattage, panelCount, controllerAmps };
   }, [results]);
+
+  // What the appliances actually demand, used to score our drafted packages.
+  const requiredSystem = useMemo(
+    () => ({
+      panelW: results.solarPanelW,
+      inverterW: results.inverterW,
+      batteryWh: results.batteryCapacityAh * results.systemVoltage,
+    }),
+    [results]
+  );
+
+  const loadProfile = useMemo(() => describeLoadProfile(results.totalKwh), [results.totalKwh]);
+
+  const planMatches = useMemo(() => {
+    const active = solarPlans.filter((plan) => plan.isActive);
+    const ranked: RankedPlan[] = active.map((plan) => {
+      const metrics = getPlanMetrics(plan);
+      const ratios: number[] = [];
+      if (metrics.panelW > 0 && requiredSystem.panelW > 0) ratios.push(metrics.panelW / requiredSystem.panelW);
+      if (metrics.inverterW > 0 && requiredSystem.inverterW > 0) ratios.push(metrics.inverterW / requiredSystem.inverterW);
+      if (metrics.batteryWh > 0 && requiredSystem.batteryWh > 0) ratios.push(metrics.batteryWh / requiredSystem.batteryWh);
+      return { plan, metrics, coverage: ratios.length ? Math.min(...ratios) : null };
+    });
+
+    // Smallest package that still covers the load wins; otherwise the closest one.
+    const covering = ranked
+      .filter((entry) => entry.coverage !== null && entry.coverage >= 0.95)
+      .sort((a, b) => (a.coverage as number) - (b.coverage as number));
+    const fallback = ranked
+      .filter((entry) => entry.coverage !== null)
+      .sort((a, b) => (b.coverage as number) - (a.coverage as number));
+
+    const best = covering[0] ?? fallback[0] ?? ranked[0] ?? null;
+    const others = ranked
+      .filter((entry) => entry.plan.id !== best?.plan.id)
+      .sort((a, b) => (b.coverage ?? -1) - (a.coverage ?? -1))
+      .slice(0, 2)
+      .sort((a, b) => (a.plan.price || 0) - (b.plan.price || 0));
+
+    return {
+      best,
+      others,
+      bestIsCovering: Boolean(best && best.coverage !== null && best.coverage >= 0.95),
+    };
+  }, [solarPlans, requiredSystem]);
 
   const applianceNames = useMemo(() => new Set(appliances.map((a) => a.name)), [appliances]);
 
@@ -1015,6 +1160,115 @@ const EnergyCalculator = () => {
               Rule of thumb: keep heavy loads (iron, AC, pump, microwave) on daytime sun, give batteries one full
               sunny day to recover after cloudy spells, and always use a certified installer for wiring and protection.
             </p>
+          </div>
+
+          {/* Recommended package from our drafted plans */}
+          <div className="rounded-xl bg-white/5 border border-gold/20 p-4 md:p-5 mb-5">
+            <div className="flex items-center gap-2 mb-3">
+              <Sun className="h-4 w-4 text-gold" />
+              <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-gold">Suggested Package</h4>
+            </div>
+
+            <p className="text-[13px] leading-relaxed text-champagne/80">
+              Your load profile fits a <strong className="text-champagne">{loadProfile.label}</strong> &mdash;{' '}
+              {loadProfile.detail}.{' '}
+              {plansLoading
+                ? 'Checking our drafted packages…'
+                : planMatches.best
+                  ? planMatches.bestIsCovering
+                    ? 'This drafted package covers it, so start from here.'
+                    : 'No drafted package covers it fully yet, so here is the closest one plus the exact sizing above.'
+                  : 'Our engineers will match a drafted package to this sizing.'}
+            </p>
+
+            {planMatches.best ? (
+              <div className="mt-3 rounded-xl border border-gold/30 bg-gold/10 p-3.5 sm:p-4">
+                <div className="flex flex-wrap items-start justify-between gap-2">
+                  <div className="min-w-0">
+                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold">
+                      {planMatches.bestIsCovering ? 'Best match' : 'Closest match'}
+                    </p>
+                    <p className="text-sm sm:text-base font-bold text-champagne">{planMatches.best.plan.name}</p>
+                    {(planMatches.best.plan.capacity || planMatches.best.plan.bestFor) && (
+                      <p className="mt-0.5 text-[11px] leading-relaxed text-champagne/60">
+                        {[planMatches.best.plan.capacity, planMatches.best.plan.bestFor].filter(Boolean).join(' • ')}
+                      </p>
+                    )}
+                  </div>
+                  {planMatches.best.plan.price > 0 && (
+                    <p className="text-sm sm:text-base font-bold text-gold">
+                      ₦{planMatches.best.plan.price.toLocaleString()}
+                    </p>
+                  )}
+                </div>
+
+                {planMatches.best.coverage !== null && (
+                  <p className="mt-2 text-[11px] sm:text-xs leading-relaxed text-champagne/70">
+                    Supplies about{' '}
+                    <strong className="text-champagne">{Math.round(planMatches.best.coverage * 100)}%</strong> of the{' '}
+                    {results.totalKwh} kWh/day system sized above ({engineerVerdict.batteryKwh} kWh battery,{' '}
+                    {engineerVerdict.panelCount} &times; {engineerVerdict.panelWattage}W panels,{' '}
+                    {engineerVerdict.recommendedInverter.toLocaleString()}W inverter).
+                  </p>
+                )}
+
+                <div className="mt-3 flex flex-wrap gap-2">
+                  <Link
+                    to="/solar"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-gold px-3.5 py-2 text-[10px] font-bold uppercase tracking-widest text-navy transition-all hover:bg-gold-antique hover:text-white"
+                  >
+                    See this plan
+                  </Link>
+                  <a
+                    href={`https://wa.me/2349128817136?text=${encodeURIComponent(
+                      `Hi Cedokamall! The calculator suggests the ${planMatches.best.plan.name} package for my ${results.totalKwh}kWh/day load (battery ${results.batteryCapacityAh}Ah @ ${results.systemVoltage}V, panels ${results.solarPanelW}Wp, inverter ${results.inverterW}W). Please confirm it fits.`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-gold/40 px-3.5 py-2 text-[10px] font-bold uppercase tracking-widest text-gold transition-all hover:bg-gold hover:text-navy"
+                  >
+                    <MessageSquare className="h-3.5 w-3.5" />
+                    Ask about it
+                  </a>
+                </div>
+              </div>
+            ) : (
+              <div className="mt-3 rounded-xl border border-white/10 bg-white/5 p-3.5 text-[11px] sm:text-xs leading-relaxed text-champagne/70">
+                No drafted package matches this load yet &mdash; send the sizing above to our engineers and we will
+                recommend the right one.
+              </div>
+            )}
+
+            {planMatches.others.length > 0 && (
+              <div className="mt-4">
+                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-champagne/50">Other drafted options</p>
+                <ul className="mt-2 space-y-2">
+                  {planMatches.others.map((entry) => (
+                    <li
+                      key={entry.plan.id}
+                      className="flex flex-wrap items-center justify-between gap-2 rounded-lg border border-white/10 bg-white/5 px-3.5 py-2.5"
+                    >
+                      <span className="min-w-0">
+                        <span className="block truncate text-xs sm:text-sm font-semibold text-champagne">
+                          {entry.plan.name}
+                        </span>
+                        <span className="block truncate text-[10px] text-champagne/50">
+                          {[
+                            entry.plan.capacity,
+                            entry.coverage !== null ? `${Math.round(entry.coverage * 100)}% of this load` : null,
+                          ]
+                            .filter(Boolean)
+                            .join(' • ') || entry.plan.bestFor}
+                        </span>
+                      </span>
+                      {entry.plan.price > 0 && (
+                        <span className="text-xs font-bold text-gold">₦{entry.plan.price.toLocaleString()}</span>
+                      )}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
           </div>
 
           {/* Professional Advised Solar System */}

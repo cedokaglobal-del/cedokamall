@@ -47,7 +47,7 @@ const MobileBottomNav = () => {
             >
               <Icon className={cn('h-4 w-4', active && 'text-gold')} />
               <span className={cn(
-                'text-[8px] font-bold uppercase tracking-wider whitespace-nowrap leading-tight',
+                'max-w-full truncate text-[8px] font-bold uppercase tracking-tight leading-tight',
                 active ? 'text-gold' : 'text-champagne/40'
               )}>
                 {item.label}

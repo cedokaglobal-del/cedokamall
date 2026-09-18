@@ -221,7 +221,8 @@ const buildProductPayload = (productData: ProductFormData) => {
     images,
     category: productData.category,
     stock: productData.inStock,
-    out_of_stock: productData.outOfStock ?? false,
+    // Only send the flag when a caller actually provides it, so admin edits never reset it.
+    ...(productData.outOfStock !== undefined ? { out_of_stock: productData.outOfStock } : {}),
     seller: productData.seller,
     sku: productData.sku || null,
     warranty: productData.warranty || null,
@@ -420,6 +421,7 @@ export const useProductStore = create<ProductState>((set, get) => ({
         color: updates.color ?? current?.color,
         features: mergedFeatures,
         badge: updates.badge ?? current?.badge,
+        outOfStock: updates.outOfStock ?? current?.outOfStock,
       });
 
       const { data, error } = await supabase

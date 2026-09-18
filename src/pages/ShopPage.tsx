@@ -1,6 +1,6 @@
-import { useEffect, useMemo, useRef, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Link, useSearchParams } from 'react-router-dom';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Search } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
@@ -21,7 +21,7 @@ import { trackSearch } from '@/utils/tracking';
 const DEFAULT_PRICE_RANGE: [number, number] = [0, 0];
 
 const ShopPage = () => {
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const categoryParam = searchParams.get('category')?.toLowerCase();
   const brandParam = searchParams.get('brand')?.trim();
   const searchTerm = searchParams.get('q') || searchParams.get('search');
@@ -46,7 +46,7 @@ const ShopPage = () => {
   const [selectedCategory, setSelectedCategory] = useState(categoryParam || 'all');
   const [sortBy, setSortBy] = useState('popular');
   const [priceRange, setPriceRange] = useState<[number, number]>(DEFAULT_PRICE_RANGE);
-  const [searchInput, setSearchInput] = useState('');
+  const [searchInput, setSearchInput] = useState(() => searchParams.get('q') || '');
   const hasInitializedPriceRange = useRef(false);
 
   const maxProductPrice = useMemo(
@@ -72,13 +72,15 @@ const ShopPage = () => {
   const resetFilters = () => {
     setSelectedCategory('all');
     setPriceRange([0, sliderMax]);
+    setSearchInput('');
     const params = new URLSearchParams();
     setSearchParams(params, { replace: true });
   };
 
   const handleSearchChange = useCallback(
     (term: string) => {
-      const params = new URLSearchParams();
+      setSearchInput(term);
+      const params = new URLSearchParams(searchParams);
       if (term.trim()) {
         params.set('q', term.trim());
       } else {
@@ -86,8 +88,14 @@ const ShopPage = () => {
       }
       setSearchParams(params, { replace: true });
     },
-    [setSearchParams]
+    [searchParams, setSearchParams]
   );
+
+  // Keep the visible input aligned with the URL, but never fight active typing.
+  useEffect(() => {
+    const urlQuery = searchParams.get('q') || '';
+    setSearchInput((current) => (current.trim() === urlQuery ? current : urlQuery));
+  }, [searchParams]);
   const activeCategory = useMemo(
     () => categories.find((category) => category.slug === (categoryParam || selectedCategory)),
     [categories, categoryParam, selectedCategory]
@@ -286,15 +294,17 @@ const ShopPage = () => {
               <ArrowLeft className="h-4 w-4" />
               Home
             </Link>
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <div className="relative w-full md:w-56">
+              <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-navy/40" aria-hidden="true" />
             <input
               type="text"
               placeholder="Search products…"
               value={searchInput}
               onChange={(e) => handleSearchChange(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleSearchChange(searchInput)}
-              className="pl-10 py-1.5 bg-transparent text-sm text-navy placeholder:text-navy/30 focus:outline-none focus:ring-1 focus:ring-gold"
+              className="w-full rounded-md border border-gold-antique/20 bg-white py-2.5 pl-9 pr-3 text-sm text-navy placeholder:text-navy/30 focus:outline-none focus:ring-1 focus:ring-gold"
             />
+            </div>
           </div>
         </div>
 

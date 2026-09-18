@@ -52,7 +52,9 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             <span className="text-xs font-bold uppercase tracking-widest text-champagne/60 hidden sm:inline">Admin</span>
           </Link>
           <button
+            type="button"
             onClick={() => setSidebarOpen(false)}
+            aria-label="Close admin menu"
             className="lg:hidden p-1.5 rounded-md text-champagne/60 hover:text-gold hover:bg-white/10 transition-colors"
           >
             <X className="w-5 h-5" />
@@ -107,7 +109,10 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
         <header className="bg-white border-b border-gray-200 px-4 py-3 flex items-center justify-between shrink-0">
           <div className="flex items-center gap-3 min-w-0">
             <button
+              type="button"
               onClick={() => setSidebarOpen(!sidebarOpen)}
+              aria-label={sidebarOpen ? 'Close admin menu' : 'Open admin menu'}
+              aria-expanded={sidebarOpen}
               className="lg:hidden p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
             >
               <Menu className="w-5 h-5" />

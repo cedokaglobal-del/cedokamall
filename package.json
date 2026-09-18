@@ -6,7 +6,8 @@
   "type": "module",
   "scripts": {
     "dev": "vite",
-    "build": "vite build",
+    "build": "npm run typecheck && vite build",
+    "typecheck": "tsc --noEmit -p tsconfig.app.json",
     "postbuild": "node scripts/generate-sitemap.mjs",
     "start": "vite start",
     "build:dev": "vite build --mode development",
