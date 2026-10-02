@@ -5,7 +5,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import { ProductGridSkeleton } from '@/components/ProductCardSkeleton';
-import SolarPlanCard from '@/components/SolarPlanCard';
+import SolarPlanProductCard from '@/components/SolarPlanProductCard';
 import EnergyCalculator from '@/components/EnergyCalculator';
 import { FilterSidebar, FilterMobileBar, type FilterOption } from '@/components/CategoryFilter';
 import { useProductStore } from '@/store/productStore';
@@ -332,9 +332,9 @@ const SolarPage = () => {
                 Ready-made solar packages designed for homes and offices. Each plan details exactly what you get, what it can power, and how long it lasts.
               </p>
             </div>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-3 gap-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {activePlans.map((plan) => (
-                <SolarPlanCard key={plan.id} plan={plan} />
+                <SolarPlanProductCard key={plan.id} plan={plan} />
               ))}
             </div>
           </section>

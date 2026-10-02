@@ -1,6 +1,6 @@
 import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
-import { Search, ShoppingCart, Menu, X, MapPin, Phone, ChevronDown, Sun, LayoutGrid, Sprout } from 'lucide-react';
+import { Search, ShoppingCart, Menu, X, MapPin, Phone, ChevronDown, Sun, LayoutGrid, Sprout, Calculator } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
 import { buildCategories, slugifyCategory } from '@/data/products';
 import { useProductStore } from '@/store/productStore';
@@ -182,6 +182,13 @@ const Header = () => {
               className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors whitespace-nowrap text-champagne/70 hover:text-gold"
             >
               <Sprout className="w-3 h-3" /> Farms
+            </Link>
+
+            <Link
+              to="/solar#solar-calculator"
+              className="hidden lg:flex items-center gap-1.5 px-2.5 py-1.5 text-xs font-bold uppercase tracking-wider transition-colors whitespace-nowrap text-champagne/70 hover:text-gold"
+            >
+              <Calculator className="w-3 h-3" /> Calculator
             </Link>
           </div>
 

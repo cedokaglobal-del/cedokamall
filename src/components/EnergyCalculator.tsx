@@ -483,16 +483,27 @@ const EnergyCalculator = () => {
    * them to the top of the page. If the section is already on screen we scroll
    * to it, otherwise we route to the page that hosts it.
    */
+  /**
+   * Refer the shopper to the solar plan that matches their load. We scroll to
+   * the specific plan when it is already on screen, and only fall back to the
+   * plans section (on the page that hosts it) when it is not.
+   */
   const revealPlans = useCallback(() => {
-    if (typeof document !== 'undefined') {
-      const target = document.getElementById('solar-plans');
-      if (target) {
-        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    const best = planMatches.best;
+    if (typeof document !== 'undefined' && best) {
+      const specific = document.getElementById(`plan-${best.plan.id}`);
+      if (specific) {
+        specific.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        return;
+      }
+      const section = document.getElementById('solar-plans');
+      if (section) {
+        section.scrollIntoView({ behavior: 'smooth', block: 'start' });
         return;
       }
     }
     navigate('/solar#solar-plans');
-  }, [navigate]);
+  }, [navigate, planMatches.best]);
 
   /**
    * A plain-language read of the match, e.g. "your 4.2 kWh/day load needs a 5kW
@@ -1280,7 +1291,7 @@ const EnergyCalculator = () => {
                     onClick={revealPlans}
                     className="inline-flex items-center gap-1.5 rounded-lg bg-gold px-3.5 py-2 text-[10px] font-bold uppercase tracking-widest text-navy transition-all hover:bg-gold-antique hover:text-white"
                   >
-                    View in Solar Plans
+                    View {planMatches.best.plan.name}
                   </button>
                   <a
                     href={`https://wa.me/2349128817136?text=${encodeURIComponent(
