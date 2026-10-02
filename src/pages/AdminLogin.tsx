@@ -99,7 +99,7 @@ const AdminLogin = () => {
       <div className="w-full max-w-md relative z-10">
         <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-[2.5rem] shadow-2xl overflow-hidden">
           {/* Header */}
-          <div className="bg-gradient-to-br from-emerald-600/20 to-primary/20 px-8 py-10 flex flex-col items-center border-b border-white/5">
+          <div className="bg-white/5 px-8 py-10 flex flex-col items-center border-b border-white/5">
             <div className="w-16 h-16 bg-white rounded-2xl flex items-center justify-center shadow-xl mb-6 transform hover:scale-110 transition-transform duration-300">
               <img
                 src="/logo.png"

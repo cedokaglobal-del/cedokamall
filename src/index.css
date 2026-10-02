@@ -229,6 +229,48 @@
     @apply animate-fade-in;
   }
 
+  /*
+   * Subtle entrance for grids and lists: short, single-pass, never bouncy.
+   * Duration is kept in the 200ms band and disabled for users who ask for
+   * reduced motion.
+   */
+  @keyframes cedoka-fade-rise {
+    from {
+      opacity: 0;
+      transform: translateY(4px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .fade-rise {
+    animation: cedoka-fade-rise 0.2s ease-out both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .fade-rise {
+      animation: none;
+    }
+  }
+
+  /* Consistent press feedback for tappable surfaces. */
+  .press {
+    transition: transform 0.15s ease-out, background-color 0.15s ease-out,
+      border-color 0.15s ease-out, color 0.15s ease-out;
+  }
+
+  .press:active {
+    transform: scale(0.97);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .press:active {
+      transform: none;
+    }
+  }
+
   .slide-up-animate {
     @apply animate-slide-up;
   }
@@ -277,6 +319,33 @@
 
   .safe-pr {
     padding-right: max(1rem, env(safe-area-inset-right));
+  }
+
+  /*
+   * On-screen keyboard safety.
+   *
+   * When a soft keyboard opens, mobile browsers shrink the visual viewport but
+   * `100vh` still reports the full height, so fixed footers and submit buttons
+   * end up underneath the keyboard. These rules make the app behave as a
+   * standard document while the keyboard is open, and keep sticky bars clear of
+   * the home indicator / notch.
+   */
+  @supports (-webkit-touch-callout: none) {
+    @media (max-width: 1023px) {
+      html:has(input:focus, textarea:focus, select:focus, [contenteditable]:focus) {
+        height: -webkit-fill-available;
+      }
+    }
+  }
+
+  /* Respect the visual viewport when a keyboard is open so focused fields and
+     sticky CTAs stay visible instead of being covered. */
+  .kb-safe {
+    padding-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  .sticky-cta-safe {
+    bottom: calc(env(safe-area-inset-bottom, 0px) + 0.5rem);
   }
 
 /* Hide number input spinners */

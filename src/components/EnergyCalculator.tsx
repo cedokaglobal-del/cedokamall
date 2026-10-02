@@ -1519,7 +1519,7 @@ const EnergyCalculator = () => {
             </div>
 
             {/* Explanation */}
-            <div className="rounded-xl bg-gradient-to-br from-navy to-navy-deep p-4">
+            <div className="rounded-xl bg-navy p-4">
               <p className="text-xs leading-relaxed text-champagne/80">
                 <strong className="text-champagne">How energy works here:</strong>
                 {' '}This {app.name || 'appliance'} uses <strong className="text-champagne">{app.watts}W</strong> of power at <strong className="text-champagne">{app.volts}V</strong>, drawing{' '}

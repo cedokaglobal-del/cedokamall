@@ -27,6 +27,7 @@ import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import { getBreadcrumbSchema, getProductSchema, SEO_CONFIG } from '@/config/seo';
 import { useSEO, useStructuredData } from '@/hooks/useSEO';
+import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { cn } from '@/lib/utils';
 import { useCartStore } from '@/store/cartStore';
 import { useProductStore } from '@/store/productStore';
@@ -128,10 +129,13 @@ const ProductPage = () => {
   const [reviewForm, setReviewForm] = useState({ name: '', rating: 0, text: '' });
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const isOnline = useOnlineStatus();
+  const isOffline = !isOnline;
 
   // Server-persisted reviews — use ?? with a stable empty array to avoid re-render loops
   const storeReviews = useReviewStore((s) => s.reviewsByProduct[id || ''] ?? EMPTY_REVIEW_LIST);
   const isLoadingReviews = useReviewStore((s) => s.loadingByProduct[id || ''] ?? false);
+  const reviewError = useReviewStore((s) => s.errorByProduct[id || ''] ?? null);
   const fetchReviews = useReviewStore((s) => s.fetchReviews);
   const addReview = useReviewStore((s) => s.addReview);
   const markHelpful = useReviewStore((s) => s.markHelpful);
@@ -503,14 +507,14 @@ const ProductPage = () => {
                             Product Features
                           </h2>
                         </div>
-                        <ul className="grid gap-3 sm:grid-cols-2">
+                        <ul className="grid gap-2.5 sm:grid-cols-2 sm:gap-3">
                           {product.features.map((feature, index) => (
                             <li
                               key={index}
-                              className="flex min-w-0 items-start gap-3 rounded-2xl border border-gold-antique/10 bg-ivory/45 px-4 py-3.5 md:px-5"
+                              className="flex h-full min-w-0 items-start gap-2.5 rounded-xl border border-gold-antique/10 bg-ivory/45 px-3.5 py-3"
                             >
-                              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
-                              <span className="min-w-0 break-words text-[13px] leading-6 text-navy/76 md:text-sm">
+                              <CheckCircle2 className="mt-[3px] h-4 w-4 shrink-0 text-gold" aria-hidden="true" />
+                              <span className="min-w-0 flex-1 break-words text-[13px] leading-5 text-navy/76">
                                 {feature}
                               </span>
                             </li>
@@ -524,13 +528,16 @@ const ProductPage = () => {
                         <h2 className="text-sm font-bold uppercase tracking-[0.24em] text-navy">
                           Product Details
                         </h2>
-                        <dl className="mt-5 grid gap-4 sm:grid-cols-2">
+                        <dl className="mt-4 grid gap-2.5 sm:grid-cols-2 sm:gap-3">
                           {productSpecs.map(([key, value]) => (
-                            <div key={key} className="rounded-2xl border border-gold-antique/10 bg-ivory/50 p-4">
-                              <dt className="text-[11px] font-bold uppercase tracking-[0.18em] text-navy/50">
+                            <div
+                              key={key}
+                              className="h-full min-w-0 rounded-xl border border-gold-antique/10 bg-ivory/50 px-3.5 py-3"
+                            >
+                              <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-navy/50">
                                 {key.replace(/_/g, ' ')}
                               </dt>
-                              <dd className="mt-2 break-words text-[13px] leading-6 text-navy/78 md:text-sm">
+                              <dd className="mt-1 break-words text-[13px] leading-5 text-navy/78">
                                 {value}
                               </dd>
                             </div>
@@ -547,14 +554,14 @@ const ProductPage = () => {
                             What can this power?
                           </h2>
                         </div>
-                        <ul className="grid gap-3 sm:grid-cols-2">
+                        <ul className="grid gap-2.5 sm:grid-cols-2 sm:gap-3">
                           {powerInfo.bullets.map((bullet, index) => (
                             <li
                               key={index}
-                              className="flex min-w-0 items-start gap-3 rounded-2xl border border-gold-antique/10 bg-ivory/45 px-4 py-3.5 md:px-5"
+                              className="flex h-full min-w-0 items-start gap-2.5 rounded-xl border border-gold-antique/10 bg-ivory/45 px-3.5 py-3"
                             >
-                              <CheckCircle2 className="mt-0.5 h-4 w-4 shrink-0 text-gold" />
-                              <span className="min-w-0 break-words text-[13px] leading-6 text-navy/76 md:text-sm">
+                              <CheckCircle2 className="mt-[3px] h-4 w-4 shrink-0 text-gold" aria-hidden="true" />
+                              <span className="min-w-0 flex-1 break-words text-[13px] leading-5 text-navy/76">
                                 {bullet}
                               </span>
                             </li>
@@ -579,6 +586,29 @@ const ProductPage = () => {
                       </h2>
                       <span className="ml-auto text-xs text-navy/45">({totalReviewCount})</span>
                     </div>
+
+                    {/* Offline / load-failure notice with retry */}
+                    {(isOffline || reviewError) && (
+                      <div className="mb-4 flex flex-wrap items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 px-3.5 py-3">
+                        <p className="min-w-0 flex-1 text-[12px] leading-5 text-amber-900">
+                          {isOffline
+                            ? "You're offline. Showing saved reviews; new ones will be kept on this device."
+                            : reviewError}
+                        </p>
+                        <button
+                          type="button"
+                          onClick={() => id && fetchReviews(id, true)}
+                          disabled={isOffline || isLoadingReviews}
+                          className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-amber-400 bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest text-amber-800 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
+                        >
+                          <RotateCcw
+                            className={cn('h-3.5 w-3.5', isLoadingReviews && 'animate-spin')}
+                            aria-hidden="true"
+                          />
+                          {isLoadingReviews ? 'Retrying' : 'Retry'}
+                        </button>
+                      </div>
+                    )}
 
                     {/* Rating Breakdown */}
                     {totalReviewCount > 0 ? (
@@ -798,14 +828,26 @@ const ProductPage = () => {
                           ))}
                         </div>
                         <textarea
-                          placeholder="Write your review..."
+                          placeholder="Share what you liked or what could be better..."
                           value={reviewForm.text}
-                          onChange={(e) =>
-                            setReviewForm((prev) => ({ ...prev, text: e.target.value }))
-                          }
+                          onChange={(e) => {
+                            if (e.target.value.length > 2000) return;
+                            setReviewForm((prev) => ({ ...prev, text: e.target.value }));
+                          }}
                           rows={3}
+                          maxLength={2000}
                           className="w-full resize-none rounded-2xl border border-gold-antique/10 bg-ivory/50 px-4 py-3 text-sm text-navy placeholder:text-navy/30 focus:border-gold focus:outline-none"
                         />
+                        <div className="flex items-center justify-between gap-2">
+                          <p className="text-[10px] text-navy/40">
+                            {reviewForm.text.length}/2000
+                          </p>
+                          {isOffline && (
+                            <p className="text-[10px] font-bold uppercase tracking-wider text-amber-700">
+                              Offline — saved on this device
+                            </p>
+                          )}
+                        </div>
                         <button
                           type="button"
                           onClick={handleSubmitReview}
@@ -1004,7 +1046,7 @@ const ProductPage = () => {
                 Discover More
               </Link>
             </div>
-            <div className="grid grid-cols-3 gap-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            <div className="fade-rise grid grid-cols-3 gap-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {relatedProducts.map((entry) => (
                 <ProductCard key={entry.id} product={entry} />
               ))}
@@ -1015,7 +1057,7 @@ const ProductPage = () => {
 
       {/* Sticky Mobile Add-to-Cart Bar */}
       {!product.outOfStock && (
-        <div className="fixed inset-x-0 bottom-0 z-[55] border-t border-gold-antique/20 bg-navy px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.3)] md:hidden">
+        <div className="fixed inset-x-0 bottom-0 z-[55] border-t border-gold-antique/20 bg-navy px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.3)] kb-safe md:hidden">
           <div className="flex items-center gap-3">
             <div className="flex-1 min-w-0">
               <p className="truncate text-[11px] font-bold uppercase tracking-[0.16em] text-champagne/60">

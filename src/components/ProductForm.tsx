@@ -801,7 +801,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
                       initial={{ opacity: 0, scale: 0.9 }}
                       animate={{ opacity: 1, scale: 1 }}
                       className={cn(
-                        "relative aspect-square rounded-2xl overflow-hidden border-2 shadow-sm transition-all group bg-[radial-gradient(circle_at_top,_hsl(var(--primary)/0.14),_transparent_55%),linear-gradient(135deg,_hsl(var(--muted)),_hsl(var(--background)))]",
+                        "relative aspect-square rounded-2xl overflow-hidden border-2 shadow-sm transition-all group bg-muted",
                         idx === 0 ? "border-primary ring-4 ring-primary/10" : "border-border hover:border-primary/40"
                       )}
                     >

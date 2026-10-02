@@ -30,6 +30,33 @@ interface ReviewState {
 const REVIEWS_CACHE_PREFIX = 'cedoka_reviews';
 const LOCAL_REVIEWS_PREFIX = 'cedoka_local_reviews';
 
+const MAX_NAME_LENGTH = 60;
+const MAX_TEXT_LENGTH = 2000;
+
+/**
+ * Normalise untrusted user input before it is stored or rendered.
+ *
+ * React already escapes text nodes, so this is defence in depth rather than the
+ * primary XSS control: it strips control characters, collapses runaway
+ * whitespace, removes zero-width/bidi override characters used to spoof names,
+ * and clamps length so a single field cannot bloat the reviews table.
+ */
+const sanitize = (value: string, maxLength: number): string =>
+  value
+    // C0/C1 control chars (except none needed here) and zero-width / bidi overrides
+    .replace(/[\u0000-\u001F\u007F-\u009F]/g, ' ')
+    .replace(/[\u200B-\u200F\u202A-\u202E\u2060-\u2064\uFEFF]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .slice(0, maxLength);
+
+const sanitizeName = (value: string): string => {
+  const cleaned = sanitize(value, MAX_NAME_LENGTH);
+  return cleaned.length > 0 ? cleaned : 'Anonymous';
+};
+
+const sanitizeText = (value: string): string => sanitize(value, MAX_TEXT_LENGTH);
+
 const readLocal = (productId: string): StoreReview[] => {
   try {
     const legacy = localStorage.getItem(`${REVIEWS_CACHE_PREFIX}_${productId}`);
@@ -57,11 +84,11 @@ const persistLocal = (productId: string, reviews: StoreReview[]) => {
 const mapRowToReview = (row: Record<string, unknown>): StoreReview => ({
   id: String(row.id),
   product_id: String(row.product_id),
-  name: typeof row.name === 'string' ? row.name : 'Anonymous',
-  rating: Number(row.rating ?? 0),
-  text: String(row.text ?? ''),
+  name: sanitizeName(typeof row.name === 'string' ? row.name : ''),
+  rating: Math.min(5, Math.max(1, Number(row.rating ?? 1))),
+  text: sanitizeText(String(row.text ?? '')),
   is_verified: Boolean(row.is_verified),
-  helpful_count: Number(row.helpful_count ?? 0),
+  helpful_count: Math.max(0, Number(row.helpful_count ?? 0)),
   created_at: String(row.created_at ?? new Date().toISOString()),
 });
 
@@ -130,12 +157,16 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
   },
 
   addReview: async (productId, review) => {
+    const safeName = sanitizeName(review.name);
+    const safeText = sanitizeText(review.text);
+    const safeRating = Math.min(5, Math.max(1, Math.round(review.rating)));
+
     const optimistic: StoreReview = {
       id: `local_${Date.now().toString(36)}${Math.random().toString(36).slice(2, 8)}`,
       product_id: productId,
-      name: review.name.trim() || 'Anonymous',
-      rating: review.rating,
-      text: review.text.trim(),
+      name: safeName,
+      rating: safeRating,
+      text: safeText,
       is_verified: false,
       helpful_count: 0,
       created_at: new Date().toISOString(),
@@ -152,7 +183,14 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
     try {
       const { data, error } = await supabase
         .from('reviews')
-        .insert([{ product_id: productId, name: review.name, rating: review.rating, text: review.text }])
+        .insert([
+          {
+            product_id: productId,
+            name: safeName,
+            rating: safeRating,
+            text: safeText,
+          },
+        ])
         .select()
         .single();
 

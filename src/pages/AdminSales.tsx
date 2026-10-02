@@ -123,7 +123,7 @@ const AdminSales = () => {
       <div className="space-y-6 pb-8">
         <div className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
           <div>
-            <h1 className="text-3xl sm:text-4xl font-bold bg-gradient-emerald bg-clip-text text-transparent">
+            <h1 className="text-3xl sm:text-4xl font-bold text-emerald-400">
               Sales
             </h1>
             <p className="text-muted-foreground text-sm mt-2">

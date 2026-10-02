@@ -18,7 +18,7 @@ const ProductCard = ({ product, priority = false }: { product: Product, priority
     : 0;
 
   return (
-    <article className="group overflow-hidden rounded-md bg-white border border-gold-antique/10 transition-colors duration-200 hover:border-gold/20 hover:-translate-y-0.5">
+    <article className="group press overflow-hidden rounded-md bg-white border border-gold-antique/10 transition-colors duration-200 hover:border-gold/20">
       {/* Image */}
       <div className="relative aspect-[4/5] overflow-hidden bg-ivory">
         <Link to={`/product/${product.id}`} state={{ from }} className="absolute inset-0 z-0">

@@ -5,6 +5,7 @@ import { FilterSidebar, FilterMobileBar, type FilterOption } from '@/components/
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
+import { ProductGridSkeleton } from '@/components/ProductCardSkeleton';
 import { useProductStore } from '@/store/productStore';
 import { useSEO, useStructuredData } from '@/hooks/useSEO';
 import { getBreadcrumbSchema, getCollectionPageSchema, SEO_CONFIG } from '@/config/seo';
@@ -258,11 +259,9 @@ const FarmsPage = () => {
             </div>
 
         {isLoading && products.length === 0 ? (
-          <div className="flex min-h-[300px] items-center justify-center">
-            <div className="h-12 w-12 animate-spin rounded-full border-4 border-gold/10 border-t-gold" />
-          </div>
+          <ProductGridSkeleton count={9} />
         ) : filteredProducts.length > 0 ? (
-          <div className="grid grid-cols-3 gap-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="fade-rise grid grid-cols-3 gap-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}
