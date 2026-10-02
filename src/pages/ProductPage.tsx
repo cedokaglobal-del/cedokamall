@@ -6,6 +6,7 @@ import {
   CheckCircle2,
   ChevronRight,
   ChevronUp,
+  ClipboardList,
   Clock,
   Filter,
   Heart,
@@ -18,6 +19,7 @@ import {
   ThumbsUp,
   Zap,
   Star,
+  Tag,
   Truck,
   User,
   X,
@@ -501,72 +503,84 @@ const ProductPage = () => {
                   <div className="space-y-6 order-2 xl:order-1">
                     {product.features && product.features.length > 0 && (
                       <div className="overflow-hidden rounded-[1.5rem] border border-gold-antique/10 bg-white p-5 md:p-6">
-                        <div className="mb-5 flex items-center gap-2">
-                          <Star className="h-4 w-4 text-gold" />
+                        <div className="flex items-center gap-2">
+                          <CheckCircle2 className="h-4 w-4 text-gold" aria-hidden="true" />
                           <h2 className="text-sm font-bold uppercase tracking-[0.24em] text-navy">
                             Product Features
                           </h2>
                         </div>
-                        <ul className="grid gap-2.5 sm:grid-cols-2 sm:gap-3">
+                        <div className="mt-4 space-y-3">
                           {product.features.map((feature, index) => (
-                            <li
+                            <div
                               key={index}
-                              className="flex h-full min-w-0 items-start gap-2.5 rounded-xl border border-gold-antique/10 bg-ivory/45 px-3.5 py-3"
+                              className="flex items-start gap-3 rounded-2xl bg-ivory/70 p-4"
                             >
-                              <CheckCircle2 className="mt-[3px] h-4 w-4 shrink-0 text-gold" aria-hidden="true" />
-                              <span className="min-w-0 flex-1 break-words text-[13px] leading-5 text-navy/76">
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+                                <CheckCircle2 className="h-4 w-4 text-gold" aria-hidden="true" />
+                              </div>
+                              <p className="min-w-0 flex-1 break-words pt-2 text-[13px] leading-6 text-navy/70">
                                 {feature}
-                              </span>
-                            </li>
+                              </p>
+                            </div>
                           ))}
-                        </ul>
+                        </div>
                       </div>
                     )}
 
                     {productSpecs.length > 0 && (
                       <div className="overflow-hidden rounded-[1.5rem] border border-gold-antique/10 bg-white p-5 md:p-6">
-                        <h2 className="text-sm font-bold uppercase tracking-[0.24em] text-navy">
-                          Product Details
-                        </h2>
-                        <dl className="mt-4 grid gap-2.5 sm:grid-cols-2 sm:gap-3">
+                        <div className="flex items-center gap-2">
+                          <ClipboardList className="h-4 w-4 text-gold" aria-hidden="true" />
+                          <h2 className="text-sm font-bold uppercase tracking-[0.24em] text-navy">
+                            Product Details
+                          </h2>
+                        </div>
+                        <div className="mt-4 space-y-3">
                           {productSpecs.map(([key, value]) => (
                             <div
                               key={key}
-                              className="h-full min-w-0 rounded-xl border border-gold-antique/10 bg-ivory/50 px-3.5 py-3"
+                              className="flex items-start gap-3 rounded-2xl bg-ivory/70 p-4"
                             >
-                              <dt className="text-[10px] font-bold uppercase tracking-[0.18em] text-navy/50">
-                                {key.replace(/_/g, ' ')}
-                              </dt>
-                              <dd className="mt-1 break-words text-[13px] leading-5 text-navy/78">
-                                {value}
-                              </dd>
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+                                <Tag className="h-4 w-4 text-gold" aria-hidden="true" />
+                              </div>
+                              <div className="min-w-0 flex-1 pt-1.5">
+                                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-navy/50">
+                                  {key.replace(/_/g, ' ')}
+                                </p>
+                                <p className="mt-1 break-words text-[13px] leading-6 text-navy/70">
+                                  {value}
+                                </p>
+                              </div>
                             </div>
                           ))}
-                        </dl>
+                        </div>
                       </div>
                     )}
 
                     {powerInfo && (
                       <div className="overflow-hidden rounded-[1.5rem] border border-gold-antique/10 bg-white p-5 md:p-6">
-                        <div className="mb-5 flex items-center gap-2">
-                          <Zap className="h-4 w-4 text-gold" />
+                        <div className="flex items-center gap-2">
+                          <Zap className="h-4 w-4 text-gold" aria-hidden="true" />
                           <h2 className="text-sm font-bold uppercase tracking-[0.24em] text-navy">
                             What can this power?
                           </h2>
                         </div>
-                        <ul className="grid gap-2.5 sm:grid-cols-2 sm:gap-3">
+                        <div className="mt-4 space-y-3">
                           {powerInfo.bullets.map((bullet, index) => (
-                            <li
+                            <div
                               key={index}
-                              className="flex h-full min-w-0 items-start gap-2.5 rounded-xl border border-gold-antique/10 bg-ivory/45 px-3.5 py-3"
+                              className="flex items-start gap-3 rounded-2xl bg-ivory/70 p-4"
                             >
-                              <CheckCircle2 className="mt-[3px] h-4 w-4 shrink-0 text-gold" aria-hidden="true" />
-                              <span className="min-w-0 flex-1 break-words text-[13px] leading-5 text-navy/76">
+                              <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full bg-white shadow-sm">
+                                <Zap className="h-4 w-4 text-gold" aria-hidden="true" />
+                              </div>
+                              <p className="min-w-0 flex-1 break-words pt-2 text-[13px] leading-6 text-navy/70">
                                 {bullet}
-                              </span>
-                            </li>
+                              </p>
+                            </div>
                           ))}
-                        </ul>
+                        </div>
                         <p className="mt-4 text-[12px] leading-5 text-navy/50">
                           Estimates are based on the listed specifications and typical appliance loads. For an exact
                           system size, use our{' '}

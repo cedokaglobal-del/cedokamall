@@ -392,7 +392,7 @@ const AdminDashboard = () => {
               {stats.map((stat) => {
                 const Icon = stat.icon;
                 return (
-                  <div key={stat.label} className="flex items-center gap-3 p-3 rounded-lg bg-gray-50">
+                  <div key={stat.label} className="flex items-center gap-3 p-3 rounded-lg bg-ivory">
                     <div className="p-2 rounded-lg bg-white shadow-sm">
                       <Icon className="w-4 h-4 text-navy" />
                     </div>
@@ -488,7 +488,7 @@ const AdminDashboard = () => {
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
-                    <TableRow className="bg-gray-50">
+                    <TableRow className="bg-ivory">
                       <TableHead className="text-xs">Product</TableHead>
                       <TableHead className="text-xs">Qty</TableHead>
                       <TableHead className="text-xs">Stock</TableHead>
@@ -499,7 +499,7 @@ const AdminDashboard = () => {
                     {paginatedSales.map((sale) => (
                       <TableRow
                         key={sale.name}
-                        className="cursor-pointer hover:bg-gray-50"
+                        className="cursor-pointer hover:bg-ivory"
                         onClick={() => { setSelectedSaleProduct(sale.name); setSaleTransactionPage(1); }}
                       >
                         <TableCell className="text-sm font-medium max-w-[200px] truncate">{sale.name}</TableCell>
@@ -662,7 +662,7 @@ const AdminDashboard = () => {
             <div className="overflow-x-auto">
               <Table>
                 <TableHeader>
-                  <TableRow className="bg-gray-50">
+                  <TableRow className="bg-ivory">
                     <TableHead className="text-xs">Order</TableHead>
                     <TableHead className="text-xs">Customer</TableHead>
                     <TableHead className="text-xs">Qty</TableHead>

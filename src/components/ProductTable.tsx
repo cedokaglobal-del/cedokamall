@@ -54,7 +54,7 @@ const ProductTable = ({ products, onEdit, onDelete, onToggleOutOfStock, isLoadin
       <div className="hidden md:block overflow-x-auto">
         <table className="w-full text-sm">
           <thead>
-            <tr className="bg-gray-50 border-b">
+            <tr className="bg-ivory border-b">
               <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Product</th>
               <th className="text-left px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Category</th>
               <th className="text-right px-4 py-3 font-semibold text-xs uppercase tracking-wider text-muted-foreground">Price</th>
@@ -68,7 +68,7 @@ const ProductTable = ({ products, onEdit, onDelete, onToggleOutOfStock, isLoadin
             {paginatedProducts.map((product) => {
               const stockStatus = getStockStatus(product.inStock);
               return (
-                <tr key={product.id} className="border-b last:border-0 hover:bg-gray-50/50 transition-colors">
+                <tr key={product.id} className="border-b last:border-0 hover:bg-ivory transition-colors">
                   <td className="px-4 py-3">
                     <div className="flex items-center gap-3">
                       <img

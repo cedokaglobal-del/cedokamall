@@ -34,7 +34,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   };
 
   return (
-    <div className="flex h-dvh bg-gray-50 font-sans">
+    <div className="flex h-dvh bg-ivory font-sans">
       {/* Sidebar */}
       <aside
         className={`fixed inset-y-0 left-0 z-50 w-64 bg-navy flex flex-col transform transition-transform duration-300 lg:relative lg:translate-x-0 ${
@@ -113,7 +113,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               onClick={() => setSidebarOpen(!sidebarOpen)}
               aria-label={sidebarOpen ? 'Close admin menu' : 'Open admin menu'}
               aria-expanded={sidebarOpen}
-              className="lg:hidden p-2 -ml-2 text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
+              className="lg:hidden p-2 -ml-2 text-gray-600 hover:bg-navy/5 rounded-lg transition-colors"
             >
               <Menu className="w-5 h-5" />
             </button>

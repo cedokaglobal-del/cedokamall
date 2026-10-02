@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
+    --background: 210 17% 95%;
     --foreground: 210 10% 15%;
     --card: 0 0% 100%;
     --card-foreground: 60 3% 17%;
@@ -14,10 +14,10 @@
     --primary-foreground: 47 60% 85%;
     --secondary: 44 55% 54%;
     --secondary-foreground: 210 60% 12%;
-    --muted: 210 20% 95%;
+    --muted: 210 16% 92%;
     --muted-foreground: 210 10% 45%;
-    --border: 210 20% 90%;
-    --input: 210 20% 90%;
+    --border: 210 16% 87%;
+    --input: 210 16% 88%;
     --ring: 44 55% 54%;
     --radius: 0.5rem;
 
@@ -30,7 +30,7 @@
     --gold-aged: 44 55% 54%;
     --gold-antique: 44 65% 35%;
     --champagne: 47 60% 85%;
-    --ivory: 210 20% 98%;
+    --ivory: 210 17% 95%;
     --charcoal: 210 10% 15%;
 
     --sidebar-background: 210 53% 11%;

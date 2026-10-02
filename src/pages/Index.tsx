@@ -417,7 +417,7 @@ const Index = () => {
         {isLoading && products.length === 0 ? (
           <div className="fade-rise grid grid-cols-3 gap-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {[...Array(10)].map((_, i) => (
-              <div key={i} className="aspect-[4/5] animate-pulse rounded-lg bg-gray-100" />
+              <div key={i} className="aspect-[4/5] animate-pulse rounded-lg bg-ivory" />
             ))}
           </div>
         ) : error && products.length === 0 ? (
@@ -523,7 +523,7 @@ const Index = () => {
         <div className="fade-rise grid grid-cols-3 gap-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {isLoading && products.length === 0 ? (
             [...Array(5)].map((_, i) => (
-              <div key={i} className="aspect-[4/5] animate-pulse rounded-lg bg-gray-100" />
+              <div key={i} className="aspect-[4/5] animate-pulse rounded-lg bg-ivory" />
             ))
           ) : (
             trending.map((product) => (
@@ -550,7 +550,7 @@ const Index = () => {
             <div className="fade-rise grid grid-cols-3 gap-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {isLoading && products.length === 0 ? (
                 [...Array(5)].map((_, i) => (
-                  <div key={i} className="aspect-[4/5] animate-pulse rounded-lg bg-gray-100" />
+                  <div key={i} className="aspect-[4/5] animate-pulse rounded-lg bg-ivory" />
                 ))
               ) : (
                 flashDeals.map((product) => (
