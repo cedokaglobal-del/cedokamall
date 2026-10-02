@@ -215,8 +215,18 @@ const SolarPlanProductCard = ({ plan, priority = false, className }: SolarPlanPr
                       <span className="min-w-0 break-words text-[13px] text-navy/80">
                         <span className="font-semibold text-navy">{item.quantity}&times;</span> {item.name}
                       </span>
-                      <span className="shrink-0 text-[11px] tabular-nums text-navy/45">
-                        {item.watts}W / {item.volts}V
+                      <span className="flex shrink-0 items-center gap-2">
+                        <span className="rounded-full bg-navy/5 px-2 py-0.5 text-[10px] font-semibold uppercase tracking-wider text-navy/50">
+                          {item.type}
+                        </span>
+                        <span className="text-[11px] tabular-nums text-navy/45">
+                          {item.type === 'battery' && Number(item.watts) > 0
+                            ? `${item.watts}Ah`
+                            : item.watts > 0
+                              ? `${item.watts}W`
+                              : null}
+                          {item.volts > 0 ? ` / ${item.volts}V` : ''}
+                        </span>
                       </span>
                     </li>
                   ))}

@@ -92,7 +92,10 @@ const AdminSolarPlans = () => {
     }));
   };
 
-  const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+  // Images are stored inline as base64 in a text column, and base64 inflates by
+  // roughly a third. Keep the encoded payload comfortably inside what the
+  // database and the REST endpoint will accept.
+  const MAX_IMAGE_BYTES = 1024 * 1024;
 
   const handleImage = (file: File | undefined, input?: HTMLInputElement) => {
     if (input) input.value = '';
@@ -102,7 +105,7 @@ const AdminSolarPlans = () => {
       return;
     }
     if (file.size > MAX_IMAGE_BYTES) {
-      setError('Image is larger than 2 MB. Please choose a smaller file.');
+      setError('Image is larger than 1 MB. Please choose a smaller file.');
       return;
     }
     setError(null);
@@ -273,17 +276,47 @@ const AdminSolarPlans = () => {
                   </div>
                 )}
               </div>
+              <div className="space-y-2 sm:col-span-2">
+                <Label htmlFor="plan-is-active">Visibility</Label>
+                <div className="flex flex-wrap items-center gap-3">
+                  <button
+                    id="plan-is-active"
+                    type="button"
+                    role="switch"
+                    aria-checked={draft.isActive}
+                    onClick={() => setDraft({ ...draft, isActive: !draft.isActive })}
+                    className={`relative inline-flex h-6 w-11 shrink-0 items-center rounded-full transition-colors ${
+                      draft.isActive ? 'bg-emerald-600' : 'bg-navy/25'
+                    }`}
+                  >
+                    <span className="sr-only">Publish this plan on the site</span>
+                    <span
+                      className={`inline-block h-4 w-4 transform rounded-full bg-white shadow transition-transform ${
+                        draft.isActive ? 'translate-x-6' : 'translate-x-1'
+                      }`}
+                    />
+                  </button>
+                  <p className="text-xs text-muted-foreground">
+                    {draft.isActive
+                      ? 'Published — this plan is shown on the home page, the solar page and offered by the energy calculator.'
+                      : 'Hidden — saved to the database but not shown anywhere on the site or offered by the calculator.'}
+                  </p>
+                </div>
+              </div>
               <div className="space-y-2 sm:col-span-2"><Label htmlFor="plan-notes">Notes / Cautions</Label><Textarea id="plan-notes" value={draft.notes} onChange={(event) => setDraft({ ...draft, notes: event.target.value })} placeholder="e.g. Not suitable for air conditioners. Requires professional installation." /></div>
             </div>
 
             <div className="mt-6 space-y-3">
               <div className="flex items-center justify-between"><h3 className="font-semibold">Plan items</h3><Button type="button" variant="outline" size="sm" onClick={() => setDraft({ ...draft, items: [...draft.items, createSolarPlanItem()] })}><Plus className="mr-1 h-4 w-4" /> Add item</Button></div>
               <p className="text-xs text-muted-foreground">
-                Name each part, pick its type, then enter quantity and energy values (watts / volts).
+                Name each part, pick its type, then enter quantity and energy values. For panels and inverters enter
+                watts; for batteries enter the <strong>amp-hour (Ah) rating</strong>, which is multiplied by the volts
+                to give stored energy.
                 Example: <em>Hybrid Inverter 3kW 24V MPPT 4.5kW</em> — Qty 1 — 3000W — 24V.
+                Battery: <em>Lithium Battery 24V 100Ah</em> — Qty 2 — 100Ah — 24V.
               </p>
               <div className="hidden sm:grid gap-2 px-3 text-[11px] font-bold uppercase tracking-wider text-muted-foreground sm:grid-cols-[1fr_140px_90px_90px_90px_36px]">
-                <span>Item name</span><span>Type</span><span>Volts (V)</span><span>Watts (W)</span><span>Qty</span><span />
+                <span>Item name</span><span>Type</span><span>Volts (V)</span><span>Watts (W) / Ah</span><span>Qty</span><span />
               </div>
               {draft.items.map((item, index) => (
                 <div key={item.id} className="space-y-1.5">
@@ -301,8 +334,20 @@ const AdminSolarPlans = () => {
                       <Input type="number" min="0" value={item.volts} onChange={(event) => updateItem(item.id, 'volts', Number(event.target.value))} placeholder="e.g. 24" aria-label="Volts" />
                     </div>
                     <div className="space-y-1">
-                      <Label className="text-[11px] sm:hidden">Watts (W)</Label>
-                      <Input type="number" min="0" value={item.watts} onChange={(event) => updateItem(item.id, 'watts', Number(event.target.value))} placeholder="e.g. 620" aria-label="Watts" />
+                      <Label className="text-[11px] sm:hidden">{item.type === 'battery' ? 'Capacity (Ah)' : 'Watts (W)'}</Label>
+                      <Input
+                        type="number"
+                        min="0"
+                        value={item.watts}
+                        onChange={(event) => updateItem(item.id, 'watts', Number(event.target.value))}
+                        placeholder={item.type === 'battery' ? 'e.g. 100' : 'e.g. 620'}
+                        aria-label={item.type === 'battery' ? 'Battery capacity in amp hours' : 'Watts'}
+                        title={
+                          item.type === 'battery'
+                            ? 'Enter the battery rating in amp hours (Ah). It is multiplied by the volts below to get stored energy, so enter 100 for a 100Ah battery - not 2560.'
+                            : undefined
+                        }
+                      />
                     </div>
                     <div className="space-y-1">
                       <Label className="text-[11px] sm:hidden">Qty</Label>
@@ -314,7 +359,7 @@ const AdminSolarPlans = () => {
                     <p className="px-1 text-xs text-muted-foreground">
                       Preview: <strong className="text-navy">{item.quantity} × {item.name.trim()}</strong>
                       {(Number(item.watts) > 0 || Number(item.volts) > 0) && (
-                        <span> ({[Number(item.watts) > 0 ? `${item.watts}W` : null, Number(item.volts) > 0 ? `${item.volts}V` : null].filter(Boolean).join(' • ')})</span>
+                        <span> ({[Number(item.watts) > 0 ? `${item.watts}${item.type === 'battery' ? 'Ah' : 'W'}` : null, Number(item.volts) > 0 ? `${item.volts}V` : null].filter(Boolean).join(' • ')})</span>
                       )}
                     </p>
                   )}
