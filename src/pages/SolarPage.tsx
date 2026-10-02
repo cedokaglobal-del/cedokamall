@@ -6,6 +6,7 @@ import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import { ProductGridSkeleton } from '@/components/ProductCardSkeleton';
 import SolarPlanCard from '@/components/SolarPlanCard';
+import EnergyCalculator from '@/components/EnergyCalculator';
 import { FilterSidebar, FilterMobileBar, type FilterOption } from '@/components/CategoryFilter';
 import { useProductStore } from '@/store/productStore';
 import { useSolarCategoryStore } from '@/store/solarCategoryStore';
@@ -25,6 +26,7 @@ const SolarPage = () => {
   const fetchProducts = useProductStore((s) => s.fetchProducts);
   const solarCategories = useSolarCategoryStore((s) => s.categories);
   const plans = useSolarPlanStore((s) => s.plans);
+  const activePlans = useMemo(() => plans.filter((plan) => plan.isActive), [plans]);
   const fetchPlans = useSolarPlanStore((s) => s.fetchPlans);
 
   useEffect(() => {
@@ -305,9 +307,23 @@ const SolarPage = () => {
           </div>
         </div>
 
+        {/* Energy calculator — sizes the system, then refers down to the plans below */}
+        <section id="solar-calculator" className="mt-16 scroll-mt-24">
+          <div className="mb-8 text-center">
+            <span className="text-xs font-bold uppercase tracking-[0.2em] text-gold">Size it properly</span>
+            <h2 className="mt-3 font-serif text-2xl font-bold text-navy sm:text-3xl">Solar Energy Calculator</h2>
+            <div className="mx-auto mt-3 h-1 w-16 bg-gold" />
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-navy/60">
+              Add the appliances you plan to run, and we will size the inverter, panels and battery bank. We then point
+              you to the drafted plan that matches your load.
+            </p>
+          </div>
+          <EnergyCalculator />
+        </section>
+
         {/* System plans */}
-        {plans.filter((p) => p.isActive).length > 0 && (
-          <section className="mt-16">
+        {activePlans.length > 0 && (
+          <section id="solar-plans" className="mt-16 scroll-mt-24">
             <div className="mb-8 text-center">
               <span className="text-xs font-bold uppercase tracking-[0.2em] text-gold">Tailored for your needs</span>
               <h2 className="mt-3 font-serif text-2xl font-bold text-navy sm:text-3xl">Solar System Plans</h2>
@@ -317,7 +333,7 @@ const SolarPage = () => {
               </p>
             </div>
             <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {plans.filter((p) => p.isActive).map((plan) => (
+              {activePlans.map((plan) => (
                 <SolarPlanCard key={plan.id} plan={plan} />
               ))}
             </div>

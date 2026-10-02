@@ -16,6 +16,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import SolarPlanCard from '@/components/SolarPlanCard';
+import { cn } from '@/lib/utils';
 import { buildCategories } from '@/data/products';
 import { MAJOR_CATEGORIES } from '@/data/catalog';
 import {
@@ -162,6 +163,7 @@ const Index = () => {
   const error = useProductStore((state) => state.error);
   const hasLoaded = useProductStore((state) => state.hasLoaded);
   const plans = useSolarPlanStore((s) => s.plans);
+  const activePlans = useMemo(() => plans.filter((plan) => plan.isActive), [plans]);
   const fetchPlans = useSolarPlanStore((s) => s.fetchPlans);
   const categories = useMemo(() => buildCategories(products), [products]);
   const topCategories = useMemo(
@@ -375,32 +377,51 @@ const Index = () => {
       )}
 
       {/* Solar System Plans */}
-      {plans.filter((p) => p.isActive).length > 0 && (
-        <section className="bg-white border-y border-gold-antique/10 py-12">
-          <div className="container">
-            <div className="mb-8 text-center">
-              <h2 className="font-serif text-2xl sm:text-3xl font-bold text-navy">Solar System Plans</h2>
-              <p className="mx-auto mt-2 max-w-lg text-sm text-navy/60">
-                Pre-designed solar plans for every need.
+      <section id="solar-plans" className="scroll-mt-24 border-y border-gold-antique/10 bg-white py-12">
+        <div className="container">
+          <div className="mb-8 text-center">
+            <h2 className="font-serif text-2xl sm:text-3xl font-bold text-navy">Solar System Plans</h2>
+            <p className="mx-auto mt-2 max-w-lg text-sm text-navy/60">
+              Pre-designed solar plans for every need.
+            </p>
+          </div>
+
+          {activePlans.length > 0 ? (
+            <>
+              <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+                {activePlans.slice(0, 6).map((plan) => (
+                  <SolarPlanCard key={plan.id} plan={plan} compact />
+                ))}
+              </div>
+              <div className="mt-10 text-center">
+                <Link
+                  to="/solar#solar-plans"
+                  className="inline-flex items-center gap-2 rounded-md bg-navy px-8 py-3 text-xs font-bold uppercase tracking-widest text-gold transition-all hover:bg-gold hover:text-navy"
+                >
+                  View All Solar Plans
+                  <ArrowRight className="h-4 w-4" />
+                </Link>
+              </div>
+            </>
+          ) : (
+            <div className="mx-auto max-w-md rounded-[1.5rem] border border-gold-antique/10 bg-ivory/60 px-6 py-10 text-center">
+              <Sun className="mx-auto h-9 w-9 text-gold/40" aria-hidden="true" />
+              <p className="mt-3 font-serif text-lg font-bold text-navy">Solar plans are being prepared</p>
+              <p className="mt-1.5 text-sm text-navy/60">
+                Our packaged systems are being finalised. Use the energy calculator to size a system now, or talk to
+                us on WhatsApp and we will build one for you.
               </p>
-            </div>
-            <div className="grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
-              {plans.filter((p) => p.isActive).slice(0, 3).map((plan) => (
-                <SolarPlanCard key={plan.id} plan={plan} compact />
-              ))}
-            </div>
-            <div className="mt-10 text-center">
               <Link
-                to="/solar"
-                className="inline-flex items-center gap-2 rounded-md bg-navy px-8 py-3 text-xs font-bold uppercase tracking-widest text-gold transition-all hover:bg-gold hover:text-navy"
+                to="/solar#solar-calculator"
+                className="mt-5 inline-flex items-center gap-2 rounded-md bg-navy px-6 py-2.5 text-xs font-bold uppercase tracking-widest text-gold transition-colors hover:bg-gold hover:text-navy"
               >
-                View All Solar Plans
+                Open Energy Calculator
                 <ArrowRight className="h-4 w-4" />
               </Link>
             </div>
-          </div>
-        </section>
-      )}
+          )}
+        </div>
+      </section>
 
       {/* Main Product List */}
       <section className="container py-8 sm:py-16">
@@ -622,6 +643,14 @@ const Index = () => {
 
 const WA_BTN_KEY = 'cedoka_wa_position';
 
+/**
+ * Floating WhatsApp bubble.
+ *
+ * On phones it stays draggable so a thumb can move it out of the way, but it is
+ * clamped above the bottom navigation. From `md` up, dragging is disabled and it
+ * locks into the bottom slot of the floating action rail, directly beneath the
+ * energy calculator button, so the two never sit on top of each other.
+ */
 const DraggableWhatsApp = () => {
   const [pos, setPos] = useState(() => {
     try {
@@ -630,12 +659,24 @@ const DraggableWhatsApp = () => {
     } catch {
       /* ignore */
     }
-    return { bottom: 32, right: 32 };
+    return { bottom: 88, right: 16 };
   });
+  const [isDesktop, setIsDesktop] = useState(
+    () => typeof window !== 'undefined' && window.matchMedia('(min-width: 768px)').matches
+  );
 
-  const dragRef = useRef({ dragging: false, startX: 0, startY: 0, startBottom: 32, startRight: 32 });
+  useEffect(() => {
+    const mq = window.matchMedia('(min-width: 768px)');
+    const sync = (event: MediaQueryList | MediaQueryListEvent) => setIsDesktop(event.matches);
+    sync(mq);
+    mq.addEventListener('change', sync as (event: MediaQueryListEvent) => void);
+    return () => mq.removeEventListener('change', sync as (event: MediaQueryListEvent) => void);
+  }, []);
+
+  const dragRef = useRef({ dragging: false, startX: 0, startY: 0, startBottom: 88, startRight: 16 });
 
   const handlePointerStart = (clientX: number, clientY: number) => {
+    if (isDesktop) return;
     const d = dragRef.current;
     d.dragging = false;
     d.startX = clientX;
@@ -645,13 +686,14 @@ const DraggableWhatsApp = () => {
   };
 
   const handlePointerMove = (clientX: number, clientY: number) => {
+    if (isDesktop) return;
     const d = dragRef.current;
     const dx = clientX - d.startX;
     const dy = clientY - d.startY;
     if (Math.abs(dx) > 8 || Math.abs(dy) > 8) d.dragging = true;
     if (d.dragging) {
       setPos({
-        bottom: Math.max(8, Math.min(80, Math.round(d.startBottom - dy))),
+        bottom: Math.max(88, Math.min(240, Math.round(d.startBottom - dy))),
         right: Math.max(8, Math.min(80, Math.round(d.startRight - dx))),
       });
     }
@@ -674,14 +716,19 @@ const DraggableWhatsApp = () => {
       onMouseDown={(e) => handlePointerStart(e.clientX, e.clientY)}
       onMouseMove={(e) => { if (e.buttons === 1) handlePointerMove(e.clientX, e.clientY); }}
       onMouseUp={handlePointerEnd}
+      onMouseLeave={handlePointerEnd}
       onTouchStart={(e) => handlePointerStart(e.touches[0].clientX, e.touches[0].clientY)}
       onTouchMove={(e) => { handlePointerMove(e.touches[0].clientX, e.touches[0].clientY); }}
       onTouchEnd={(e) => { if (dragRef.current.dragging) e.preventDefault(); handlePointerEnd(); }}
-      className="fixed z-50 flex h-16 w-16 items-center justify-center rounded-full bg-[#25D366] text-white shadow-2xl transition-shadow hover:shadow-gold/20 touch-none select-none"
-      style={{ bottom: `${pos.bottom}px`, right: `${pos.right}px` }}
+      className={cn(
+        'fixed z-50 flex h-14 w-14 items-center justify-center rounded-full bg-[#25D366] text-white shadow-2xl transition-shadow hover:shadow-gold/20 select-none md:h-16 md:w-16',
+        isDesktop ? 'bottom-6 right-6 touch-auto' : 'touch-none'
+      )}
+      style={isDesktop ? undefined : { bottom: `${pos.bottom}px`, right: `${pos.right}px` }}
       title="Chat with Support"
+      aria-label="Chat with support on WhatsApp"
     >
-      <svg viewBox="0 0 24 24" className="w-8 h-8 fill-current">
+      <svg viewBox="0 0 24 24" className="h-7 w-7 fill-current md:h-8 md:w-8" aria-hidden="true">
         <path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347m-5.421 7.403h-.004a9.87 9.87 0 01-5.031-1.378l-.361-.214-3.741.982.998-3.648-.235-.374a9.86 9.86 0 01-1.51-5.26c.001-5.45 4.436-9.884 9.888-9.884 2.64 0 5.122 1.03 6.988 2.898a9.825 9.825 0 012.893 6.994c-.003 5.45-4.437 9.884-9.885 9.884m8.413-18.297A11.815 11.815 0 0012.05 0C5.495 0 .16 5.335.157 11.892c0 2.096.547 4.142 1.588 5.945L.057 24l6.305-1.654a11.882 11.882 0 005.683 1.448h.005c6.554 0 11.89-5.335 11.893-11.893a11.821 11.821 0 00-3.48-8.413z"/>
       </svg>
     </a>

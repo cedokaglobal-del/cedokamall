@@ -50,7 +50,11 @@ const FloatingCalculatorButton = ({ externalOpen, onExternalToggle }: FloatingCa
         onClick={handleToggle}
         className={cn(
           'fixed z-40 flex items-center gap-2 rounded-full shadow-xl transition-all duration-300 hover:scale-105',
-          'bottom-6 right-6 bg-navy text-champagne border border-gold/30',
+          // Sits directly above the WhatsApp bubble in the floating action rail
+          // so the two never overlap. Lifted further on small screens to clear
+          // the bottom navigation bar.
+          'bottom-[164px] right-4 md:bottom-24 md:right-6',
+          'bg-navy text-champagne border border-gold/30',
           'px-4 py-3 md:px-5 md:py-3.5',
           'text-xs font-bold uppercase tracking-widest',
           actualOpen && 'scale-90 opacity-0 pointer-events-none'

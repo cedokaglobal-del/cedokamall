@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Pencil, Plus, Trash2, Upload, X } from 'lucide-react';
+import { CheckCircle2, Pencil, Plus, Trash2, Upload, X } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -42,6 +42,7 @@ const AdminSolarPlans = () => {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [canPowerInput, setCanPowerInput] = useState('');
+  const [imageMeta, setImageMeta] = useState<{ name: string; size: number; width: number; height: number } | null>(null);
 
   useEffect(() => {
     void fetchPlans();
@@ -63,6 +64,7 @@ const AdminSolarPlans = () => {
       isActive: plan.isActive,
     });
     setCanPowerInput(plan.canPower.join(', '));
+    setImageMeta(null);
     setError('');
   };
 
@@ -70,6 +72,7 @@ const AdminSolarPlans = () => {
     setEditingId(null);
     setDraft(emptyPlan());
     setCanPowerInput('');
+    setImageMeta(null);
     setError('');
   };
 
@@ -80,15 +83,43 @@ const AdminSolarPlans = () => {
     }));
   };
 
-  const handleImage = (file: File | undefined) => {
+  const MAX_IMAGE_BYTES = 2 * 1024 * 1024;
+
+  const handleImage = (file: File | undefined, input?: HTMLInputElement) => {
+    if (input) input.value = '';
     if (!file) return;
     if (!file.type.startsWith('image/')) {
       setError('Please choose an image file.');
       return;
     }
+    if (file.size > MAX_IMAGE_BYTES) {
+      setError('Image is larger than 2 MB. Please choose a smaller file.');
+      return;
+    }
+    setError(null);
+
     const reader = new FileReader();
-    reader.onload = () => setDraft((current) => ({ ...current, image: String(reader.result) }));
+    reader.onload = () => {
+      const image = String(reader.result);
+      // Read natural dimensions so the admin can confirm the right asset landed.
+      const probe = new Image();
+      probe.onload = () => {
+        setImageMeta({ name: file.name, size: file.size, width: probe.naturalWidth, height: probe.naturalHeight });
+        setDraft((current) => ({ ...current, image }));
+      };
+      probe.onerror = () => {
+        setImageMeta({ name: file.name, size: file.size, width: 0, height: 0 });
+        setDraft((current) => ({ ...current, image }));
+      };
+      probe.src = image;
+    };
+    reader.onerror = () => setError('Could not read that image. Please try another file.');
     reader.readAsDataURL(file);
+  };
+
+  const clearImage = () => {
+    setImageMeta(null);
+    setDraft((current) => ({ ...current, image: '' }));
   };
 
   const addCanPowerItem = () => {
@@ -151,7 +182,63 @@ const AdminSolarPlans = () => {
               <div className="space-y-2"><Label htmlFor="plan-name">Plan name *</Label><Input id="plan-name" value={draft.name} onChange={(event) => setDraft({ ...draft, name: event.target.value })} placeholder="e.g. Home Essentials 3.5kW" /></div>
               <div className="space-y-2"><Label htmlFor="plan-capacity">Capacity</Label><Input id="plan-capacity" value={draft.capacity} onChange={(event) => setDraft({ ...draft, capacity: event.target.value })} placeholder="e.g. 3.5kVA / 48V" /></div>
               <div className="space-y-2"><Label htmlFor="plan-price">Price (₦)</Label><Input id="plan-price" type="number" min="0" value={draft.price || ''} onChange={(event) => setDraft({ ...draft, price: Number(event.target.value) })} placeholder="e.g. 850000" /></div>
-              <div className="space-y-2"><Label htmlFor="plan-image">Plan image</Label><label htmlFor="plan-image" className="flex h-10 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm text-muted-foreground hover:bg-muted"><Upload className="h-4 w-4" /> Upload image</label><input id="plan-image" type="file" accept="image/*" className="sr-only" onChange={(event) => handleImage(event.target.files?.[0])} /></div>
+              <div className="space-y-2">
+                <Label htmlFor="plan-image">Plan image</Label>
+                <label
+                  htmlFor="plan-image"
+                  className="flex h-10 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm text-muted-foreground transition-colors hover:bg-muted"
+                >
+                  <Upload className="h-4 w-4" />
+                  {draft.image ? 'Replace image' : 'Upload image'}
+                </label>
+                <input
+                  id="plan-image"
+                  type="file"
+                  accept="image/*"
+                  className="sr-only"
+                  onChange={(event) => handleImage(event.target.files?.[0], event.target)}
+                />
+
+                {draft.image && (
+                  <div className="flex items-start gap-3 rounded-md border border-emerald-200 bg-emerald-50/60 p-2.5">
+                    <img
+                      src={draft.image}
+                      alt="Selected plan image preview"
+                      className="h-16 w-16 shrink-0 rounded border border-emerald-200 bg-white object-cover"
+                    />
+                    <div className="min-w-0 flex-1">
+                      <p className="flex items-center gap-1.5 text-xs font-semibold text-emerald-900">
+                        <CheckCircle2 className="h-3.5 w-3.5 shrink-0" />
+                        Image added
+                      </p>
+                      {imageMeta ? (
+                        <>
+                          <p className="mt-0.5 truncate text-[11px] text-emerald-800/90" title={imageMeta.name}>
+                            {imageMeta.name}
+                          </p>
+                          <p className="text-[11px] text-emerald-800/70">
+                            {imageMeta.width > 0 && imageMeta.height > 0
+                              ? `${imageMeta.width} x ${imageMeta.height}px - `
+                              : ''}
+                            {(imageMeta.size / 1024).toFixed(0)} KB
+                          </p>
+                        </>
+                      ) : (
+                        <p className="mt-0.5 text-[11px] text-emerald-800/80">Saved with this plan</p>
+                      )}
+                    </div>
+                    <button
+                      type="button"
+                      onClick={clearImage}
+                      className="shrink-0 rounded p-1 text-emerald-800/70 transition-colors hover:bg-emerald-100 hover:text-emerald-900"
+                      aria-label="Remove plan image"
+                      title="Remove image"
+                    >
+                      <X className="h-4 w-4" />
+                    </button>
+                  </div>
+                )}
+              </div>
               <div className="space-y-2 sm:col-span-2"><Label htmlFor="plan-description">Description</Label><Textarea id="plan-description" value={draft.description} onChange={(event) => setDraft({ ...draft, description: event.target.value })} placeholder="Brief description of what this plan includes" /></div>
               <div className="space-y-2 sm:col-span-2"><Label htmlFor="plan-best-for">Best For</Label><Input id="plan-best-for" value={draft.bestFor} onChange={(event) => setDraft({ ...draft, bestFor: event.target.value })} placeholder="e.g. 2-3 bedroom flat, small office" /></div>
               <div className="space-y-2"><Label htmlFor="plan-backup-time">Backup Time</Label><Input id="plan-backup-time" value={draft.backupTime} onChange={(event) => setDraft({ ...draft, backupTime: event.target.value })} placeholder="e.g. 8-12 hours (light loads)" /></div>

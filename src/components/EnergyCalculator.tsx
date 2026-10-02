@@ -1,7 +1,8 @@
 import { useState, useEffect, useCallback, useMemo, useRef } from 'react';
-import { Calculator, Plus, Trash2, Sun, Zap, Battery, BarChart3, ShoppingCart, MessageSquare, Check, ToggleLeft, ToggleRight, Edit3, Info, X, RotateCcw } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Calculator, Plus, Trash2, Sun, Zap, Battery, BarChart3, ShoppingCart, MessageSquare, Check, ToggleLeft, ToggleRight, Edit3, Info, X, RotateCcw, Sparkles } from 'lucide-react';
+import { Link, useNavigate } from 'react-router-dom';
 import { cn } from '@/lib/utils';
+import NumberField from '@/components/NumberField';
 import { useCartStore } from '@/store/cartStore';
 import { useProductStore } from '@/store/productStore';
 import { useSolarPlanStore } from '@/store/solarPlanStore';
@@ -324,6 +325,7 @@ const energyIconMap: Record<string, React.ReactNode> = {
 };
 
 const EnergyCalculator = () => {
+  const navigate = useNavigate();
   const saved = loadFromStorage();
   const [appliances, setAppliances] = useState<ApplianceRow[]>(
     saved?.appliances?.length
@@ -475,6 +477,43 @@ const EnergyCalculator = () => {
       bestIsCovering: Boolean(best && best.coverage !== null && best.coverage >= 0.95),
     };
   }, [solarPlans, requiredSystem]);
+
+  /**
+   * Refer the shopper to the Solar System Plans section rather than bouncing
+   * them to the top of the page. If the section is already on screen we scroll
+   * to it, otherwise we route to the page that hosts it.
+   */
+  const revealPlans = useCallback(() => {
+    if (typeof document !== 'undefined') {
+      const target = document.getElementById('solar-plans');
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        return;
+      }
+    }
+    navigate('/solar#solar-plans');
+  }, [navigate]);
+
+  /**
+   * A plain-language read of the match, e.g. "your 4.2 kWh/day load needs a 5kW
+   * inverter, and the Home Essentials 5kW plan already clears that with ~20% in
+   * hand, so it is the closest drafted fit".
+   */
+  const smartPlanMessage = useMemo(() => {
+    if (plansLoading) return null;
+    if (!planMatches.best) return null;
+
+    const plan = planMatches.best.plan;
+    const inverterKw = Math.round(engineerVerdict.recommendedInverter / 100) / 10;
+    const coverage = planMatches.best.coverage;
+
+    if (planMatches.bestIsCovering && coverage !== null) {
+      const headroom = Math.round((coverage - 1) * 100);
+      return `Your ${results.totalKwh} kWh/day load needs about a ${inverterKw}kW inverter and ${engineerVerdict.batteryKwh} kWh of storage. ${plan.name} already clears both${headroom > 0 ? `, with roughly ${headroom}% in hand for cloudy days and future loads` : ''}, so it is the closest drafted fit. Have a look at it in the Solar System Plans section below.`;
+    }
+
+    return `Your ${results.totalKwh} kWh/day load sizes to about a ${inverterKw}kW inverter and ${engineerVerdict.batteryKwh} kWh of storage. None of our drafted packages covers that fully yet, and ${plan.name} is the nearest. Compare it against the exact sizing above, then check the Solar System Plans section below or let our engineers build a custom system for you.`;
+  }, [plansLoading, planMatches, results.totalKwh, engineerVerdict]);
 
   const applianceNames = useMemo(() => new Set(appliances.map((a) => a.name)), [appliances]);
 
@@ -801,17 +840,21 @@ const EnergyCalculator = () => {
                   <div className="flex flex-wrap items-end gap-3 mt-2.5 pt-2.5 border-t border-gold-antique/10">
                     <div className="w-24">
                       <label className="text-[9px] font-bold uppercase tracking-wider text-navy/30 block mb-0.5">Exact watts (opt.)</label>
-                      <input type="number" min={1} value={appliance.watts || ''}
-                        onChange={(e) => updateAppliance(appliance.id, 'watts', Math.max(1, Number(e.target.value) || 1))}
-                        className="w-full bg-white rounded-md border border-gold-antique/10 px-2 py-1 text-xs text-navy focus:border-gold focus:outline-none placeholder:text-navy/20"
-                        placeholder="e.g. 110" />
+                      <NumberField
+                        min={1} value={appliance.watts} emptyFallback={appliance.watts || 1}
+                        onChange={(v) => updateAppliance(appliance.id, 'watts', v || 1)}
+                        placeholder="e.g. 110"
+                        inputClassName="w-full bg-white rounded-md border border-gold-antique/10 px-2 py-1 text-xs text-navy focus:border-gold focus:outline-none placeholder:text-navy/20"
+                      />
                     </div>
                     <div className="w-24">
                       <label className="text-[9px] font-bold uppercase tracking-wider text-navy/30 block mb-0.5">Exact volts (opt.)</label>
-                      <input type="number" min={1} step={0.1} value={appliance.volts || ''}
-                        onChange={(e) => updateAppliance(appliance.id, 'volts', Math.max(1, Number(e.target.value) || 1))}
-                        className="w-full bg-white rounded-md border border-gold-antique/10 px-2 py-1 text-xs text-navy focus:border-gold focus:outline-none placeholder:text-navy/20"
-                        placeholder="e.g. 220" />
+                      <NumberField
+                        min={1} step={0.1} value={appliance.volts} emptyFallback={appliance.volts || 1}
+                        onChange={(v) => updateAppliance(appliance.id, 'volts', v || 1)}
+                        placeholder="e.g. 220"
+                        inputClassName="w-full bg-white rounded-md border border-gold-antique/10 px-2 py-1 text-xs text-navy focus:border-gold focus:outline-none placeholder:text-navy/20"
+                      />
                     </div>
                     <p className="text-[10px] text-navy/30 italic leading-tight pt-1">
                       Know the exact watts/volts? Enter them here for a more accurate sizing.
@@ -824,35 +867,40 @@ const EnergyCalculator = () => {
                   <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
                     <div>
                       <label className="text-[10px] font-bold uppercase tracking-wider text-navy/40">Watts</label>
-                      <input type="number" min={1} value={appliance.watts || ''}
-                        onChange={(e) => updateAppliance(appliance.id, 'watts', Number(e.target.value))}
-                        onBlur={(e) => { const v = Number(e.target.value); if (!v || v < 1) updateAppliance(appliance.id, 'watts', 1); }}
-                        className="w-full bg-ivory rounded-md border border-gold-antique/10 px-2 py-1.5 text-sm text-navy focus:border-gold focus:outline-none" />
+                      <NumberField
+                        min={1} value={appliance.watts} emptyFallback={1}
+                        onChange={(v) => updateAppliance(appliance.id, 'watts', v)}
+                        inputClassName="w-full bg-ivory rounded-md border border-gold-antique/10 px-2 py-1.5 text-sm text-navy focus:border-gold focus:outline-none"
+                      />
                     </div>
                     <div>
                       <label className="text-[10px] font-bold uppercase tracking-wider text-navy/40">Volts</label>
-                      <input type="number" min={1} step={0.1} value={appliance.volts || ''}
-                        onChange={(e) => updateAppliance(appliance.id, 'volts', Number(e.target.value))}
-                        onBlur={(e) => { const v = Number(e.target.value); if (!v || v < 1) updateAppliance(appliance.id, 'volts', 12); }}
-                        className="w-full bg-ivory rounded-md border border-gold-antique/10 px-2 py-1.5 text-sm text-navy focus:border-gold focus:outline-none" />
+                      <NumberField
+                        min={1} step={0.1} value={appliance.volts} emptyFallback={12}
+                        onChange={(v) => updateAppliance(appliance.id, 'volts', v)}
+                        inputClassName="w-full bg-ivory rounded-md border border-gold-antique/10 px-2 py-1.5 text-sm text-navy focus:border-gold focus:outline-none"
+                      />
                     </div>
                     <div>
                       <label className="text-[10px] font-bold uppercase tracking-wider text-navy/40">Qty</label>
-                      <input type="number" min={1} value={appliance.quantity || ''}
-                        onChange={(e) => updateAppliance(appliance.id, 'quantity', Number(e.target.value))}
-                        onBlur={(e) => { const v = Number(e.target.value); if (!v || v < 1) updateAppliance(appliance.id, 'quantity', 1); }}
-                        className="w-full bg-ivory rounded-md border border-gold-antique/10 px-2 py-1.5 text-sm text-navy focus:border-gold focus:outline-none" />
+                      <NumberField
+                        min={1} value={appliance.quantity} emptyFallback={1}
+                        onChange={(v) => updateAppliance(appliance.id, 'quantity', v)}
+                        inputClassName="w-full bg-ivory rounded-md border border-gold-antique/10 px-2 py-1.5 text-sm text-navy focus:border-gold focus:outline-none"
+                      />
                     </div>
                     <div>
                       <label className="text-[10px] font-bold uppercase tracking-wider text-navy/40">Hours</label>
                       {appliance.usage === 'all-day' ? (
                         <p className="mt-1.5 rounded-md bg-gold/10 border border-gold/30 px-2 py-1.5 text-sm font-bold text-navy">22h auto</p>
                       ) : (
-                        <input type="number" min={0.25} max={24} step={0.25}
-                          value={Math.round((appliance.minutes / 60) * 4) / 4 || ''}
-                          onChange={(e) => updateAppliance(appliance.id, 'minutes', Math.round(Number(e.target.value) * 60))}
-                          onBlur={(e) => { const v = Number(e.target.value); if (!v || v < 0.25) updateAppliance(appliance.id, 'minutes', 15); if (v > 24) updateAppliance(appliance.id, 'minutes', 1440); }}
-                          className="w-full bg-ivory rounded-md border border-gold-antique/10 px-2 py-1.5 text-sm text-navy focus:border-gold focus:outline-none" />
+                        <NumberField
+                          min={0.25} max={24} step={0.25}
+                          value={Math.round((appliance.minutes / 60) * 4) / 4 || 0}
+                          emptyFallback={0.25}
+                          onChange={(v) => updateAppliance(appliance.id, 'minutes', Math.round(v * 60))}
+                          inputClassName="w-full bg-ivory rounded-md border border-gold-antique/10 px-2 py-1.5 text-sm text-navy focus:border-gold focus:outline-none"
+                        />
                       )}
                     </div>
                     <div>
@@ -943,11 +991,12 @@ const EnergyCalculator = () => {
                   ))}
                 </select>
                 {customSunHours && (
-                  <input type="number" min={1} max={12} step={0.5} value={peakSunHours}
-                    onChange={(e) => setPeakSunHours(clampNum(Number(e.target.value), 1, 12))}
-                    onBlur={(e) => { if (!e.target.value || Number(e.target.value) < 1) setPeakSunHours(5); }}
-                    className="w-full bg-white rounded-lg border border-gold-antique/20 px-3 py-2 text-sm text-navy focus:border-gold focus:outline-none mt-2"
-                    placeholder="Enter custom sun hours" />
+                  <NumberField
+                    min={1} max={12} step={0.5} value={peakSunHours} emptyFallback={5}
+                    onChange={(v) => setPeakSunHours(v || 1)}
+                    placeholder="Enter custom sun hours"
+                    inputClassName="w-full bg-white rounded-lg border border-gold-antique/20 px-3 py-2 text-sm text-navy focus:border-gold focus:outline-none mt-2"
+                  />
                 )}
               </div>
               <div>
@@ -1175,7 +1224,14 @@ const EnergyCalculator = () => {
               <h4 className="text-xs font-bold uppercase tracking-[0.2em] text-gold">Suggested Package</h4>
             </div>
 
-            <p className="text-[13px] leading-relaxed text-champagne/80">
+            {smartPlanMessage && (
+              <div className="mt-3 flex items-start gap-2.5 rounded-xl border border-gold/30 bg-gold/10 p-3.5 sm:p-4">
+                <Sparkles className="mt-0.5 h-4 w-4 shrink-0 text-gold" aria-hidden="true" />
+                <p className="text-[13px] leading-relaxed text-champagne/85">{smartPlanMessage}</p>
+              </div>
+            )}
+
+            <p className={`text-[13px] leading-relaxed text-champagne/80 ${smartPlanMessage ? 'mt-3' : ''}`}>
               Your load profile fits a <strong className="text-champagne">{loadProfile.label}</strong> &mdash;{' '}
               {loadProfile.detail}.{' '}
               {plansLoading
@@ -1219,12 +1275,13 @@ const EnergyCalculator = () => {
                 )}
 
                 <div className="mt-3 flex flex-wrap gap-2">
-                  <Link
-                    to="/solar"
+                  <button
+                    type="button"
+                    onClick={revealPlans}
                     className="inline-flex items-center gap-1.5 rounded-lg bg-gold px-3.5 py-2 text-[10px] font-bold uppercase tracking-widest text-navy transition-all hover:bg-gold-antique hover:text-white"
                   >
-                    See this plan
-                  </Link>
+                    View in Solar Plans
+                  </button>
                   <a
                     href={`https://wa.me/2349128817136?text=${encodeURIComponent(
                       `Hi Cedokamall! The calculator suggests the ${planMatches.best.plan.name} package for my ${results.totalKwh}kWh/day load (battery ${results.batteryCapacityAh}Ah @ ${results.systemVoltage}V, panels ${results.solarPanelW}Wp, inverter ${results.inverterW}W). Please confirm it fits.`
@@ -1351,13 +1408,10 @@ const EnergyCalculator = () => {
                         </div>
                       </div>
                       <div className="flex items-center gap-2 shrink-0">
-                        <input
-                          type="number"
-                          min={0}
-                          value={comp.quantity || ''}
-                          onChange={(e) => updateComponentQty(comp.id, Number(e.target.value))}
-                          onBlur={(e) => { const v = Number(e.target.value); if (!v || v < 0) updateComponentQty(comp.id, 0); }}
-                          className="w-16 bg-white/10 border border-white/20 rounded-md px-2 py-1.5 text-sm text-champagne text-center focus:border-gold focus:outline-none"
+                        <NumberField
+                          min={0} value={comp.quantity} emptyFallback={0}
+                          onChange={(v) => updateComponentQty(comp.id, v)}
+                          inputClassName="w-16 bg-white/10 border border-white/20 rounded-md px-2 py-1.5 text-sm text-champagne text-center focus:border-gold focus:outline-none"
                         />
                         <button type="button" onClick={() => removeComponent(comp.id)} className="text-champagne/40 hover:text-red-400" aria-label="Remove">
                           <Trash2 className="h-4 w-4" />

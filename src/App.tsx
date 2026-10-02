@@ -20,6 +20,7 @@ import { safeLazy } from "@/utils/lazy";
 import { addConnectionHints } from "@/utils/performance";
 import { trackPageView, trackReferrer } from "@/utils/tracking";
 import MobileBottomNav from "@/components/MobileBottomNav";
+import ScrollToHash from "@/components/ScrollToHash";
 
 const Index        = safeLazy(() => import("./pages/Index"));
 const ShopPage     = safeLazy(() => import("./pages/ShopPage"));
@@ -263,6 +264,7 @@ const App = () => {
                   <Route path="*" element={<NotFound />} />
                 </Routes>
               </Suspense>
+              <ScrollToHash />
               <MobileBottomNav />
             </BrowserRouter>
           </ErrorBoundary>
