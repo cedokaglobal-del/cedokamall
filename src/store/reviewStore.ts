@@ -33,22 +33,38 @@ const LOCAL_REVIEWS_PREFIX = 'cedoka_local_reviews';
 const MAX_NAME_LENGTH = 60;
 const MAX_TEXT_LENGTH = 2000;
 
+/** C0/C1 control characters, replaced with a space. */
+const isControlCode = (code: number): boolean =>
+  code <= 0x1f || (code >= 0x7f && code <= 0x9f);
+
+/** Zero-width and bidi-override characters, dropped entirely. */
+const isInvisibleCode = (code: number): boolean =>
+  (code >= 0x200b && code <= 0x200f) ||
+  (code >= 0x202a && code <= 0x202e) ||
+  (code >= 0x2060 && code <= 0x2064) ||
+  code === 0xfeff;
+
 /**
  * Normalise untrusted user input before it is stored or rendered.
  *
  * React already escapes text nodes, so this is defence in depth rather than the
- * primary XSS control: it strips control characters, collapses runaway
- * whitespace, removes zero-width/bidi override characters used to spoof names,
- * and clamps length so a single field cannot bloat the reviews table.
+ * primary XSS control: it strips control characters, removes zero-width and
+ * bidi-override characters used to spoof reviewer names, collapses runaway
+ * whitespace, and clamps length so a single field cannot bloat the table.
  */
-const sanitize = (value: string, maxLength: number): string =>
-  value
-    // C0/C1 control chars (except none needed here) and zero-width / bidi overrides
-    .replace(/[\u0000-\u001F\u007F-\u009F]/g, ' ')
-    .replace(/[\u200B-\u200F\u202A-\u202E\u2060-\u2064\uFEFF]/g, '')
-    .replace(/\s+/g, ' ')
-    .trim()
-    .slice(0, maxLength);
+const sanitize = (value: string, maxLength: number): string => {
+  let stripped = '';
+  for (const char of value) {
+    const code = char.codePointAt(0) ?? 0;
+    if (isControlCode(code)) {
+      stripped += ' ';
+    } else if (!isInvisibleCode(code)) {
+      stripped += char;
+    }
+  }
+
+  return stripped.replace(/\s+/g, ' ').trim().slice(0, maxLength);
+};
 
 const sanitizeName = (value: string): string => {
   const cleaned = sanitize(value, MAX_NAME_LENGTH);
@@ -92,7 +108,7 @@ const mapRowToReview = (row: Record<string, unknown>): StoreReview => ({
   created_at: String(row.created_at ?? new Date().toISOString()),
 });
 
-let pendingFetches: Record<string, Promise<void> | null> = {};
+const pendingFetches: Record<string, Promise<void> | null> = {};
 let reviewRealtimeChannel: RealtimeChannel | null = null;
 
 export const useReviewStore = create<ReviewState>((set, get) => ({

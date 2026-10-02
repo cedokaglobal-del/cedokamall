@@ -252,7 +252,7 @@ const Index = () => {
           src={heroImage}
           alt="Featured Cedokamall electronics and technology"
           className="absolute inset-0 h-full w-full object-cover object-center"
-          fetchPriority="high"
+          {...({ fetchpriority: 'high' } as Record<string, string>)}
           decoding="async"
         />
         <div className="absolute inset-0 bg-navy/70" aria-hidden="true" />
