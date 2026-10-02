@@ -74,6 +74,13 @@ const PEAK_SUN_HOURS_OPTIONS = [
 
 const STORAGE_KEY = 'cedoka_energy_calculator';
 
+/**
+ * "All day" means the appliance runs round the clock, so it is locked to 22h
+ * (the practical minimum) automatically and the user never enters a time.
+ * Module scope: a true constant, so the callbacks below need no extra deps.
+ */
+const ALL_DAY_MINUTES = 22 * 60;
+
 const generateId = () => `${Date.now().toString(36)}-${Math.random().toString(36).slice(2, 8)}`;
 
 const loadFromStorage = () => {
@@ -399,7 +406,6 @@ const EnergyCalculator = () => {
 
   // Task 9: "All day" means the appliance runs round the clock — lock it to
   // 22h (minimum) automatically so the user never has to enter time manually.
-  const ALL_DAY_MINUTES = 22 * 60;
   const setApplianceUsage = useCallback((id: string, usage: ApplianceRow['usage']) => {
     setAppliances((prev) =>
       prev.map((a) =>

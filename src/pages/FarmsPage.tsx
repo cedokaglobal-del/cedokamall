@@ -90,7 +90,7 @@ const FarmsPage = () => {
           return scoreB - scoreA;
         });
     }
-  }, [farmProducts, activeCategory, priceRange, sortBy]);
+  }, [farmProducts, activeCategory, priceRange, searchTerm, sortBy]);
 
   const handleTabChange = (value: string) => {
     const params = new URLSearchParams(searchParams);
