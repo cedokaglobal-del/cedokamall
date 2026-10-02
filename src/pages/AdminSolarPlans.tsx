@@ -6,6 +6,7 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Textarea } from '@/components/ui/textarea';
 import { useSolarPlanStore, createSolarPlanItem } from '@/store/solarPlanStore';
+import { SOLAR_PLAN_BUCKET, uploadImage, readAsDataUrl } from '@/lib/imageUpload';
 import type { SolarPlan, SolarPlanItem, SolarPlanItemType } from '@/types/solarPlan';
 
 const itemTypes: { value: SolarPlanItemType; label: string }[] = [
@@ -45,6 +46,7 @@ const AdminSolarPlans = () => {
   const [error, setError] = useState('');
   const [canPowerInput, setCanPowerInput] = useState('');
   const [imageMeta, setImageMeta] = useState<{ name: string; size: number; width: number; height: number } | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
 
   useEffect(() => {
     void fetchPlans();
@@ -92,12 +94,11 @@ const AdminSolarPlans = () => {
     }));
   };
 
-  // Images are stored inline as base64 in a text column, and base64 inflates by
-  // roughly a third. Keep the encoded payload comfortably inside what the
-  // database and the REST endpoint will accept.
+  // Images are stored in Supabase Storage. The inline cap is the fallback path
+  // for when the bucket is unavailable, and base64 inflates by about a third.
   const MAX_IMAGE_BYTES = 1024 * 1024;
 
-  const handleImage = (file: File | undefined, input?: HTMLInputElement) => {
+  const handleImage = async (file: File | undefined, input?: HTMLInputElement) => {
     if (input) input.value = '';
     if (!file) return;
     if (!file.type.startsWith('image/')) {
@@ -109,24 +110,39 @@ const AdminSolarPlans = () => {
       return;
     }
     setError(null);
+    setIsUploading(true);
 
-    const reader = new FileReader();
-    reader.onload = () => {
-      const image = String(reader.result);
+    try {
+      // Preferred path: real object storage, so the row holds a short URL.
+      const uploaded = await uploadImage(file, SOLAR_PLAN_BUCKET, 'plans');
+      let image: string;
+
+      if (uploaded.ok && uploaded.url) {
+        image = uploaded.url;
+      } else {
+        // Storage unavailable (policies or bucket not applied yet). Fall back to
+        // an inline data URL so the admin is not blocked from saving a plan.
+        console.warn('Falling back to an inline image:', uploaded.error);
+        image = await readAsDataUrl(file);
+      }
+
       // Read natural dimensions so the admin can confirm the right asset landed.
       const probe = new Image();
       probe.onload = () => {
         setImageMeta({ name: file.name, size: file.size, width: probe.naturalWidth, height: probe.naturalHeight });
         setDraft((current) => ({ ...current, image }));
+        setIsUploading(false);
       };
       probe.onerror = () => {
         setImageMeta({ name: file.name, size: file.size, width: 0, height: 0 });
         setDraft((current) => ({ ...current, image }));
+        setIsUploading(false);
       };
       probe.src = image;
-    };
-    reader.onerror = () => setError('Could not read that image. Please try another file.');
-    reader.readAsDataURL(file);
+    } catch (err) {
+      setIsUploading(false);
+      setError(err instanceof Error ? err.message : 'Could not read that image.');
+    }
   };
 
   const clearImage = () => {
@@ -207,7 +223,7 @@ const AdminSolarPlans = () => {
                   className="flex h-10 cursor-pointer items-center gap-2 rounded-md border px-3 text-sm text-muted-foreground transition-colors hover:bg-muted"
                 >
                   <Upload className="h-4 w-4" />
-                  {draft.image ? 'Replace image' : 'Upload image'}
+                  {isUploading ? 'Uploading…' : draft.image ? 'Replace image' : 'Upload image'}
                 </label>
                 <input
                   id="plan-image"

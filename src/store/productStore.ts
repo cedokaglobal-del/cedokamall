@@ -560,47 +560,70 @@ export const useProductStore = create<ProductState>((set, get) => ({
     }
   },
 
+  /**
+   * Submit a star rating.
+   *
+   * The average used to be recomputed in the browser and written back, which was
+   * both forgeable and prone to losing votes when two people rated at once. The
+   * arithmetic now runs inside the database via increment_product_rating(), which
+   * locks the row, and the store re-reads the row it returns.
+   */
   rateProduct: async (id, newRating) => {
     const current = get().products.find((p) => p.id === id);
     if (!current) return;
 
+    const clamped = Math.min(5, Math.max(1, Math.round(newRating)));
     const oldRating = current.rating || 0;
     const oldReviews = current.reviews || 0;
-    const nextReviews = oldReviews + 1;
-    const nextRating = Number(((oldRating * oldReviews + newRating) / nextReviews).toFixed(1));
 
-    // Update local state immediately so the UI always reflects the rating
+    // Optimistic local update so the stars respond immediately.
+    const optimisticReviews = oldReviews + 1;
+    const optimisticRating = Number(
+      ((oldRating * oldReviews + clamped) / optimisticReviews).toFixed(1)
+    );
     set((state) => {
       const products = state.products.map((product) =>
         product.id === id
-          ? { ...product, rating: nextRating, reviews: nextReviews }
+          ? { ...product, rating: optimisticRating, reviews: optimisticReviews }
           : product
       );
       persistProducts(products);
       return { products, lastSyncedAt: new Date().toISOString() };
     });
 
-    try {
-      const { data, error } = await supabase
-        .from('products')
-        .update({ rating: nextRating, reviews: nextReviews })
-        .eq('id', id)
-        .select();
+    const { error } = await supabase.rpc('increment_product_rating', {
+      target_product_id: id,
+      new_rating: clamped,
+    });
 
-      if (error) throw error;
+    if (error) {
+      // The function only exists once SECURITY_HARDENING.sql has been applied.
+      // Say so plainly rather than leaving a silently unsaved rating.
+      console.warn('Could not save rating through the database:', error.message);
+      return;
+    }
 
-      const row = data?.[0];
-      if (row) {
-        set((state) => {
-          const products = state.products.map((product) =>
-            product.id === id ? mapSupabaseToProduct(row) : product
-          );
-          persistProducts(products);
-          return { products, lastSyncedAt: new Date().toISOString() };
-        });
-      }
-    } catch (error) {
-      console.warn('Supabase rating update failed, using local rating:', error);
+    // Read back the authoritative values the function committed.
+    const { data } = await supabase
+      .from('products')
+      .select('id, rating, reviews')
+      .eq('id', id)
+      .maybeSingle();
+
+    if (data) {
+      set((state) => {
+        const products = state.products.map((product) =>
+          product.id === id
+            ? {
+                ...product,
+                rating: Number(data.rating ?? product.rating ?? 0),
+                reviews: Number(data.reviews ?? product.reviews ?? 0),
+              }
+            : product
+        );
+        persistProducts(products);
+        return { products, lastSyncedAt: new Date().toISOString() };
+      });
     }
   },
 
