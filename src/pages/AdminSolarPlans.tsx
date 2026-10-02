@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { CheckCircle2, Pencil, Plus, Trash2, Upload, X } from 'lucide-react';
+import { CheckCircle2, Pencil, Plus, RotateCcw, Trash2, Upload, X } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -37,6 +37,8 @@ const AdminSolarPlans = () => {
   const addPlan = useSolarPlanStore((state) => state.addPlan);
   const updatePlan = useSolarPlanStore((state) => state.updatePlan);
   const deletePlan = useSolarPlanStore((state) => state.deletePlan);
+  const isSaving = useSolarPlanStore((state) => state.isSaving);
+  const syncError = useSolarPlanStore((state) => state.error);
   const fetchPlans = useSolarPlanStore((state) => state.fetchPlans);
   const [draft, setDraft] = useState<PlanDraft>(emptyPlan);
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -74,6 +76,13 @@ const AdminSolarPlans = () => {
     setCanPowerInput('');
     setImageMeta(null);
     setError('');
+  };
+
+  const handleDelete = async (id: string) => {
+    const result = await deletePlan(id);
+    if (!result.ok) {
+      setError(result.message || 'Could not delete the plan from the database.');
+    }
   };
 
   const updateItem = (id: string, field: keyof SolarPlanItem, value: string | number) => {
@@ -134,7 +143,7 @@ const AdminSolarPlans = () => {
     setDraft((current) => ({ ...current, canPower: current.canPower.filter((i) => i !== item) }));
   };
 
-  const handleSubmit = () => {
+  const handleSubmit = async () => {
     const items = draft.items.filter((item) => item.name.trim());
     if (!draft.name.trim() || items.length === 0) {
       setError('Add a plan name and at least one named plan item.');
@@ -153,11 +162,17 @@ const AdminSolarPlans = () => {
       price: Math.max(0, Number(draft.price) || 0),
       items: normalizedItems,
     };
-    if (editingId) {
-      void updatePlan(editingId, planData);
-    } else {
-      void addPlan(planData);
+
+    const result = editingId ? await updatePlan(editingId, planData) : await addPlan(planData);
+
+    if (!result.ok) {
+      // Never report success when the database rejected the write.
+      setError(result.message || 'Could not save the plan to the database.');
+      return;
     }
+
+    setError('');
+    setImageMeta(null);
     reset();
   };
 
@@ -307,13 +322,26 @@ const AdminSolarPlans = () => {
               ))}
             </div>
             {error && <p className="mt-4 text-sm text-destructive">{error}</p>}
-            <Button onClick={handleSubmit} className="mt-6">{editingId ? 'Save plan' : 'Create solar plan'}</Button>
+            <Button onClick={handleSubmit} disabled={isSaving} className="mt-6">
+        {isSaving ? 'Saving…' : editingId ? 'Save plan' : 'Create solar plan'}
+      </Button>
           </section>
 
           <section className="space-y-4">
             <h2 className="text-lg font-bold">Saved plans ({plans.length})</h2>
+      <div className="mt-2 flex flex-wrap items-center gap-3">
+        <p className={`text-xs ${syncError ? 'font-semibold text-destructive' : 'text-muted-foreground'}`}>
+          {syncError
+            ? `Not synced with the database: ${syncError}`
+            : `In sync with the database. ${plans.filter((plan) => plan.id.startsWith('plan-')).length} plan(s) are only on this device and still need a working database connection.`}
+        </p>
+        <Button type="button" variant="outline" size="sm" onClick={() => void fetchPlans()} className="gap-1.5">
+          <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+          Sync now
+        </Button>
+      </div>
             {plans.length === 0 && <div className="rounded-xl border border-dashed p-8 text-center text-sm text-muted-foreground">No Solar Plans yet.</div>}
-            {plans.map((plan) => <article key={plan.id} className="overflow-hidden rounded-xl border bg-white shadow-sm">{plan.image && <img src={plan.image} alt="" className="h-32 w-full object-cover" /> }<div className="p-4"><div className="flex items-start justify-between gap-3"><div><h3 className="font-bold">{plan.name}</h3>{plan.capacity && <p className="mt-0.5 text-xs text-gold font-semibold">{plan.capacity}</p>}{plan.price > 0 && <p className="mt-0.5 text-xs text-muted-foreground">₦{plan.price.toLocaleString()}</p>}{plan.bestFor && <p className="mt-1 text-xs text-muted-foreground">Best for: {plan.bestFor}</p>}</div><div className="flex"><Button variant="ghost" size="icon" onClick={() => startEdit(plan)} aria-label={`Edit ${plan.name}`}><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={() => deletePlan(plan.id)} aria-label={`Delete ${plan.name}`}><Trash2 className="h-4 w-4 text-destructive" /></Button></div></div><ul className="mt-3 space-y-1 text-xs text-muted-foreground">{plan.items.map((item) => <li key={item.id}>{item.quantity} x {item.name} ({item.volts}V / {item.watts}W)</li>)}</ul>{plan.canPower.length > 0 && <div className="mt-3 flex flex-wrap gap-1">{plan.canPower.map((item) => <span key={item} className="rounded-full bg-gold/10 px-2 py-0.5 text-[10px] text-navy">{item}</span>)}</div>}</div></article>)}
+            {plans.map((plan) => <article key={plan.id} className="overflow-hidden rounded-xl border bg-white shadow-sm">{plan.image && <img src={plan.image} alt="" className="h-32 w-full object-cover" /> }<div className="p-4"><div className="flex items-start justify-between gap-3"><div><h3 className="font-bold">{plan.name}</h3>{plan.capacity && <p className="mt-0.5 text-xs text-gold font-semibold">{plan.capacity}</p>}{plan.price > 0 && <p className="mt-0.5 text-xs text-muted-foreground">₦{plan.price.toLocaleString()}</p>}{plan.bestFor && <p className="mt-1 text-xs text-muted-foreground">Best for: {plan.bestFor}</p>}</div><div className="flex"><Button variant="ghost" size="icon" onClick={() => startEdit(plan)} aria-label={`Edit ${plan.name}`}><Pencil className="h-4 w-4" /></Button><Button variant="ghost" size="icon" onClick={() => handleDelete(plan.id)} aria-label={`Delete ${plan.name}`}><Trash2 className="h-4 w-4 text-destructive" /></Button></div></div><ul className="mt-3 space-y-1 text-xs text-muted-foreground">{plan.items.map((item) => <li key={item.id}>{item.quantity} x {item.name} ({item.volts}V / {item.watts}W)</li>)}</ul>{plan.canPower.length > 0 && <div className="mt-3 flex flex-wrap gap-1">{plan.canPower.map((item) => <span key={item} className="rounded-full bg-gold/10 px-2 py-0.5 text-[10px] text-navy">{item}</span>)}</div>}</div></article>)}
           </section>
         </div>
       </div>

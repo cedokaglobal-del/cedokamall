@@ -5,6 +5,7 @@ import {
   ArrowRight,
   ChevronRight,
   Package,
+  RotateCcw,
   ShieldCheck,
   Star,
   Sun,
@@ -166,6 +167,7 @@ const Index = () => {
   const [listingTab, setListingTab] = useState<'all' | 'products' | 'plans'>('all');
   const activePlans = useMemo(() => plans.filter((plan) => plan.isActive), [plans]);
   const fetchPlans = useSolarPlanStore((s) => s.fetchPlans);
+  const plansError = useSolarPlanStore((s) => s.error);
   const categories = useMemo(() => buildCategories(products), [products]);
   const topCategories = useMemo(
     () => [...categories].sort((a, b) => b.count - a.count).slice(0, 8),
@@ -398,6 +400,22 @@ const Index = () => {
               <ArrowRight className="h-4 w-4" />
             </Link>
           </div>
+
+          {plansError && (
+            <div className="mb-5 flex flex-wrap items-center gap-3 rounded-xl border border-amber-300 bg-amber-50 px-4 py-3">
+              <p className="min-w-0 flex-1 text-[12px] leading-5 text-amber-900">
+                Solar plans could not be synced from the database, so this list may be out of date.
+              </p>
+              <button
+                type="button"
+                onClick={() => fetchPlans()}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-amber-400 bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest text-amber-800 transition-colors hover:bg-amber-100"
+              >
+                <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
+                Retry sync
+              </button>
+            </div>
+          )}
 
           {activePlans.length > 0 ? (
             <div className="grid grid-cols-3 gap-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
