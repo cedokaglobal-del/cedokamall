@@ -325,7 +325,7 @@ const SolarPage = () => {
         {activePlans.length > 0 && (
           <section id="solar-plans" className="mt-16 scroll-mt-24">
             <div className="mb-8 text-center">
-              <span className="text-xs font-bold uppercase tracking-[0.2em] text-gold">Tailored for your needs</span>
+              <span className="text-xs font-bold uppercase tracking-[0.2em] text-gold">Solar Plans</span>
               <h2 className="mt-3 font-serif text-2xl font-bold text-navy sm:text-3xl">Solar System Plans</h2>
               <div className="mx-auto mt-3 h-1 w-16 bg-gold" />
               <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-navy/60">

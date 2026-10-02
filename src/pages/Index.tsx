@@ -382,7 +382,10 @@ const Index = () => {
         <div className="container">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <h2 className="font-serif text-2xl font-bold text-navy sm:text-3xl">Solar System Plans</h2>
+              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold sm:text-xs">
+                Solar Plans
+              </span>
+              <h2 className="mt-2 font-serif text-2xl font-bold text-navy sm:text-3xl">Solar System Plans</h2>
               <p className="mt-2 max-w-lg text-sm text-navy/60">
                 Complete, ready-to-install solar packages. Pick one, or size your own with the energy calculator.
               </p>
