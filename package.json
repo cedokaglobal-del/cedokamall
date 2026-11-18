@@ -10,12 +10,12 @@
     "typecheck": "tsc --noEmit -p tsconfig.app.json && npm run typecheck:api",
     "typecheck:api": "tsc --noEmit -p tsconfig.api.json",
     "verify:build": "node scripts/verify-build.mjs",
-    "postbuild": "node scripts/generate-sitemap.mjs",
+    "postbuild": "node scripts/generate-sitemap.mjs && node scripts/prerender-products.mjs",
     "start": "vite start",
     "build:dev": "vite build --mode development",
     "lint": "eslint .",
     "preview": "vite preview",
-    "test": "vitest run",
+    "test": "vitest run && node --test scripts/prerender-products.test.mjs",
     "test:watch": "vitest"
   },
   "dependencies": {

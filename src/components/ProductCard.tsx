@@ -56,19 +56,25 @@ const ProductCard = ({ product, priority = false }: { product: Product, priority
           </h3>
         </Link>
 
-        {/* Rating */}
-        <div className="flex items-center gap-0.5 sm:gap-1 mb-1 sm:mb-2">
+        {/* Rating — the shared aggregate every shopper contributes to */}
+        <div
+          className="mb-1 flex items-center gap-0.5 sm:mb-2 sm:gap-1"
+          aria-label={`Rated ${(product.rating || 0).toFixed(1)} out of 5 by ${product.reviews || 0} customers`}
+        >
           {[...Array(5)].map((_, index) => (
             <Star
               key={index}
               className={cn(
-                'h-[9px] w-[9px] sm:h-2 sm:w-2 transition-colors duration-200',
+                'h-[9px] w-[9px] transition-colors duration-200 sm:h-2.5 sm:w-2.5',
                 index < Math.round(product.rating || 0) ? 'fill-gold text-gold' : 'fill-gray-200 text-gray-200'
               )}
             />
           ))}
-          <span className="ml-1 text-[11px] sm:text-xs font-bold text-charcoal/60 tabular-nums">
-            ({product.reviews})
+          <span className="ml-1 text-[11px] font-bold text-charcoal/80 tabular-nums sm:text-xs">
+            {(product.rating || 0).toFixed(1)}
+          </span>
+          <span className="text-[10px] text-charcoal/45 tabular-nums sm:text-[11px]">
+            ({product.reviews || 0})
           </span>
         </div>
 

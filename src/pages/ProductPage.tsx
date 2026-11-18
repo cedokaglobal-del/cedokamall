@@ -320,7 +320,13 @@ const ProductPage = () => {
   const productMeta = product
     ? {
         title: `${product.name} - Buy Original ${product.category} in Nigeria | Cedokamall`,
-        description: `${product.description.slice(0, 140)}${product.description.length > 140 ? '...' : ''}`,
+        // The rating phrase is part of the description so answer engines that
+        // read meta descriptions (not just JSON-LD) can cite the rating too.
+        description: `${product.description.slice(0, 140)}${product.description.length > 140 ? '...' : ''}${
+          (product.reviews || 0) > 0
+            ? ` Rated ${(product.rating || 0).toFixed(1)}/5 by ${product.reviews} customers.`
+            : ''
+        }`,
         keywords: [
           product.name,
           product.category,
@@ -560,20 +566,62 @@ const ProductPage = () => {
                   {product.name}
                 </h1>
 
-                <div className="mt-5 flex flex-wrap items-center gap-4">
+                <div
+                  className="mt-5 flex flex-wrap items-center gap-3"
+                  aria-label={`Rated ${avgRating.toFixed(1)} out of 5 by ${totalReviewCount || product.reviews || 0} customers`}
+                >
                   <div className="flex items-center gap-1">
                     {[...Array(5)].map((_, index) => (
                       <Star
                         key={index}
                         className={cn(
                           'h-4 w-4',
-                          index < Math.round(product.rating || 0) ? 'fill-gold text-gold' : 'fill-gray-200 text-gray-200'
+                          index < Math.round(avgRating) ? 'fill-gold text-gold' : 'fill-gray-200 text-gray-200'
                         )}
                       />
                     ))}
                   </div>
-                  <span className="break-words text-sm font-bold text-navy">{(product.rating || 0).toFixed(1)}</span>
-                  <span className="break-words text-sm text-navy/45">{product.reviews || 0} verified reviews</span>
+                  <span className="break-words text-sm font-bold text-navy">{avgRating.toFixed(1)}</span>
+                  <span className="break-words text-sm text-navy/45">
+                    {totalReviewCount || product.reviews || 0} customer ratings
+                  </span>
+                </div>
+
+                {/* Quick rating — every vote updates the shared aggregate other shoppers see. */}
+                <div className="mt-4 flex flex-wrap items-center gap-x-3 gap-y-2 rounded-2xl border border-gold-antique/10 bg-ivory/60 px-3 py-2.5">
+                  <span className="text-[11px] font-bold uppercase tracking-[0.16em] text-navy/55">
+                    {userRating > 0 ? `You rated ${userRating}/5` : 'Rate this product'}
+                  </span>
+                  <div className="flex items-center gap-0.5">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <button
+                        key={star}
+                        type="button"
+                        disabled={userRating > 0 || isRating}
+                        onMouseEnter={() => setHoverRating(star)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        onFocus={() => setHoverRating(star)}
+                        onBlur={() => setHoverRating(0)}
+                        onClick={() => handleRate(star)}
+                        aria-label={`Rate ${star} out of 5 stars`}
+                        className="press rounded p-0.5 disabled:cursor-default"
+                      >
+                        <Star
+                          className={cn(
+                            'h-5 w-5 sm:h-6 sm:w-6',
+                            star <= (hoverRating || userRating)
+                              ? 'fill-gold text-gold'
+                              : 'fill-gray-200 text-gray-200'
+                          )}
+                        />
+                      </button>
+                    ))}
+                  </div>
+                  {userRating === 0 && (
+                    <span className="text-[11px] text-navy/40">
+                      Your rating is shared with other shoppers
+                    </span>
+                  )}
                 </div>
               </div>
 
