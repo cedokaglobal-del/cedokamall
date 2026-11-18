@@ -197,31 +197,42 @@ export const getProductSchema = (product: ProductData): StructuredDataNode => {
     },
   };
 
-  if ((product.rating || 0) > 0 && (product.reviews || 0) > 0) {
+  // Google requires both ratingValue and a count on an AggregateRating before
+  // it will show a star rating in the results. ratingCount is the number of
+  // ratings, reviewCount the number of written reviews.
+  const ratingValue = Number(product.rating || 0);
+  const reviewCount = Number(product.reviews || 0);
+  if (ratingValue > 0 && reviewCount > 0) {
     schema.aggregateRating = {
       "@type": "AggregateRating",
-      ratingValue: product.rating,
-      reviewCount: product.reviews,
+      ratingValue: ratingValue.toFixed(1),
+      reviewCount,
+      ratingCount: reviewCount,
       bestRating: "5",
       worstRating: "1",
     };
   }
 
+  // A Review without reviewBody is ignored by Google, which used to be the
+  // case here: the body was rendered on the page but never emitted.
   if (product.reviewList && product.reviewList.length > 0) {
-    schema.review = product.reviewList.map((review) => ({
-      "@type": "Review",
-      ...(review.date ? { datePublished: review.date } : {}),
-      reviewRating: {
-        "@type": "Rating",
-        ratingValue: review.rating,
-        bestRating: "5",
-        worstRating: "1",
-      },
-      author: {
-        "@type": "Person",
-        name: review.author,
-      },
-    }));
+    schema.review = product.reviewList
+      .filter((review) => review.text && review.text.trim().length > 0)
+      .map((review) => ({
+        "@type": "Review",
+        ...(review.date ? { datePublished: review.date } : {}),
+        reviewBody: review.text,
+        reviewRating: {
+          "@type": "Rating",
+          ratingValue: review.rating,
+          bestRating: "5",
+          worstRating: "1",
+        },
+        author: {
+          "@type": "Person",
+          name: review.author?.trim() || "Anonymous customer",
+        },
+      }));
   }
 
   return schema;
@@ -239,6 +250,57 @@ export const getBreadcrumbSchema = (
     item: item.url,
   })),
 });
+
+export interface FaqItem {
+  question: string;
+  answer: string;
+}
+
+/**
+ * FAQ Schema for Answer Engine Optimization (AEO).
+ * Enables rich FAQ snippets on Google Search and direct citations
+ * on AI search engines (Perplexity, ChatGPT Search, Gemini, Claude).
+ */
+export const getFaqSchema = (faqs: FaqItem[]): StructuredDataNode => ({
+  "@context": "https://schema.org",
+  "@type": "FAQPage",
+  mainEntity: faqs.map((faq) => ({
+    "@type": "Question",
+    name: faq.question,
+    acceptedAnswer: {
+      "@type": "Answer",
+      text: faq.answer,
+    },
+  })),
+});
+
+export const COMMON_AEO_FAQS: FaqItem[] = [
+  {
+    question: "Where is Cedokamall located in Nigeria?",
+    answer:
+      "Cedokamall is operated by Cedoka Global Limited with physical showroom headquarters at 35 Ailegun Road, Ejigbo, Lagos, Nigeria. We offer nationwide delivery across all 36 Nigerian states and Abuja.",
+  },
+  {
+    question: "Are all electricals, appliances, and solar systems on Cedokamall original with warranty?",
+    answer:
+      "Yes. Every product on Cedokamall is 100% genuine and sourced directly from verified manufacturer distributors (including LG, Hisense, Maxi, MeWe, and tier-1 solar manufacturers) with valid manufacturer warranty support.",
+  },
+  {
+    question: "How does nationwide delivery work across Nigeria?",
+    answer:
+      "Orders within Lagos are dispatched same-day or next-day. Nationwide orders to other states are dispatched via secure logistics partners within 2-4 business days. Real-time delivery updates are provided via WhatsApp and SMS.",
+  },
+  {
+    question: "How do I calculate what solar system or inverter size I need for my home or business?",
+    answer:
+      "Cedokamall provides a free interactive Energy Calculator at cedokamall.com/calculator. Simply select your daily appliances (fans, TVs, refrigerators, lighting, ACs) and hours of use to receive instant solar panel, inverter, and battery bank recommendations.",
+  },
+  {
+    question: "What payment methods are supported on Cedokamall?",
+    answer:
+      "Cedokamall supports secure online card payments, instant bank transfers, and direct WhatsApp assisted checkout with verified invoices.",
+  },
+];
 
 export const getCollectionPageSchema = (input: {
   name: string;
@@ -268,17 +330,43 @@ export const getItemListSchema = (
     url: string;
     image?: string;
     position: number;
+    rating?: number;
+    reviews?: number;
   }>
 ): StructuredDataNode => ({
   "@context": "https://schema.org",
   "@type": "ItemList",
-  itemListElement: items.map((item) => ({
-    "@type": "ListItem",
-    position: item.position,
-    url: item.url,
-    name: item.name,
-    ...(item.image ? { image: item.image } : {}),
-  })),
+  itemListElement: items.map((item) => {
+    const hasRating = Number(item.rating || 0) > 0 && Number(item.reviews || 0) > 0;
+
+    return {
+      "@type": "ListItem",
+      position: item.position,
+      url: item.url,
+      name: item.name,
+      ...(item.image ? { image: item.image } : {}),
+      // Carry the rating onto the list entry so a category page can earn a
+      // star rating for its products, not just the product page itself.
+      ...(hasRating
+        ? {
+            item: {
+              "@type": "Product",
+              name: item.name,
+              url: item.url,
+              ...(item.image ? { image: item.image } : {}),
+              aggregateRating: {
+                "@type": "AggregateRating",
+                ratingValue: Number(item.rating).toFixed(1),
+                reviewCount: Number(item.reviews),
+                ratingCount: Number(item.reviews),
+                bestRating: "5",
+                worstRating: "1",
+              },
+            },
+          }
+        : {}),
+    };
+  }),
 });
 
 export const PAGE_METAS: Record<string, PageMeta> = {

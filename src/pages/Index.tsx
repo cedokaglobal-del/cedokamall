@@ -26,6 +26,8 @@ import {
   getOrganizationSchema,
   getStoreSchema,
   getWebsiteSchema,
+  getFaqSchema,
+  COMMON_AEO_FAQS,
   SEO_CONFIG,
 } from '@/config/seo';
 import { useSEO, useStructuredData } from '@/hooks/useSEO';
@@ -225,6 +227,7 @@ const Index = () => {
       getOrganizationSchema(),
       getStoreSchema(),
       getWebsiteSchema(),
+      getFaqSchema(COMMON_AEO_FAQS),
       getBreadcrumbSchema([{ name: 'Home', url: SEO_CONFIG.siteUrl }]),
       getItemListSchema(
         topCategories.map((category, index) => ({
@@ -239,6 +242,8 @@ const Index = () => {
           name: product.name,
           url: `${SEO_CONFIG.siteUrl}/product/${product.id}`,
           image: product.image,
+          rating: product.rating,
+          reviews: product.reviews,
         }))
       ),
     ],
@@ -497,12 +502,6 @@ const Index = () => {
                 ] as const
               ).map((tab) => {
                 const isActive = listingTab === tab.key;
-                const count =
-                  tab.key === 'all'
-                    ? homepageProducts.length + activePlans.length
-                    : tab.key === 'products'
-                      ? homepageProducts.length
-                      : activePlans.length;
                 return (
                   <button
                     key={tab.key}
@@ -510,14 +509,13 @@ const Index = () => {
                     onClick={() => setListingTab(tab.key)}
                     aria-pressed={isActive}
                     className={cn(
-                      'press inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-[11px] font-bold uppercase tracking-widest transition-colors',
+                      'press inline-flex items-center gap-1.5 rounded-full border px-4 py-2 text-[11px] font-bold uppercase tracking-widest transition-colors',
                       isActive
-                        ? 'border-navy bg-navy text-gold'
+                        ? 'border-navy bg-navy text-gold shadow-sm'
                         : 'border-gold-antique/20 bg-white text-navy/60 hover:border-gold hover:text-navy'
                     )}
                   >
                     {tab.label}
-                    <span className={cn('tabular-nums', isActive ? 'text-gold/70' : 'text-navy/35')}>{count}</span>
                   </button>
                 );
               })}

@@ -12,7 +12,7 @@ import { useProductStore } from '@/store/productStore';
 import { useSolarCategoryStore } from '@/store/solarCategoryStore';
 import { useSolarPlanStore } from '@/store/solarPlanStore';
 import { useSEO, useStructuredData } from '@/hooks/useSEO';
-import { getBreadcrumbSchema, getCollectionPageSchema, SEO_CONFIG } from '@/config/seo';
+import { getBreadcrumbSchema, getCollectionPageSchema, getFaqSchema, SEO_CONFIG } from '@/config/seo';
 
 const slugify = (value: string) =>
   value.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '');
@@ -174,6 +174,20 @@ const SolarPage = () => {
     getBreadcrumbSchema([
       { name: 'Home', url: SEO_CONFIG.siteUrl },
       { name: 'Solar Energy', url: `${SEO_CONFIG.siteUrl}/solar` },
+    ]),
+    getFaqSchema([
+      {
+        question: 'What solar components do I need for a complete solar installation in Nigeria?',
+        answer: 'A complete solar energy setup requires monocrystalline solar panels, a pure sine wave solar inverter, deep-cycle solar batteries (lithium LiFePO4 or tubular gel), and a high-efficiency MPPT charge controller, along with mounting racks and DC surge protection.',
+      },
+      {
+        question: 'How long do solar batteries last in Nigeria?',
+        answer: 'High-grade Lithium Iron Phosphate (LiFePO4) solar batteries typically last 10 to 15 years (3,000 to 6,000 cycles). Tubular gel deep-cycle batteries typically provide 3 to 5 years under proper depth-of-discharge management.',
+      },
+      {
+        question: 'Does Cedokamall offer warranty and genuine solar equipment?',
+        answer: 'Yes, Cedokamall provides authentic solar panels, inverters, and batteries with manufacturer warranty and direct customer support across Lagos and Nigeria.',
+      },
     ]),
     getCollectionPageSchema({
       name: 'Solar Energy Solutions - Cedokamall',

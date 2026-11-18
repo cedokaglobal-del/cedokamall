@@ -101,7 +101,7 @@ const ProductCard = ({ product, priority = false }: { product: Product, priority
                 duration: 2000,
               });
             }}
-            className="flex h-8 w-8 sm:h-10 sm:w-10 shrink-0 items-center justify-center rounded-md bg-navy text-gold shadow-premium-sm transition-all duration-200 hover:scale-110 hover:bg-gold hover:text-navy active:scale-95 focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:bg-navy disabled:hover:text-gold"
+            className="flex h-9 w-9 sm:h-10 sm:w-10 min-h-[36px] min-w-[36px] sm:min-h-[40px] sm:min-w-[40px] shrink-0 items-center justify-center rounded-md bg-navy text-gold shadow-premium-sm transition-all duration-200 hover:scale-110 hover:bg-gold hover:text-navy active:scale-95 focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:bg-navy disabled:hover:text-gold"
             aria-label={product.outOfStock ? 'Out of stock' : 'Add to cart'}
           >
             <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 transition-transform duration-200 pointer-events-none" />

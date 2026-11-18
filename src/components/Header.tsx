@@ -84,7 +84,7 @@ const Header = () => {
             </span>
             <span className="hidden sm:flex items-center gap-1 opacity-90">
               <Phone className="w-4 h-4 text-gold flex-shrink-0" /> 
-              <Link to="tel:09128817136" className="hover:text-gold">09128817136</Link>
+              <a href="tel:09128817136" className="hover:text-gold transition-colors">09128817136</a>
             </span>
           </div>
         </div>

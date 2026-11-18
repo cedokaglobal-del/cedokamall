@@ -7,9 +7,10 @@ interface PaginationControlsProps {
   onPageChange: (page: number) => void;
   totalItems: number;
   pageSize: number;
+  hideTotalItems?: boolean;
 }
 
-const PaginationControls = ({ currentPage, totalPages, onPageChange, totalItems, pageSize }: PaginationControlsProps) => {
+const PaginationControls = ({ currentPage, totalPages, onPageChange, totalItems, pageSize, hideTotalItems = false }: PaginationControlsProps) => {
   if (totalPages <= 1) return null;
 
   const startItem = (currentPage - 1) * pageSize + 1;
@@ -34,7 +35,7 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange, totalItems,
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between gap-4 px-6 py-4 border-t">
       <p className="text-sm text-muted-foreground">
-        Showing {startItem}–{endItem} of {totalItems}
+        {hideTotalItems ? `Page ${currentPage} of ${totalPages}` : `Showing ${startItem}–${endItem} of ${totalItems}`}
       </p>
       <div className="flex items-center gap-1">
         <Button

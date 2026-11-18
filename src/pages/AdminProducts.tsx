@@ -31,21 +31,68 @@ const AdminProducts = () => {
   const clearAllProducts = useProductStore((s) => s.clearAllProducts);
   const getFilteredProducts = useProductStore((s) => s.getFilteredProducts);
   const fetchProducts = useProductStore((s) => s.fetchProducts);
-  
-const [isFormOpen, setIsFormOpen] = useState(false);
-   const [editingProduct, setEditingProduct] = useState<Product | undefined>();
-   const [isLoading, setIsLoading] = useState(false);
-   const [isClearAllPasswordOpen, setIsClearAllPasswordOpen] = useState(false);
-   const [isConfirmClearAllOpen, setIsConfirmClearAllOpen] = useState(false);
-   const [clearPassword, setClearPassword] = useState('');
-   const [clearPasswordError, setClearPasswordError] = useState('');
-   const [isClearing, setIsClearing] = useState(false);
-   const [deletePassword, setDeletePassword] = useState('');
-   const [deletePasswordError, setDeletePasswordError] = useState('');
-   const [isDeletePasswordOpen, setIsDeletePasswordOpen] = useState(false);
-   const [pendingDeleteProduct, setPendingDeleteProduct] = useState<Product | null>(null);
 
-  const filteredProducts = useMemo(() => getFilteredProducts(), [getFilteredProducts]);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [editingProduct, setEditingProduct] = useState<Product | undefined>();
+  const [isLoading, setIsLoading] = useState(false);
+  const [isClearAllPasswordOpen, setIsClearAllPasswordOpen] = useState(false);
+  const [isConfirmClearAllOpen, setIsConfirmClearAllOpen] = useState(false);
+  const [clearPassword, setClearPassword] = useState('');
+  const [clearPasswordError, setClearPasswordError] = useState('');
+  const [isClearing, setIsClearing] = useState(false);
+  const [deletePassword, setDeletePassword] = useState('');
+  const [deletePasswordError, setDeletePasswordError] = useState('');
+  const [isDeletePasswordOpen, setIsDeletePasswordOpen] = useState(false);
+  const [pendingDeleteProduct, setPendingDeleteProduct] = useState<Product | null>(null);
+
+  const filteredProducts = useMemo(() => {
+    return products.filter((product) => {
+      if (filter.category && product.category !== filter.category) {
+        return false;
+      }
+      if (filter.brands && filter.brands.length > 0 && !filter.brands.some((b) => b.toLowerCase() === product.seller.toLowerCase())) {
+        return false;
+      }
+      if (filter.solarType && product.specs?.solarType !== filter.solarType && product.specs?.solar_type !== filter.solarType) {
+        return false;
+      }
+      if (filter.minPrice !== undefined && product.price < filter.minPrice) {
+        return false;
+      }
+      if (filter.maxPrice !== undefined && product.price > filter.maxPrice) {
+        return false;
+      }
+      if (filter.inStock !== undefined && filter.inStock && product.inStock === 0) {
+        return false;
+      }
+      if (filter.stockStatus) {
+        if (filter.stockStatus === 'in' && (product.inStock === 0 || product.outOfStock)) {
+          return false;
+        }
+        if (filter.stockStatus === 'low' && (product.inStock === 0 || product.inStock >= 10)) {
+          return false;
+        }
+        if (filter.stockStatus === 'out' && product.inStock !== 0) {
+          return false;
+        }
+        if (filter.stockStatus === 'flagged' && !product.outOfStock) {
+          return false;
+        }
+      }
+      if (filter.searchTerm) {
+        const term = filter.searchTerm.toLowerCase().trim();
+        return (
+          product.name.toLowerCase().includes(term) ||
+          product.description.toLowerCase().includes(term) ||
+          product.seller.toLowerCase().includes(term) ||
+          product.category.toLowerCase().includes(term) ||
+          (product.sku && product.sku.toLowerCase().includes(term)) ||
+          (product.badge && product.badge.toLowerCase().includes(term))
+        );
+      }
+      return true;
+    });
+  }, [products, filter]);
   const categories = useMemo(() => getCategoryOptions(products), [products]);
   const brands = useMemo(
     () => Array.from(new Set(products.map((p) => p.seller).filter(Boolean))).sort(),
@@ -62,64 +109,64 @@ const [isFormOpen, setIsFormOpen] = useState(false);
     setIsFormOpen(true);
   };
 
-const handleDeleteProduct = async (productId: string) => {
-     try {
-       setIsLoading(true);
-       await deleteProduct(productId);
-     } finally {
-       setIsLoading(false);
-     }
-   };
+  const handleDeleteProduct = async (productId: string) => {
+    try {
+      setIsLoading(true);
+      await deleteProduct(productId);
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
-   const handleDeleteWithPassword = (productId: string) => {
-     const product = products.find((p) => p.id === productId);
-     if (!product) return;
-     setPendingDeleteProduct(product);
-     setIsDeletePasswordOpen(true);
-   };
+  const handleDeleteWithPassword = (productId: string) => {
+    const product = products.find((p) => p.id === productId);
+    if (!product) return;
+    setPendingDeleteProduct(product);
+    setIsDeletePasswordOpen(true);
+  };
 
-   const handleVerifyDeletePassword = async () => {
-     try {
-       setDeletePasswordError('');
+  const handleVerifyDeletePassword = async () => {
+    try {
+      setDeletePasswordError('');
 
-       if (!deletePassword) {
-         setDeletePasswordError('Password is required');
-         return;
-       }
+      if (!deletePassword) {
+        setDeletePasswordError('Password is required');
+        return;
+      }
 
-       if (!adminEmail) {
-         setDeletePasswordError('Admin session not found. Please log in again.');
-         return;
-       }
+      if (!adminEmail) {
+        setDeletePasswordError('Admin session not found. Please log in again.');
+        return;
+      }
 
-       setIsLoading(true);
+      setIsLoading(true);
 
-       const { error: authError } = await supabase.auth.signInWithPassword({
-         email: adminEmail,
-         password: deletePassword,
-       });
+      const { error: authError } = await supabase.auth.signInWithPassword({
+        email: adminEmail,
+        password: deletePassword,
+      });
 
-       if (authError) {
-         setDeletePasswordError('Incorrect password. Please try again.');
-         setIsLoading(false);
-         return;
-       }
+      if (authError) {
+        setDeletePasswordError('Incorrect password. Please try again.');
+        setIsLoading(false);
+        return;
+      }
 
-       setDeletePassword('');
-       setDeletePasswordError('');
-       setIsDeletePasswordOpen(false);
+      setDeletePassword('');
+      setDeletePasswordError('');
+      setIsDeletePasswordOpen(false);
 
-       if (pendingDeleteProduct) {
-         await deleteProduct(pendingDeleteProduct.id);
-       }
-       setPendingDeleteProduct(null);
-     } catch (error) {
-       console.error('Password verification failed:', error);
-       setDeletePasswordError('An error occurred. Please try again.');
-     } finally {
-       setIsLoading(false);
-     }
-    };
+      if (pendingDeleteProduct) {
+        await deleteProduct(pendingDeleteProduct.id);
+      }
+      setPendingDeleteProduct(null);
+    } catch (error) {
+      console.error('Password verification failed:', error);
+      setDeletePasswordError('An error occurred. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
+  };
 
   const [isRefreshing, setIsRefreshing] = useState(false);
 
@@ -215,9 +262,9 @@ const handleDeleteProduct = async (productId: string) => {
     }
   };
 
-  const maxPrice = useMemo(() => 
+  const maxPrice = useMemo(() =>
     products.length > 0 ? Math.max(...products.map((p) => p.price)) : 0
-  , [products]);
+    , [products]);
 
 
   return (
@@ -228,12 +275,12 @@ const handleDeleteProduct = async (productId: string) => {
           <div>
             <h1 className="text-2xl sm:text-3xl font-bold text-navy">Products</h1>
             <p className="text-muted-foreground text-sm mt-1">
-              {filteredProducts.length} products
+              Catalog Inventory Management
             </p>
           </div>
           <div className="flex flex-wrap gap-2">
             <Button onClick={handleRefresh} size="sm" variant="outline" className="gap-1.5" disabled={isRefreshing}>
-              <svg className={'w-3.5 h-3.5' + (isRefreshing ? ' animate-spin' : '')} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg>
+              <svg className={'w-3.5 h-3.5' + (isRefreshing ? ' animate-spin' : '')} xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56" /></svg>
               {isRefreshing ? 'Syncing...' : 'Refresh'}
             </Button>
             <Button onClick={handleAddProduct} size="sm" className="gap-1.5">
@@ -251,33 +298,48 @@ const handleDeleteProduct = async (productId: string) => {
 
         {/* Filters */}
         <Card className="p-4">
-          <div className="flex items-center gap-2 mb-3">
-            <Filter className="w-4 h-4" />
-            <h3 className="font-semibold text-sm">Filters</h3>
+          <div className="flex items-center justify-between gap-2 mb-3">
+            <div className="flex items-center gap-2">
+              <Filter className="w-4 h-4 text-navy" />
+              <h3 className="font-semibold text-sm">Search &amp; Filter Products</h3>
+            </div>
+            <span className="text-xs text-muted-foreground italic">Real-time filtering active</span>
           </div>
 
-          {/* Search - full width on all screens */}
-          <div className="mb-3">
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-              <Input
-                id="search"
-                placeholder="Search by name, category, brand, SKU..."
-                value={filter.searchTerm || ''}
-                onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
-                className="pl-9 pr-8 h-10"
-              />
-              {filter.searchTerm && (
-                <button
-                  type="button"
-                  onClick={() => handleFilterChange('searchTerm', '')}
-                  className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
-                >
-                  Clear
-                </button>
-              )}
+          {/* Search bar with real-time feedback & explicit Search action */}
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+              toast.success('Search filter updated');
+            }}
+            className="mb-3"
+          >
+            <div className="flex flex-col sm:flex-row gap-2">
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+                <Input
+                  id="search"
+                  placeholder="Search by name, category, brand, SKU..."
+                  value={filter.searchTerm || ''}
+                  onChange={(e) => handleFilterChange('searchTerm', e.target.value)}
+                  className="pl-9 pr-14 h-10 w-full"
+                />
+                {filter.searchTerm && (
+                  <button
+                    type="button"
+                    onClick={() => handleFilterChange('searchTerm', '')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              <Button type="submit" size="sm" className="h-10 px-5 gap-1.5 shrink-0">
+                <Search className="w-4 h-4" />
+                Search
+              </Button>
             </div>
-          </div>
+          </form>
 
           <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
 
@@ -352,7 +414,7 @@ const handleDeleteProduct = async (productId: string) => {
               </Select>
             </div>
 
-            {/* Min Price */}
+            {/* Min Price - no default details */}
             <div>
               <Label htmlFor="minPrice" className="text-xs mb-2 block">
                 Min Price (₦)
@@ -360,13 +422,13 @@ const handleDeleteProduct = async (productId: string) => {
               <Input
                 id="minPrice"
                 type="number"
-                placeholder="0"
-                value={filter.minPrice || ''}
+                placeholder="Min price"
+                value={filter.minPrice !== undefined ? filter.minPrice : ''}
                 onChange={(e) => handleFilterChange('minPrice', e.target.value ? Number(e.target.value) : undefined)}
               />
             </div>
 
-            {/* Max Price */}
+            {/* Max Price - no default details */}
             <div>
               <Label htmlFor="maxPrice" className="text-xs mb-2 block">
                 Max Price (₦)
@@ -374,13 +436,13 @@ const handleDeleteProduct = async (productId: string) => {
               <Input
                 id="maxPrice"
                 type="number"
-                placeholder={maxPrice.toString()}
-                value={filter.maxPrice || ''}
+                placeholder="Max price"
+                value={filter.maxPrice !== undefined ? filter.maxPrice : ''}
                 onChange={(e) => handleFilterChange('maxPrice', e.target.value ? Number(e.target.value) : undefined)}
               />
             </div>
 
-            {/* In Stock (legacy quick toggle) */}
+            {/* In Stock (quick toggle) */}
             <div>
               <Label htmlFor="inStock" className="text-xs mb-2 block">
                 Availability
@@ -417,96 +479,96 @@ const handleDeleteProduct = async (productId: string) => {
         </Card>
 
         {/* Products Table */}
-<ProductTable
-           products={filteredProducts}
-           onEdit={handleEditProduct}
-           onDelete={handleDeleteWithPassword}
-           onToggleOutOfStock={toggleOutOfStock}
-           isLoading={isLoading}
-         />
+        <ProductTable
+          products={filteredProducts}
+          onEdit={handleEditProduct}
+          onDelete={handleDeleteWithPassword}
+          onToggleOutOfStock={toggleOutOfStock}
+          isLoading={isLoading}
+        />
       </div>
 
-{/* Single Product Delete - Password Verification */}
-       <Dialog open={isDeletePasswordOpen} onOpenChange={(open) => {
-         setIsDeletePasswordOpen(open);
-         if (!open) {
-           setDeletePassword('');
-           setDeletePasswordError('');
-           setPendingDeleteProduct(null);
-         }
-       }}>
-         <DialogContent className="max-w-md" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
-           <DialogHeader>
-             <DialogTitle className="flex items-center gap-2 text-lg text-red-600">
-               <Lock className="w-5 h-5" />
-               Verify Password to Delete
-             </DialogTitle>
-             <DialogDescription className="text-base">
-               Enter your admin password to delete <strong>"{pendingDeleteProduct?.name}"</strong>. This action cannot be undone.
-             </DialogDescription>
-           </DialogHeader>
+      {/* Single Product Delete - Password Verification */}
+      <Dialog open={isDeletePasswordOpen} onOpenChange={(open) => {
+        setIsDeletePasswordOpen(open);
+        if (!open) {
+          setDeletePassword('');
+          setDeletePasswordError('');
+          setPendingDeleteProduct(null);
+        }
+      }}>
+        <DialogContent className="max-w-md" onPointerDownOutside={(e) => e.preventDefault()} onEscapeKeyDown={(e) => e.preventDefault()}>
+          <DialogHeader>
+            <DialogTitle className="flex items-center gap-2 text-lg text-red-600">
+              <Lock className="w-5 h-5" />
+              Verify Password to Delete
+            </DialogTitle>
+            <DialogDescription className="text-base">
+              Enter your admin password to delete <strong>"{pendingDeleteProduct?.name}"</strong>. This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
 
-           <div className="space-y-4 py-6 border-y">
-             <p className="text-sm text-muted-foreground">
-               For security verification, please enter your admin password:
-             </p>
-             <div className="space-y-2">
-               <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
-                 Admin Password
-               </label>
-               <div className="relative">
-                 <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
-                 <Input
-                   type="password"
-                   placeholder="Enter your admin password"
-                   value={deletePassword}
-                   onChange={(e) => {
-                     setDeletePassword(e.target.value);
-                     setDeletePasswordError('');
-                   }}
-                   onKeyDown={(e) => {
-                     if (e.key === 'Enter' && deletePassword && !isLoading) {
-                       e.preventDefault();
-                       void handleVerifyDeletePassword();
-                     }
-                   }}
-                   disabled={isLoading}
-                   className="pl-10 h-11"
-                   autoFocus
-                 />
-               </div>
-               {deletePasswordError && (
-                 <p className="text-xs text-red-600 font-medium bg-red-50 p-2 rounded">{deletePasswordError}</p>
-               )}
-             </div>
-           </div>
+          <div className="space-y-4 py-6 border-y">
+            <p className="text-sm text-muted-foreground">
+              For security verification, please enter your admin password:
+            </p>
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-muted-foreground uppercase tracking-wider">
+                Admin Password
+              </label>
+              <div className="relative">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  type="password"
+                  placeholder="Enter your admin password"
+                  value={deletePassword}
+                  onChange={(e) => {
+                    setDeletePassword(e.target.value);
+                    setDeletePasswordError('');
+                  }}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter' && deletePassword && !isLoading) {
+                      e.preventDefault();
+                      void handleVerifyDeletePassword();
+                    }
+                  }}
+                  disabled={isLoading}
+                  className="pl-10 h-11"
+                  autoFocus
+                />
+              </div>
+              {deletePasswordError && (
+                <p className="text-xs text-red-600 font-medium bg-red-50 p-2 rounded">{deletePasswordError}</p>
+              )}
+            </div>
+          </div>
 
-           <div className="flex gap-3 justify-end">
-             <Button
-               variant="outline"
-               disabled={isLoading}
-               onClick={() => {
-                 setDeletePassword('');
-                 setDeletePasswordError('');
-                 setIsDeletePasswordOpen(false);
-                 setPendingDeleteProduct(null);
-               }}
-             >
-               Cancel
-             </Button>
-             <Button
-               variant="destructive"
-               onClick={() => void handleVerifyDeletePassword()}
-               disabled={isLoading || !deletePassword}
-             >
-               {isLoading ? 'Verifying...' : 'Verify Password'}
-             </Button>
-           </div>
-         </DialogContent>
-       </Dialog>
+          <div className="flex gap-3 justify-end">
+            <Button
+              variant="outline"
+              disabled={isLoading}
+              onClick={() => {
+                setDeletePassword('');
+                setDeletePasswordError('');
+                setIsDeletePasswordOpen(false);
+                setPendingDeleteProduct(null);
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => void handleVerifyDeletePassword()}
+              disabled={isLoading || !deletePassword}
+            >
+              {isLoading ? 'Verifying...' : 'Verify Password'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
 
-       {/* Clear All - Password Verification */}
-       <Dialog open={isClearAllPasswordOpen} onOpenChange={(open) => {
+      {/* Clear All - Password Verification */}
+      <Dialog open={isClearAllPasswordOpen} onOpenChange={(open) => {
         setIsClearAllPasswordOpen(open);
         if (!open) {
           setClearPassword('');
@@ -520,10 +582,10 @@ const handleDeleteProduct = async (productId: string) => {
               Clear All Products
             </DialogTitle>
             <DialogDescription className="text-base">
-              This will permanently delete all <strong>{products.length} products</strong>. Please verify your identity.
+              This will permanently delete all <strong>products</strong> from your catalog and database. Please verify your identity.
             </DialogDescription>
           </DialogHeader>
-          
+
           <div className="space-y-4 py-6 border-y">
             <p className="text-sm text-muted-foreground">
               Enter your admin password to continue:
@@ -560,7 +622,7 @@ const handleDeleteProduct = async (productId: string) => {
           </div>
 
           <div className="flex gap-3 justify-end">
-            <Button 
+            <Button
               variant="outline"
               disabled={isClearing}
               onClick={() => {
@@ -595,7 +657,7 @@ const handleDeleteProduct = async (productId: string) => {
                 ⚠️ WARNING: This action is irreversible!
               </p>
               <p>
-                You are about to permanently delete all <strong>{products.length} products</strong> from your catalog and database.
+                You are about to permanently delete all <strong>products</strong> from your catalog and database.
               </p>
               <ul className="list-disc pl-5 text-sm text-muted-foreground space-y-1">
                 <li>All product data will be lost forever</li>

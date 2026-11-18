@@ -17,6 +17,7 @@ import {
   Lock,
   ChevronRight,
   BarChart3,
+  Search,
 } from 'lucide-react';
 import AdminLayout from '@/components/AdminLayout';
 import { Card } from '@/components/ui/card';
@@ -125,7 +126,17 @@ const AdminDashboard = () => {
       ),
     [products]
   );
-  const recentProducts = useMemo(() => products.slice(0, 6), [products]);
+  const [dashboardSearch, setDashboardSearch] = useState('');
+  const recentProducts = useMemo(() => {
+    if (!dashboardSearch.trim()) return products.slice(0, 6);
+    const term = dashboardSearch.toLowerCase().trim();
+    return products.filter((p) =>
+      p.name.toLowerCase().includes(term) ||
+      p.category.toLowerCase().includes(term) ||
+      p.seller.toLowerCase().includes(term) ||
+      (p.sku && p.sku.toLowerCase().includes(term))
+    ).slice(0, 12);
+  }, [products, dashboardSearch]);
 
   const fetchTransactions = useTransactionStore((state) => state.fetchTransactions);
   const transactions = useTransactionStore((state) => state.transactions);
@@ -312,7 +323,7 @@ const AdminDashboard = () => {
   };
 
   const stats = [
-    { label: 'Products', value: products.length.toString(), note: 'Live records', icon: Package },
+    { label: 'Catalog Status', value: products.length > 0 ? 'Active' : 'Empty', note: 'Realtime synced', icon: Package },
     { label: 'Categories', value: categoryCount.toString(), note: 'From catalog', icon: Shapes },
     { label: 'Low Stock', value: lowStockProducts.length.toString(), note: 'Needs restocking', icon: AlertCircle },
     { label: 'Inventory', value: currency.format(totalInventoryValue), note: 'Current value', icon: RefreshCw },
@@ -424,14 +435,62 @@ const AdminDashboard = () => {
           </Card>
         </div>
 
-        {/* Recent Products */}
+        {/* Recent Products with Real-time Search */}
         <Card className="overflow-hidden">
-          <div className="flex items-center justify-between p-4 border-b">
-            <h2 className="font-bold text-sm">Recent Products</h2>
-            {products.length > 0 && (
-              <Button variant="ghost" size="sm" className="gap-1 text-xs text-red-600" onClick={() => setIsClearAllOpen(true)}>
-                <Trash2 className="w-3.5 h-3.5" /> Clear
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between p-4 border-b gap-3">
+            <div>
+              <h2 className="font-bold text-sm">Catalog &amp; Recent Products</h2>
+              <p className="text-xs text-muted-foreground mt-0.5">Quick search and manage inventory</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <Button variant="outline" size="sm" onClick={() => navigate('/admin/products')} className="text-xs">
+                View All Products
               </Button>
+              {products.length > 0 && (
+                <Button variant="ghost" size="sm" className="gap-1 text-xs text-red-600" onClick={() => setIsClearAllOpen(true)}>
+                  <Trash2 className="w-3.5 h-3.5" /> Clear
+                </Button>
+              )}
+            </div>
+          </div>
+
+          {/* Search Filter Bar */}
+          <div className="p-4 border-b bg-ivory/50">
+            <form
+              onSubmit={(e) => {
+                e.preventDefault();
+                toast.success('Search filter updated');
+              }}
+              className="flex flex-col sm:flex-row gap-2"
+            >
+              <div className="relative flex-1">
+                <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+                <Input
+                  id="dashboard-search"
+                  placeholder="Search catalog by name, category, SKU, brand..."
+                  value={dashboardSearch}
+                  onChange={(e) => setDashboardSearch(e.target.value)}
+                  className="pl-9 pr-14 h-10 w-full bg-white"
+                />
+                {dashboardSearch && (
+                  <button
+                    type="button"
+                    onClick={() => setDashboardSearch('')}
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
+                  >
+                    Clear
+                  </button>
+                )}
+              </div>
+              <Button type="submit" size="sm" className="h-10 px-5 gap-1.5 shrink-0">
+                <Search className="w-4 h-4" />
+                Search
+              </Button>
+            </form>
+            {dashboardSearch && (
+              <p className="text-xs text-muted-foreground mt-2 italic">
+                Showing real-time results for &ldquo;{dashboardSearch}&rdquo;
+              </p>
             )}
           </div>
           {isLoading ? (
@@ -606,7 +665,7 @@ const AdminDashboard = () => {
             <DialogTitle className="text-base text-red-600 flex items-center gap-2">
               <Lock className="w-4 h-4" /> Clear Entire Catalog?
             </DialogTitle>
-            <DialogDescription className="text-sm">Permanently delete all <strong>{products.length} products</strong>.</DialogDescription>
+            <DialogDescription className="text-sm">Permanently delete all <strong>products in the catalog</strong>.</DialogDescription>
           </DialogHeader>
           <div className="space-y-3 py-4 border-y">
             <div className="relative">
@@ -639,7 +698,7 @@ const AdminDashboard = () => {
           <AlertDialogHeader>
             <AlertDialogTitle className="text-red-600">Are you absolutely sure?</AlertDialogTitle>
             <AlertDialogDescription className="text-sm">
-              This permanently deletes all <strong>{products.length} products</strong>. This cannot be undone.
+              This permanently deletes all <strong>products in the catalog</strong>. This cannot be undone.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <div className="flex gap-2 justify-end">

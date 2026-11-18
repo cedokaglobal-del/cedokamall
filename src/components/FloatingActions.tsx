@@ -1,4 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
+import { useLocation } from 'react-router-dom';
 import { Calculator, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import EnergyCalculator from './EnergyCalculator';
@@ -14,10 +15,18 @@ import EnergyCalculator from './EnergyCalculator';
  *
  * Mounted once at the app level so the calculator is reachable from every page
  * rather than only the standalone calculator route.
+ *
+ * Hidden completely on admin routes so admin management pages remain clean and unobstructed.
  */
 const FloatingActions = () => {
+  const location = useLocation();
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const [applianceCount, setApplianceCount] = useState(0);
+
+  // Hide WhatsApp and calculator icon completely on any admin route
+  if (location.pathname.startsWith('/admin')) {
+    return null;
+  }
 
   // Keep the calculator badge in step with what has been added.
   useEffect(() => {

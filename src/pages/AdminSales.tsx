@@ -18,8 +18,10 @@ import {
 } from '@/components/ui/dialog';
 import PaginationControls from '@/components/PaginationControls';
 import { useTransactionStore } from '@/store/transactionStore';
-import { ShoppingCart, MapPin, Home, ChevronRight } from 'lucide-react';
+import { ShoppingCart, MapPin, Home, ChevronRight, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
+import { Input } from '@/components/ui/input';
+import { Button } from '@/components/ui/button';
 import { seedHistoricalSales } from '@/utils/seedSales';
 
 const currencyFormatter = new Intl.NumberFormat('en-NG', {
@@ -40,6 +42,7 @@ const AdminSales = () => {
   const transactions = useTransactionStore((s) => s.transactions);
 
   const [activeTab, setActiveTab] = useState<'transactions' | 'sales'>('transactions');
+  const [salesSearch, setSalesSearch] = useState('');
 
   useEffect(() => { void seedHistoricalSales(); }, []);
 
@@ -89,24 +92,45 @@ const AdminSales = () => {
     return Array.from(map.values()).sort((a, b) => b.date.getTime() - a.date.getTime());
   }, [completedTxs]);
 
+  const filteredOrders = useMemo(() => {
+    if (!salesSearch.trim()) return orderMap;
+    const q = salesSearch.toLowerCase().trim();
+    return orderMap.filter((o) =>
+      o.orderId.toLowerCase().includes(q) ||
+      o.customerName.toLowerCase().includes(q) ||
+      o.paymentMethod.toLowerCase().includes(q) ||
+      o.deliveryMethod.toLowerCase().includes(q)
+    );
+  }, [orderMap, salesSearch]);
+
   const paginatedOrders = useMemo(
-    () => orderMap.slice((txPage - 1) * pageSize, txPage * pageSize),
-    [orderMap, txPage]
+    () => filteredOrders.slice((txPage - 1) * pageSize, txPage * pageSize),
+    [filteredOrders, txPage]
   );
 
   useEffect(() => {
-    if (txPage > Math.ceil(orderMap.length / pageSize)) setTxPage(1);
-  }, [orderMap.length, txPage]);
+    if (txPage > Math.ceil(filteredOrders.length / pageSize)) setTxPage(1);
+  }, [filteredOrders.length, txPage]);
 
   // --- SALES VIEW (individual line items) ---
+  const filteredCompletedSales = useMemo(() => {
+    if (!salesSearch.trim()) return completedTxs;
+    const q = salesSearch.toLowerCase().trim();
+    return completedTxs.filter((t) =>
+      t.productName.toLowerCase().includes(q) ||
+      t.customerEmail.toLowerCase().includes(q) ||
+      t.orderId.toLowerCase().includes(q)
+    );
+  }, [completedTxs, salesSearch]);
+
   const paginatedSales = useMemo(
-    () => completedTxs.slice((salePage - 1) * pageSize, salePage * pageSize),
-    [completedTxs, salePage]
+    () => filteredCompletedSales.slice((salePage - 1) * pageSize, salePage * pageSize),
+    [filteredCompletedSales, salePage]
   );
 
   useEffect(() => {
-    if (salePage > Math.ceil(completedTxs.length / pageSize)) setSalePage(1);
-  }, [completedTxs.length, salePage]);
+    if (salePage > Math.ceil(filteredCompletedSales.length / pageSize)) setSalePage(1);
+  }, [filteredCompletedSales.length, salePage]);
 
   // --- DETAIL DRAWER for an order ---
   const [selectedOrderId, setSelectedOrderId] = useState<string | null>(null);
@@ -171,6 +195,45 @@ const AdminSales = () => {
             Sales ({completedTxs.length})
           </button>
         </div>
+
+        {/* Search Bar for Sales & Orders */}
+        <Card className="p-4 bg-white shadow-sm">
+          <form
+            onSubmit={(e) => {
+              e.preventDefault();
+            }}
+            className="flex flex-col sm:flex-row gap-2"
+          >
+            <div className="relative flex-1">
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground pointer-events-none" />
+              <Input
+                id="sales-search"
+                placeholder="Search by order ID, buyer, product name, payment..."
+                value={salesSearch}
+                onChange={(e) => setSalesSearch(e.target.value)}
+                className="pl-9 pr-14 h-10 w-full"
+              />
+              {salesSearch && (
+                <button
+                  type="button"
+                  onClick={() => setSalesSearch('')}
+                  className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground text-xs"
+                >
+                  Clear
+                </button>
+              )}
+            </div>
+            <Button type="submit" size="sm" className="h-10 px-5 gap-1.5 shrink-0">
+              <Search className="w-4 h-4" />
+              Search
+            </Button>
+          </form>
+          {salesSearch && (
+            <p className="text-xs text-muted-foreground mt-2 italic">
+              Real-time filtering applied for &ldquo;{salesSearch}&rdquo;
+            </p>
+          )}
+        </Card>
 
         {/* TRANSACTIONS TAB */}
         {activeTab === 'transactions' && (
@@ -242,9 +305,9 @@ const AdminSales = () => {
             </div>
             <PaginationControls
               currentPage={txPage}
-              totalPages={Math.max(1, Math.ceil(orderMap.length / pageSize))}
+              totalPages={Math.max(1, Math.ceil(filteredOrders.length / pageSize))}
               onPageChange={setTxPage}
-              totalItems={orderMap.length}
+              totalItems={filteredOrders.length}
               pageSize={pageSize}
             />
           </Card>
@@ -316,9 +379,9 @@ const AdminSales = () => {
             </div>
             <PaginationControls
               currentPage={salePage}
-              totalPages={Math.max(1, Math.ceil(completedTxs.length / pageSize))}
+              totalPages={Math.max(1, Math.ceil(filteredCompletedSales.length / pageSize))}
               onPageChange={setSalePage}
-              totalItems={completedTxs.length}
+              totalItems={filteredCompletedSales.length}
               pageSize={pageSize}
             />
           </Card>

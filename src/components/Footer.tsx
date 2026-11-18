@@ -1,7 +1,23 @@
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Phone, Mail, Shield, RotateCcw, CreditCard } from 'lucide-react';
+import { MapPin, Phone, Mail, Shield, RotateCcw, CreditCard, Send } from 'lucide-react';
+import { toast } from 'sonner';
 
-const Footer = () => (
+const Footer = () => {
+  const [newsletterEmail, setNewsletterEmail] = useState('');
+  const [subscribed, setSubscribed] = useState(false);
+
+  const handleNewsletter = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!newsletterEmail.trim() || !newsletterEmail.includes('@')) {
+      toast.error('Please enter a valid email address');
+      return;
+    }
+    setSubscribed(true);
+    toast.success('Thank you! You are now subscribed to Cedokamall updates and exclusive drops.');
+  };
+
+  return (
   <footer className="bg-navy text-champagne border-t border-gold-antique/20">
     {/* Trust bar */}
     <div className="border-b border-gold-antique/10">
@@ -46,11 +62,11 @@ const Footer = () => (
           </p>
           <p className="flex items-start gap-3">
             <Phone className="w-3 h-3 text-gold flex-shrink-0 mt-0.5" />
-            <Link to="tel:09128817136" className="hover:text-gold">09128817136</Link>
+            <a href="tel:09128817136" className="hover:text-gold transition-colors">09128817136</a>
           </p>
           <p className="flex items-start gap-3">
             <Mail className="w-3 h-3 text-gold flex-shrink-0 mt-0.5" />
-            <Link to="mailto:hello@cedokamall.com" className="hover:text-gold">hello@cedokamall.com</Link>
+            <a href="mailto:hello@cedokamall.com" className="hover:text-gold transition-colors">hello@cedokamall.com</a>
           </p>
         </div>
       </div>
@@ -105,22 +121,31 @@ const Footer = () => (
       <div className="p-3 sm:p-4 rounded-lg border border-gold-antique/10">
         <h5 className="font-serif text-base sm:text-lg font-bold mb-2 sm:mb-3 text-gold">Newsletter</h5>
         <p className="text-xs sm:text-sm opacity-70 mb-2 sm:mb-3 leading-relaxed">
-          Join for exclusive access to premium drops.
+          Join for exclusive access to premium drops and pricing alerts.
         </p>
-        <div className="flex flex-col gap-2">
-          <input 
-            type="email" 
-            placeholder="Your Email" 
-            className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm bg-navy border border-gold-antique/20 focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-all duration-200 text-champagne placeholder:text-champagne/40"
-            aria-label="Email for newsletter"
-          />
-          <button 
-            type="button"
-            className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-gold text-navy text-xs sm:text-sm font-bold hover:bg-gold-antique hover:text-white transition-all duration-200 shadow-premium-sm active:scale-95"
-          >
-            Subscribe
-          </button>
-        </div>
+        {subscribed ? (
+          <p className="text-xs text-emerald-400 font-semibold p-2.5 rounded-lg bg-emerald-950/40 border border-emerald-500/20">
+            ✓ Subscribed! You will receive our latest catalog updates.
+          </p>
+        ) : (
+          <form onSubmit={handleNewsletter} className="flex flex-col gap-2">
+            <input 
+              type="email" 
+              value={newsletterEmail}
+              onChange={(e) => setNewsletterEmail(e.target.value)}
+              placeholder="Your Email Address" 
+              required
+              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm bg-navy border border-gold-antique/20 focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-all duration-200 text-champagne placeholder:text-champagne/40"
+              aria-label="Email for newsletter"
+            />
+            <button 
+              type="submit"
+              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg bg-gold text-navy text-xs sm:text-sm font-bold hover:bg-gold-antique hover:text-white transition-all duration-200 shadow-premium-sm active:scale-95"
+            >
+              Subscribe
+            </button>
+          </form>
+        )}
       </div>
     </div>
 
@@ -136,6 +161,7 @@ const Footer = () => (
       </div>
     </div>
   </footer>
-);
+  );
+};
 
 export default Footer;

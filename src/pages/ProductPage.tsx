@@ -1,5 +1,5 @@
 import { Link, useLocation, useNavigate, useParams } from 'react-router-dom';
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ArrowLeft,
   BadgeCheck,
@@ -10,6 +10,7 @@ import {
   Clock,
   Filter,
   Heart,
+  Info,
   MessageSquare,
   RotateCcw,
   Send,
@@ -31,12 +32,18 @@ import { getBreadcrumbSchema, getProductSchema, SEO_CONFIG } from '@/config/seo'
 import { useSEO, useStructuredData } from '@/hooks/useSEO';
 import { useOnlineStatus } from '@/hooks/useOnlineStatus';
 import { cn } from '@/lib/utils';
+import {
+  looksLikeReviewText,
+  splitMisplacedReview,
+  MAX_REVIEW_TEXT_LENGTH,
+} from '@/lib/reviewText';
 import { useCartStore } from '@/store/cartStore';
 import { useProductStore } from '@/store/productStore';
 import { useReviewStore, subscribeToProductReviews, type StoreReview } from '@/store/reviewStore';
 import { toast } from 'sonner';
 import { getOptimizedImageUrl, generateSrcSet, generateSizes } from '@/utils/performance';
 import { RENEWABLE_ENERGY_CATEGORIES } from '@/data/catalog';
+import { findProductByPath } from '@/utils/slug';
 import type { Product } from '@/types/product';
 
 const fallbackImage = '/image.png';
@@ -113,31 +120,75 @@ const ProductPage = () => {
   const rateProduct = useProductStore((s) => s.rateProduct);
   const addItem = useCartStore((state) => state.addItem);
 
-  const product = useMemo(() => products.find((p) => p.id === id), [products, id]);
+  // Accepts either the readable slug or the raw id, so every old UUID link
+  // keeps working while new links use the keyword version.
+  const product = useMemo(() => findProductByPath(products, id), [products, id]);
+  const productKey = product?.id ?? id;
   const powerInfo = useMemo(() => (product ? getPowerGuidance(product) : null), [product]);
   const [activeImage, setActiveImage] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [isRating, setIsRating] = useState(false);
 
   // Hooks for reviews/rating - must be before early returns
-  const [userRating, setUserRating] = useState<number>(() => {
-    if (!id) return 0;
+  const [userRating, setUserRating] = useState(0);
+  const [isWishlisted, setIsWishlisted] = useState(false);
+
+  useEffect(() => {
+    if (!product?.id) return;
     try {
-      return Number(localStorage.getItem(`cedoka_rating_${id}`)) || 0;
-    } catch { return 0; }
-  });
+      setIsWishlisted(Boolean(localStorage.getItem(`cedoka_wishlist_${product.id}`)));
+    } catch {
+      setIsWishlisted(false);
+    }
+  }, [product?.id]);
+
+  const toggleWishlist = () => {
+    if (!product?.id) return;
+    const next = !isWishlisted;
+    setIsWishlisted(next);
+    try {
+      if (next) {
+        localStorage.setItem(`cedoka_wishlist_${product.id}`, 'true');
+        toast.success(`${product.name} saved to your wishlist!`);
+      } else {
+        localStorage.removeItem(`cedoka_wishlist_${product.id}`);
+        toast.info(`${product.name} removed from your wishlist.`);
+      }
+    } catch {
+      /* ignore */
+    }
+  };
+
+  // The saved rating is keyed by product id, which is only known once the
+  // product resolves, so it is read in an effect rather than at mount.
+  useEffect(() => {
+    if (!product?.id) return;
+    try {
+      setUserRating(Number(localStorage.getItem(`cedoka_rating_${product.id}`)) || 0);
+    } catch {
+      setUserRating(0);
+    }
+  }, [product?.id]);
 
   const [reviewSort, setReviewSort] = useState<SortOption>('newest');
   const [reviewForm, setReviewForm] = useState({ name: '', rating: 0, text: '' });
   const [isSubmittingReview, setIsSubmittingReview] = useState(false);
   const [showReviewForm, setShowReviewForm] = useState(false);
+  const reviewFormRef = useRef<HTMLDivElement | null>(null);
+
+  // Live detection of the most common mistake: a full review typed into the
+  // name box. Surfacing it before submission beats a silently broken form.
+  const nameLooksLikeReview = useMemo(
+    () => looksLikeReviewText(reviewForm.name),
+    [reviewForm.name]
+  );
   const isOnline = useOnlineStatus();
   const isOffline = !isOnline;
 
   // Server-persisted reviews — use ?? with a stable empty array to avoid re-render loops
-  const storeReviews = useReviewStore((s) => s.reviewsByProduct[id || ''] ?? EMPTY_REVIEW_LIST);
-  const isLoadingReviews = useReviewStore((s) => s.loadingByProduct[id || ''] ?? false);
-  const reviewError = useReviewStore((s) => s.errorByProduct[id || ''] ?? null);
+  const storeReviews = useReviewStore((s) => s.reviewsByProduct[productKey || ''] ?? EMPTY_REVIEW_LIST);
+  const isLoadingReviews = useReviewStore((s) => s.loadingByProduct[productKey || ''] ?? false);
+  const reviewError = useReviewStore((s) => s.errorByProduct[productKey || ''] ?? null);
   const fetchReviews = useReviewStore((s) => s.fetchReviews);
   const addReview = useReviewStore((s) => s.addReview);
   const markHelpful = useReviewStore((s) => s.markHelpful);
@@ -148,11 +199,11 @@ const ProductPage = () => {
 
   // Fetch reviews from server + subscribe to realtime inserts
   useEffect(() => {
-    if (!id) return;
-    fetchReviews(id, true);
-    const unsub = subscribeToProductReviews(id);
+    if (!productKey) return;
+    fetchReviews(productKey, true);
+    const unsub = subscribeToProductReviews(productKey);
     return unsub;
-  }, [id, fetchReviews]);
+  }, [productKey, fetchReviews]);
 
   // Compute rating breakdown from store reviews
   const ratingBreakdown = useMemo(() => {
@@ -197,7 +248,7 @@ const ProductPage = () => {
     setIsRating(true);
     try {
       await rateProduct(product.id, rating);
-      localStorage.setItem(`cedoka_rating_${id}`, String(rating));
+      localStorage.setItem(`cedoka_rating_${product.id}`, String(rating));
       setUserRating(rating);
       toast.success('Thank you for your rating!');
     } catch {
@@ -208,32 +259,50 @@ const ProductPage = () => {
   };
 
   const handleSubmitReview = async () => {
-    if (!reviewForm.text.trim() || reviewForm.rating === 0 || !id || !product) return;
+    if ((!reviewForm.text.trim() && !reviewForm.name.trim()) || reviewForm.rating === 0 || !productKey || !product) return;
     setIsSubmittingReview(true);
     try {
+      // A review typed into the name box is moved into the review field rather
+      // than discarded, so the customer never loses their words.
+      const { name, text, migrated } = splitMisplacedReview(reviewForm.name, reviewForm.text);
+
       // Save review text to server
-      await addReview(id, {
-        name: reviewForm.name.trim() || 'Anonymous',
+      await addReview(productKey, {
+        name: name || 'Anonymous',
         rating: reviewForm.rating,
-        text: reviewForm.text.trim(),
+        text,
       });
 
       // Update aggregate rating on the product
       if (userRating === 0) {
         await rateProduct(product.id, reviewForm.rating);
-        localStorage.setItem(`cedoka_rating_${id}`, String(reviewForm.rating));
+        localStorage.setItem(`cedoka_rating_${product.id}`, String(reviewForm.rating));
         setUserRating(reviewForm.rating);
       }
 
       setReviewForm({ name: '', rating: 0, text: '' });
       setShowReviewForm(false);
-      toast.success('Review submitted!');
+      if (migrated) {
+        toast.success('Review submitted — we moved it out of the name box for you.');
+      } else {
+        toast.success('Review submitted!');
+      }
     } catch {
       toast.error('Failed to submit review. Please try again.');
     } finally {
       setIsSubmittingReview(false);
     }
   };
+
+  // Bring the form into view when it opens. On a phone the soft keyboard can
+  // otherwise cover the field the customer is trying to type into.
+  useEffect(() => {
+    if (!showReviewForm) return;
+    const timer = window.setTimeout(() => {
+      reviewFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+    }, 60);
+    return () => window.clearTimeout(timer);
+  }, [showReviewForm]);
 
   const relatedProducts = useMemo(() => {
     if (!product) {
@@ -290,7 +359,14 @@ const ProductPage = () => {
           ]),
           getProductSchema({
             ...product,
-            reviewList: storeReviews.slice(0, 10).map((review) => ({
+            // The live store is what the customer can see, so it is what the
+            // structured data must agree with. Google penalises an aggregate
+            // rating that does not match the reviews on the page.
+            rating: storeReviews.length > 0 ? avgRating : product.rating,
+            reviews: totalReviewCount > 0 ? totalReviewCount : product.reviews,
+            // Every review the customer can see is emitted, not just the first
+            // ten, so the page carries its full review content for search.
+            reviewList: storeReviews.map((review) => ({
               author: review.name,
               rating: review.rating,
               text: review.text,
@@ -343,7 +419,7 @@ const ProductPage = () => {
       key.toLowerCase() !== 'features' &&
       typeof value === 'string' &&
       value.trim().length > 0
-  );
+  ) as [string, string][];
   const assuranceItems = [
     { icon: Truck, label: 'Delivery across Nigeria', description: 'Dispatched from our Lagos store to your address.' },
     {
@@ -611,7 +687,7 @@ const ProductPage = () => {
                         </p>
                         <button
                           type="button"
-                          onClick={() => id && fetchReviews(id, true)}
+                          onClick={() => productKey && fetchReviews(productKey, true)}
                           disabled={isOffline || isLoadingReviews}
                           className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-amber-400 bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest text-amber-800 transition-colors hover:bg-amber-100 disabled:cursor-not-allowed disabled:opacity-50"
                         >
@@ -767,7 +843,7 @@ const ProductPage = () => {
                               <div className="mt-3 border-t border-gold-antique/10 pt-2">
                                 <button
                                   type="button"
-                                  onClick={() => id && markHelpful(id, review.id)}
+                                  onClick={() => productKey && markHelpful(productKey, review.id)}
                                   className="group flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-navy/35 transition-colors hover:text-gold"
                                 >
                                   <ThumbsUp className="h-3 w-3 transition-transform group-hover:scale-110" />
@@ -795,7 +871,7 @@ const ProductPage = () => {
                         Write a Review
                       </button>
                     ) : (
-                      <div className="space-y-3">
+                      <div ref={reviewFormRef} className="space-y-4 scroll-mt-28">
                         <div className="flex items-center justify-between">
                           <p className="text-xs font-bold uppercase tracking-[0.18em] text-navy/55">
                             Your Review
@@ -803,58 +879,117 @@ const ProductPage = () => {
                           <button
                             type="button"
                             onClick={() => setShowReviewForm(false)}
+                            aria-label="Close review form"
                             className="text-navy/30 hover:text-navy transition-colors"
                           >
                             <X className="h-4 w-4" />
                           </button>
                         </div>
-                        <input
-                          type="text"
-                          placeholder="Your name (optional)"
-                          value={reviewForm.name}
-                          onChange={(e) =>
-                            setReviewForm((prev) => ({ ...prev, name: e.target.value }))
-                          }
-                          className="w-full rounded-2xl border border-gold-antique/10 bg-ivory/50 px-4 py-3 text-sm text-navy placeholder:text-navy/30 focus:border-gold focus:outline-none"
-                        />
-                        <div className="flex items-center gap-1">
-                          <span className="mr-2 text-xs font-bold uppercase tracking-[0.18em] text-navy/55">
-                            Your rating:
+
+                        {/* Rating — required */}
+                        <div>
+                          <span
+                            id="review-rating-label"
+                            className="mb-2 block text-[11px] font-bold uppercase tracking-[0.16em] text-navy/55"
+                          >
+                            Your rating <span className="text-gold">*</span>
                           </span>
-                          {[1, 2, 3, 4, 5].map((star) => (
-                            <button
-                              key={star}
-                              type="button"
-                              onClick={() =>
-                                setReviewForm((prev) => ({ ...prev, rating: star }))
-                              }
-                              className="p-0.5"
-                            >
-                              <Star
-                                className={cn(
-                                  'h-5 w-5',
-                                  star <= reviewForm.rating
-                                    ? 'fill-gold text-gold'
-                                    : 'fill-gray-200 text-gray-200'
-                                )}
-                              />
-                            </button>
-                          ))}
+                          <div
+                            role="radiogroup"
+                            aria-labelledby="review-rating-label"
+                            className="flex flex-wrap items-center gap-1"
+                          >
+                            {[1, 2, 3, 4, 5].map((star) => (
+                              <button
+                                key={star}
+                                type="button"
+                                role="radio"
+                                aria-checked={reviewForm.rating === star}
+                                aria-label={`${star} star${star > 1 ? 's' : ''}`}
+                                onClick={() =>
+                                  setReviewForm((prev) => ({ ...prev, rating: star }))
+                                }
+                                className="press rounded-lg p-1"
+                              >
+                                <Star
+                                  className={cn(
+                                    'h-6 w-6',
+                                    star <= reviewForm.rating
+                                      ? 'fill-gold text-gold'
+                                      : 'fill-gray-200 text-gray-200'
+                                  )}
+                                />
+                              </button>
+                            ))}
+                            <span className="ml-1 text-[11px] text-navy/45">
+                              {reviewForm.rating > 0
+                                ? `${reviewForm.rating} of 5`
+                                : 'Tap a star'}
+                            </span>
+                          </div>
                         </div>
-                        <textarea
-                          placeholder="Share what you liked or what could be better..."
-                          value={reviewForm.text}
-                          onChange={(e) => {
-                            if (e.target.value.length > 2000) return;
-                            setReviewForm((prev) => ({ ...prev, text: e.target.value }));
-                          }}
-                          rows={3}
-                          maxLength={2000}
-                          className="w-full resize-none rounded-2xl border border-gold-antique/10 bg-ivory/50 px-4 py-3 text-sm text-navy placeholder:text-navy/30 focus:border-gold focus:outline-none"
-                        />
-                        <div className="flex items-center justify-between gap-2">
+
+                        {/* Review body — required, and the primary field.
+                            It sits above the name box on purpose: the name is
+                            optional, so the review must be the thing the eye
+                            lands on first. */}
+                        <div>
+                          <label
+                            htmlFor="review-body"
+                            className="mb-2 block text-[11px] font-bold uppercase tracking-[0.16em] text-navy/55"
+                          >
+                            Your review <span className="text-gold">*</span>
+                          </label>
+                          <textarea
+                            id="review-body"
+                            name="review-body"
+                            placeholder="Share what you liked or what could be better..."
+                            value={reviewForm.text}
+                            onChange={(e) => {
+                              if (e.target.value.length > MAX_REVIEW_TEXT_LENGTH) return;
+                              setReviewForm((prev) => ({ ...prev, text: e.target.value }));
+                            }}
+                            rows={4}
+                            maxLength={MAX_REVIEW_TEXT_LENGTH}
+                            className="w-full resize-y rounded-2xl border border-gold-antique/10 bg-ivory/50 px-4 py-3 text-base leading-6 text-navy placeholder:text-navy/30 focus:border-gold focus:outline-none sm:text-sm"
+                          />
+                        </div>
+
+                        {/* Name — optional, and deliberately last and secondary */}
+                        <div>
+                          <label
+                            htmlFor="review-name"
+                            className="mb-2 block text-[11px] font-bold uppercase tracking-[0.16em] text-navy/55"
+                          >
+                            Your name <span className="normal-case tracking-normal text-navy/35">(optional)</span>
+                          </label>
+                          <input
+                            id="review-name"
+                            name="reviewer-name"
+                            type="text"
+                            autoComplete="name"
+                            enterKeyHint="done"
+                            placeholder="e.g. Ade Okafor"
+                            value={reviewForm.name}
+                            onChange={(e) =>
+                              setReviewForm((prev) => ({ ...prev, name: e.target.value }))
+                            }
+                            className="w-full rounded-2xl border border-gold-antique/10 bg-ivory/50 px-4 py-3 text-base leading-6 text-navy placeholder:text-navy/30 focus:border-gold focus:outline-none sm:text-sm"
+                          />
+                          {nameLooksLikeReview && (
+                            <p className="mt-2 flex items-start gap-1.5 text-[11px] leading-5 text-amber-700">
+                              <Info className="mt-0.5 h-3.5 w-3.5 shrink-0" />
+                              <span>
+                                That reads like a review rather than a name. We will move it into
+                                your review automatically.
+                              </span>
+                            </p>
+                          )}
+                        </div>
+
+                        <div className="flex flex-wrap items-center justify-between gap-2">
                           <p className="text-[10px] text-navy/40">
-                            {reviewForm.text.length}/2000
+                            {reviewForm.text.length}/{MAX_REVIEW_TEXT_LENGTH}
                           </p>
                           {isOffline && (
                             <p className="text-[10px] font-bold uppercase tracking-wider text-amber-700">
@@ -867,7 +1002,7 @@ const ProductPage = () => {
                           onClick={handleSubmitReview}
                           disabled={
                             isSubmittingReview ||
-                            !reviewForm.text.trim() ||
+                            (!reviewForm.text.trim() && !reviewForm.name.trim()) ||
                             reviewForm.rating === 0
                           }
                           className="flex w-full items-center justify-center gap-2 rounded-2xl bg-gold py-3 text-xs font-bold uppercase tracking-widest text-navy transition-all hover:bg-gold-antique hover:text-white disabled:cursor-not-allowed disabled:opacity-50"
@@ -942,9 +1077,17 @@ const ProductPage = () => {
                     </div>
 
                     <div className="mt-4 flex items-center gap-5 text-[10px] font-bold uppercase tracking-[0.16em] text-champagne/60 md:text-[11px]">
-                      <button type="button" className="group flex items-center gap-2 transition-colors hover:text-gold">
-                        <Heart className="h-4 w-4 transition-transform group-hover:scale-110" />
-                        Wishlist
+                      <button
+                        type="button"
+                        onClick={toggleWishlist}
+                        className={cn(
+                          "group flex items-center gap-2 transition-colors",
+                          isWishlisted ? "text-gold font-bold" : "hover:text-gold"
+                        )}
+                        aria-label={isWishlisted ? "Remove from wishlist" : "Add to wishlist"}
+                      >
+                        <Heart className={cn("h-4 w-4 transition-transform group-hover:scale-110", isWishlisted && "fill-gold text-gold")} />
+                        {isWishlisted ? 'Saved' : 'Wishlist'}
                       </button>
                       <button
                         type="button"

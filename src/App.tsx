@@ -31,6 +31,11 @@ const SolarPage    = safeLazy(() => import("./pages/SolarPage"));
 const FarmsPage    = safeLazy(() => import("./pages/FarmsPage"));
 const BrandsPage   = safeLazy(() => import("./pages/BrandsPage"));
 const CalculatorPage = safeLazy(() => import("./pages/CalculatorPage"));
+const TrackOrderPage = safeLazy(() => import("./pages/TrackOrderPage"));
+const ShippingPage   = safeLazy(() => import("./pages/ShippingPage"));
+const ReturnsPage    = safeLazy(() => import("./pages/ReturnsPage"));
+const FaqPage        = safeLazy(() => import("./pages/FaqPage"));
+const ContactPage    = safeLazy(() => import("./pages/ContactPage"));
 const NotFound     = safeLazy(() => import("./pages/NotFound"));
 
 // Admin pages (heavy, only loaded when admin visits)
@@ -200,6 +205,11 @@ const App = () => {
                   <Route path="/farms" element={<FarmsPage />} />
                   <Route path="/brands" element={<BrandsPage />} />
                   <Route path="/calculator" element={<CalculatorPage />} />
+                  <Route path="/track-order" element={<TrackOrderPage />} />
+                  <Route path="/shipping" element={<ShippingPage />} />
+                  <Route path="/returns" element={<ReturnsPage />} />
+                  <Route path="/faq" element={<FaqPage />} />
+                  <Route path="/contact" element={<ContactPage />} />
 
                   {/* Admin Routes - Login (no protection needed) */}
                   <Route path="/admin/login" element={<AdminLogin />} />

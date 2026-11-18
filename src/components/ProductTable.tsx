@@ -177,6 +177,7 @@ const ProductTable = ({ products, onEdit, onDelete, onToggleOutOfStock, isLoadin
           onPageChange={setPage}
           totalItems={products.length}
           pageSize={pageSize}
+          hideTotalItems={true}
         />
       </div>
     </Card>

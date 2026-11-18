@@ -257,6 +257,8 @@ const ShopPage = () => {
           name: product.name,
           url: `${SEO_CONFIG.siteUrl}/product/${product.id}`,
           image: product.image,
+          rating: product.rating,
+          reviews: product.reviews,
         }))
       ),
     ],
