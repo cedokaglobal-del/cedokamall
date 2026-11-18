@@ -4,6 +4,7 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import { useSEO, useStructuredData } from '@/hooks/useSEO';
 import { getBreadcrumbSchema, SEO_CONFIG } from '@/config/seo';
+import { COMPANY_CONFIG, formatWhatsAppHref } from '@/config/company';
 import { Card } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
@@ -39,12 +40,16 @@ const ContactPage = () => {
       return;
     }
 
+    // The message is delivered through WhatsApp; only claim success if the
+    // chat actually opened, and tell the customer to tap Send.
+    const text = `Hello Cedokamall,\n\nName: ${name}\nPhone: ${phone || 'Not provided'}\nEmail: ${email || 'Not provided'}\n\nMessage: ${message}`;
+    const chat = window.open(formatWhatsAppHref(text), '_blank', 'noopener,noreferrer');
+    if (!chat) {
+      toast.error('Please allow pop-ups, or use the WhatsApp link below to send your message.');
+      return;
+    }
     setSubmitted(true);
-    toast.success('Thank you! Your message has been received. Our team will contact you shortly.');
-
-    // Pre-format WhatsApp link as option
-    const text = encodeURIComponent(`Hello Cedokamall,\n\nName: ${name}\nPhone: ${phone || 'Not provided'}\nEmail: ${email || 'Not provided'}\n\nMessage: ${message}`);
-    window.open(`https://wa.me/2349128817136?text=${text}`, '_blank');
+    toast.success('Your message is ready in WhatsApp. Please tap Send to reach our team.');
   };
 
   return (
@@ -92,7 +97,7 @@ const ContactPage = () => {
                   <Mail className="h-5 w-5 text-gold shrink-0 mt-0.5" />
                   <div>
                     <strong className="block text-white">Official Email:</strong>
-                    <a href="mailto:hello@cedokamall.com" className="text-gold hover:underline">hello@cedokamall.com</a>
+                    <a href={`mailto:${COMPANY_CONFIG.email}`} className="text-gold hover:underline break-all">{COMPANY_CONFIG.email}</a>
                   </div>
                 </div>
 
@@ -107,7 +112,7 @@ const ContactPage = () => {
 
               <div className="pt-2 border-t border-white/10">
                 <a
-                  href="https://wa.me/2349128817136?text=Hello%20Cedokamall%2C%20I%20have%20an%20inquiry."
+                  href={formatWhatsAppHref('Hello Cedokamall, I have an inquiry.')}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="w-full inline-flex items-center justify-center gap-2 py-3 rounded-xl bg-[#25D366] text-white text-xs font-bold uppercase tracking-wider hover:brightness-105 transition-all"
@@ -152,10 +157,11 @@ const ContactPage = () => {
                 <form onSubmit={handleSubmit} className="space-y-4">
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold uppercase tracking-wider text-navy">
+                      <label htmlFor="contact-name" className="text-xs font-bold uppercase tracking-wider text-navy">
                         Your Full Name <span className="text-red-500">*</span>
                       </label>
                       <Input
+                        id="contact-name"
                         value={name}
                         onChange={(e) => setName(e.target.value)}
                         placeholder="e.g. Tunde Adebayo"
@@ -165,10 +171,11 @@ const ContactPage = () => {
                     </div>
 
                     <div className="space-y-1.5">
-                      <label className="text-xs font-bold uppercase tracking-wider text-navy">
+                      <label htmlFor="contact-phone" className="text-xs font-bold uppercase tracking-wider text-navy">
                         Phone / WhatsApp Number
                       </label>
                       <Input
+                        id="contact-phone"
                         value={phone}
                         onChange={(e) => setPhone(e.target.value)}
                         placeholder="e.g. 08012345678"
@@ -178,10 +185,11 @@ const ContactPage = () => {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-wider text-navy">
+                    <label htmlFor="contact-email" className="text-xs font-bold uppercase tracking-wider text-navy">
                       Email Address
                     </label>
                     <Input
+                      id="contact-email"
                       type="email"
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
@@ -191,16 +199,17 @@ const ContactPage = () => {
                   </div>
 
                   <div className="space-y-1.5">
-                    <label className="text-xs font-bold uppercase tracking-wider text-navy">
+                    <label htmlFor="contact-message" className="text-xs font-bold uppercase tracking-wider text-navy">
                       Message / Inquired Equipment <span className="text-red-500">*</span>
                     </label>
                     <Textarea
+                      id="contact-message"
                       value={message}
                       onChange={(e) => setMessage(e.target.value)}
                       placeholder="Tell us what you are looking for (e.g. 5kVA Solar Inverter pricing, Hisense 55-inch TV availability, Delivery inquiry)..."
                       rows={5}
                       required
-                      className="rounded-xl resize-none p-3.5 text-sm"
+                      className="rounded-xl resize-none p-3.5 text-base sm:text-sm"
                     />
                   </div>
 

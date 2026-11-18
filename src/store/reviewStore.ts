@@ -230,6 +230,11 @@ export const useReviewStore = create<ReviewState>((set, get) => ({
       return created;
     } catch (error) {
       console.warn('Failed to save review to server, keeping it locally:', error);
+      // Keep the review on this device, but flag it so the UI does not claim it
+      // was published to other customers.
+      set((state) => ({
+        localOnlyByProduct: { ...state.localOnlyByProduct, [productId]: true },
+      }));
       return optimistic;
     }
   },

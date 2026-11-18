@@ -2,6 +2,7 @@ import { create } from 'zustand';
 import { Transaction, TransactionSummary, AnalyticsData, DailyMetric, CategoryMetric } from '@/types/transaction';
 import { supabase } from '@/lib/supabase';
 import { retryWithBackoff } from '@/utils/resilience';
+import { useVisitorStore } from '@/store/visitorStore';
 
 interface TransactionState {
   transactions: Transaction[];
@@ -218,7 +219,14 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
       totalOrders,
       totalRefunds,
       avgOrderValue: totalOrders > 0 ? Math.round(totalRevenue / totalOrders) : 0,
-      conversionRate: 3.2,
+      conversionRate: (() => {
+        const visitors = useVisitorStore
+          .getState()
+          .getDailyVisitorMetrics()
+          .slice(-days)
+          .reduce((sum, day) => sum + day.visitors, 0);
+        return visitors > 0 ? Math.round((totalOrders / visitors) * 10000) / 100 : 0;
+      })(),
       topProduct,
       topCategory,
     };
@@ -309,7 +317,12 @@ export const useTransactionStore = create<TransactionState>((set, get) => ({
       categoryMetrics: categoryMetrics.sort((a, b) => b.revenue - a.revenue),
       revenueChange: Math.round(revenueChange * 100) / 100,
       orderChange: Math.round(orderChange * 100) / 100,
-      customerChange: 8.4,
+      customerChange: (() => {
+        const metrics = useVisitorStore.getState().getDailyVisitorMetrics();
+        const current = metrics.slice(-7).reduce((sum, day) => sum + day.visitors, 0);
+        const previous = metrics.slice(-14, -7).reduce((sum, day) => sum + day.visitors, 0);
+        return previous > 0 ? Math.round(((current - previous) / previous) * 10000) / 100 : 0;
+      })(),
     };
   },
 }));

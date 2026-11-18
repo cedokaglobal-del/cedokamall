@@ -31,7 +31,7 @@ class FlashDealStoreImpl implements FlashDealStore {
     const newDeal: FlashDeal = {
       id: `deal-${Date.now()}`,
       ...dealData,
-      currentQuantity: dealData.quantityLimit,
+      currentQuantity: dealData.maxQuantity ?? dealData.quantityLimit ?? 0,
       isActive: new Date(dealData.startTime) <= new Date() && new Date(dealData.endTime) >= new Date(),
       createdAt: new Date(),
       updatedAt: new Date(),

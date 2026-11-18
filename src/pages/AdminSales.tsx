@@ -22,7 +22,6 @@ import { ShoppingCart, MapPin, Home, ChevronRight, Search } from 'lucide-react';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
-import { seedHistoricalSales } from '@/utils/seedSales';
 
 const currencyFormatter = new Intl.NumberFormat('en-NG', {
   style: 'currency',
@@ -44,7 +43,6 @@ const AdminSales = () => {
   const [activeTab, setActiveTab] = useState<'transactions' | 'sales'>('transactions');
   const [salesSearch, setSalesSearch] = useState('');
 
-  useEffect(() => { void seedHistoricalSales(); }, []);
 
   // Pagination
   const [txPage, setTxPage] = useState(1);
@@ -404,21 +402,21 @@ const AdminSales = () => {
           {selectedOrderItems.length > 0 && (
             <>
               {/* Order summary */}
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 p-4 bg-muted/30 rounded-lg">
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 p-4 bg-muted/30 rounded-lg">
                 <div>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold">Buyer</p>
+                  <p className="text-[11px] text-muted-foreground uppercase font-bold">Buyer</p>
                   <p className="text-sm font-medium truncate">{selectedOrderItems[0].customerEmail}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold">Delivery</p>
+                  <p className="text-[11px] text-muted-foreground uppercase font-bold">Delivery</p>
                   <p className="text-sm font-medium">{selectedOrderItems[0].deliveryMethod}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold">Payment</p>
+                  <p className="text-[11px] text-muted-foreground uppercase font-bold">Payment</p>
                   <p className="text-sm font-medium">{selectedOrderItems[0].paymentMethod}</p>
                 </div>
                 <div>
-                  <p className="text-[10px] text-muted-foreground uppercase font-bold">Total</p>
+                  <p className="text-[11px] text-muted-foreground uppercase font-bold">Total</p>
                   <p className="text-sm font-bold">{currencyFormatter.format(selectedOrderItems.reduce((s, t) => s + t.amount, 0))}</p>
                 </div>
               </div>

@@ -2,7 +2,7 @@ import { useState, useEffect, useMemo } from 'react';
 import { Link, useNavigate, useSearchParams, useLocation } from 'react-router-dom';
 import { Search, ShoppingCart, Menu, X, MapPin, Phone, ChevronDown, Sun, LayoutGrid, Sprout, Calculator } from 'lucide-react';
 import { useCartStore } from '@/store/cartStore';
-import { buildCategories, slugifyCategory } from '@/data/products';
+import { buildCategories } from '@/data/products';
 import { useProductStore } from '@/store/productStore';
 import { useSolarCategoryStore } from '@/store/solarCategoryStore';
 import { cn } from '@/lib/utils';
@@ -46,17 +46,9 @@ const Header = () => {
     e.preventDefault();
     const term = searchQuery.trim();
     if (term) {
-      const normalizedTerm = term.toLowerCase();
-      const product = products.find((item) =>
-        item.name.toLowerCase().includes(normalizedTerm) ||
-        item.description.toLowerCase().includes(normalizedTerm) ||
-        item.seller.toLowerCase().includes(normalizedTerm)
-      );
-      const categorySlug = product?.category ? slugifyCategory(product.category) : '';
+      // Search across the whole catalogue; do not force the category of the
+      // first matching product, which would hide other valid matches.
       const search = new URLSearchParams({ q: term });
-      if (categorySlug) {
-        search.set('category', categorySlug);
-      }
       navigate(`/shop?${search.toString()}`);
     } else {
       navigate('/shop');
@@ -116,12 +108,12 @@ const Header = () => {
               value={searchQuery}
               onChange={handleInputChange}
               placeholder="Search..."
-              className="w-full pl-3 sm:pl-5 pr-8 sm:pr-10 py-2 sm:py-2.5 rounded-lg border border-gold-antique/30 bg-navy-deep/50 text-champagne text-xs sm:text-base focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all duration-200 placeholder:text-champagne/50"
+              className="w-full pl-3 sm:pl-5 pr-8 sm:pr-10 py-2 sm:py-2.5 rounded-lg border border-gold-antique/30 bg-navy-deep/50 text-champagne text-base focus:outline-none focus:ring-2 focus:ring-gold/50 transition-all duration-200 placeholder:text-champagne/50"
               aria-label="Search products"
             />
             <button 
               type="submit" 
-              className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 min-h-10 min-w-10 p-1.5 hover:text-gold transition-colors duration-200 flex-shrink-0 rounded-md hover:bg-white/5"
+              className="absolute right-2 sm:right-3 top-1/2 -translate-y-1/2 min-h-11 min-w-11 p-1.5 hover:text-gold transition-colors duration-200 flex-shrink-0 rounded-md hover:bg-white/5"
               aria-label="Search"
             >
               <Search className="w-4 h-4 sm:w-5 sm:h-5" />
@@ -203,7 +195,7 @@ const Header = () => {
             >
               <ShoppingCart className="w-4 h-4 sm:w-5 sm:h-5" />
               {itemCount > 0 && (
-                <span className="absolute -top-1 -right-1 w-4 h-4 bg-gold text-navy text-[10px] font-bold rounded-full shadow border border-navy">
+                <span className="absolute -top-1 -right-1 w-4 h-4 bg-gold text-navy text-[11px] font-bold rounded-full shadow border border-navy">
                   {itemCount > 9 ? '9+' : itemCount}
                 </span>
               )}
@@ -212,7 +204,7 @@ const Header = () => {
             <button 
               type="button" 
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)} 
-              className="md:hidden min-h-10 min-w-10 p-2 sm:p-2.5 hover:text-gold transition-colors rounded-lg hover:bg-white/5 active:scale-95"
+              className="lg:hidden min-h-11 min-w-11 p-2.5 sm:p-3 hover:text-gold transition-colors rounded-lg hover:bg-white/5 active:scale-95"
               title="Menu"
               aria-label="Toggle menu"
             >
@@ -222,7 +214,7 @@ const Header = () => {
         </div>
       </header>
       {mobileMenuOpen && (
-        <div className="border-b border-gold-antique/30 bg-navy-deep px-4 py-3 shadow-lg md:hidden">
+        <div className="border-b border-gold-antique/30 bg-navy-deep px-4 py-3 shadow-lg lg:hidden">
           <nav className="container grid grid-cols-2 gap-2" aria-label="Mobile menu">
             {[
               { label: 'Home', href: '/' },

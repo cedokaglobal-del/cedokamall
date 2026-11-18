@@ -83,7 +83,7 @@ const AdminAnalytics = () => {
   if (isTransactionLoading || isVisitorLoading) {
     return (
       <AdminLayout>
-        <div className="flex items-center justify-center min-h-screen">
+        <div className="flex items-center justify-center py-16 min-h-[50vh]">
           <p className="text-muted-foreground">Loading analytics...</p>
         </div>
       </AdminLayout>
@@ -96,7 +96,7 @@ const AdminAnalytics = () => {
         {/* Header */}
         <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
           <div>
-            <h1 className="text-3xl font-bold">Analytics & Insights</h1>
+            <h1 className="text-2xl font-bold sm:text-3xl">Analytics & Insights</h1>
             <p className="text-muted-foreground mt-2">Track your store performance and transactions</p>
           </div>
 

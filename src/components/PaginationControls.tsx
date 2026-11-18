@@ -41,6 +41,8 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange, totalItems,
         <Button
           variant="outline"
           size="sm"
+          aria-label="Previous page"
+          className="h-10 w-10"
           disabled={currentPage <= 1}
           onClick={() => onPageChange(currentPage - 1)}
         >
@@ -54,7 +56,7 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange, totalItems,
               key={page}
               variant={currentPage === page ? 'default' : 'outline'}
               size="sm"
-              className="min-w-[36px]"
+              className="h-9 min-w-[40px]"
               onClick={() => onPageChange(page)}
             >
               {page}
@@ -64,6 +66,8 @@ const PaginationControls = ({ currentPage, totalPages, onPageChange, totalItems,
         <Button
           variant="outline"
           size="sm"
+          aria-label="Next page"
+          className="h-10 w-10"
           disabled={currentPage >= totalPages}
           onClick={() => onPageChange(currentPage + 1)}
         >

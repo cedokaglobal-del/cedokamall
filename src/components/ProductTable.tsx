@@ -107,10 +107,10 @@ const ProductTable = ({ products, onEdit, onDelete, onToggleOutOfStock, isLoadin
                   </td>
                   <td className="px-4 py-3 text-center">
                     <div className="flex justify-center gap-1">
-                      <Button variant="ghost" size="sm" onClick={() => onEdit(product)} disabled={isLoading} className="h-8 w-8 p-0">
+                      <Button variant="ghost" size="sm" aria-label={`Edit ${product.name}`} onClick={() => onEdit(product)} disabled={isLoading} className="h-10 w-10 p-0">
                         <Edit2 className="w-4 h-4" />
                       </Button>
-                      <Button variant="ghost" size="sm" onClick={() => onDelete(product.id)} disabled={isLoading} className="h-8 w-8 p-0 text-destructive hover:text-destructive">
+                      <Button variant="ghost" size="sm" aria-label={`Delete ${product.name}`} onClick={() => onDelete(product.id)} disabled={isLoading} className="h-10 w-10 p-0 text-destructive hover:text-destructive">
                         <Trash2 className="w-4 h-4" />
                       </Button>
                     </div>
@@ -149,7 +149,7 @@ const ProductTable = ({ products, onEdit, onDelete, onToggleOutOfStock, isLoadin
                   type="button"
                   onClick={() => onToggleOutOfStock?.(product.id)}
                   disabled={isLoading}
-                  className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[10px] font-semibold transition-colors ${
+                  className={`inline-flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold transition-colors ${
                     product.outOfStock
                       ? 'bg-red-100 text-red-700 hover:bg-red-200'
                       : 'bg-green-100 text-green-700 hover:bg-green-200'
@@ -158,7 +158,7 @@ const ProductTable = ({ products, onEdit, onDelete, onToggleOutOfStock, isLoadin
                   {product.outOfStock ? <EyeOff className="h-3 w-3" /> : <Eye className="h-3 w-3" />}
                   {product.outOfStock ? 'Out of Stock' : 'In Stock'}
                 </button>
-                <Button variant="outline" size="sm" onClick={() => onEdit(product)} disabled={isLoading} className="h-7 px-2 text-xs gap-1">
+                <Button variant="outline" size="sm" onClick={() => onEdit(product)} disabled={isLoading} className="h-9 px-3 text-xs gap-1">
                   <Edit2 className="w-3 h-3" /> Edit
                 </Button>
                 <Button variant="destructive" size="sm" onClick={() => onDelete(product.id)} disabled={isLoading} className="h-7 px-2 text-xs gap-1">

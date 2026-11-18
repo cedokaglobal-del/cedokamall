@@ -15,6 +15,7 @@ import { initWebVitals, logMetricsSummary } from "@/utils/webVitals";
 import { validateSupabaseConfig } from "@/utils/resilience";
 import { useSEO } from "@/hooks/useSEO";
 import { subscribeToProductChanges, useProductStore } from "@/store/productStore";
+import { subscribeToSolarPlanChanges } from "@/store/solarPlanStore";
 import { useVisitorStore } from "@/store/visitorStore";
 import { safeLazy } from "@/utils/lazy";
 import { addConnectionHints } from "@/utils/performance";
@@ -28,7 +29,11 @@ const ShopPage     = safeLazy(() => import("./pages/ShopPage"));
 const ProductPage  = safeLazy(() => import("./pages/ProductPage"));
 const CartPage     = safeLazy(() => import("./pages/CartPage"));
 const SolarPage    = safeLazy(() => import("./pages/SolarPage"));
-const FarmsPage    = safeLazy(() => import("./pages/FarmsPage"));
+const SolarPlanDetailsPage = safeLazy(() => import("./pages/SolarPlanDetailsPage"));
+const FarmComingSoonPage = safeLazy(() => import("./pages/FarmComingSoonPage"));
+// The original catalogue is preserved here so the Farm section can be restored
+// by swapping the /farms route back to <FarmsPage /> when it is ready to launch.
+// const FarmsPage = safeLazy(() => import("./pages/FarmsPage"));
 const BrandsPage   = safeLazy(() => import("./pages/BrandsPage"));
 const CalculatorPage = safeLazy(() => import("./pages/CalculatorPage"));
 const TrackOrderPage = safeLazy(() => import("./pages/TrackOrderPage"));
@@ -124,6 +129,7 @@ const App = () => {
           }, { timeout: 5000 })
         : null;
     const unsubscribeProductRealtime = subscribeToProductChanges();
+    const unsubscribeSolarPlanRealtime = subscribeToSolarPlanChanges();
 
     // Initialize visitor session
     const visitorStore = useVisitorStore.getState();
@@ -169,6 +175,7 @@ const App = () => {
 
     return () => {
       unsubscribeProductRealtime();
+      unsubscribeSolarPlanRealtime();
       stopWebVitals();
       clearTimeout(initialFetchTimeout);
       if (typeof window !== "undefined" && "cancelIdleCallback" in window && backgroundFetchHandle !== null) {
@@ -202,7 +209,9 @@ const App = () => {
                   <Route path="/product/:id" element={<ProductPage />} />
                   <Route path="/cart" element={<CartPage />} />
                   <Route path="/solar" element={<SolarPage />} />
-                  <Route path="/farms" element={<FarmsPage />} />
+                  <Route path="/solar-plans/:id" element={<SolarPlanDetailsPage />} />
+                  <Route path="/farms" element={<FarmComingSoonPage />} />
+                  <Route path="/farm" element={<FarmComingSoonPage />} />
                   <Route path="/brands" element={<BrandsPage />} />
                   <Route path="/calculator" element={<CalculatorPage />} />
                   <Route path="/track-order" element={<TrackOrderPage />} />

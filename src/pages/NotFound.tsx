@@ -53,7 +53,8 @@ const NotFound = () => {
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               placeholder="Search products, brands, inverters..."
-              className="pl-10 h-11 bg-white border-gold-antique/30 rounded-xl"
+              aria-label="Search products"
+              className="pl-10 h-11 text-base bg-white border-gold-antique/30 rounded-xl"
             />
           </div>
           <Button type="submit" className="h-11 px-5 bg-navy text-gold hover:bg-gold hover:text-navy font-bold text-xs uppercase tracking-wider">

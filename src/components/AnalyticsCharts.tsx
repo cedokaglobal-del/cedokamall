@@ -156,11 +156,11 @@ const AnalyticsCharts = ({ data, visitorDailyMetrics }: AnalyticsChartProps) => 
             <BarChart
               data={data.categoryMetrics}
               layout="vertical"
-              margin={{ left: 150, right: 30 }}
+              margin={{ left: 8, right: 16 }}
             >
               <CartesianGrid strokeDasharray="3 3" />
               <XAxis type="number" tick={{ fontSize: 12 }} />
-              <YAxis dataKey="category" type="category" tick={{ fontSize: 11 }} width={140} />
+              <YAxis dataKey="category" type="category" tick={{ fontSize: 11 }} width={80} tickFormatter={(value) => String(value).slice(0, 10)} />
               <Tooltip formatter={(value) => formatCurrency(value as number)} />
               <Bar dataKey="revenue" fill="#8b5cf6" name="Revenue" />
             </BarChart>
@@ -178,7 +178,7 @@ const AnalyticsCharts = ({ data, visitorDailyMetrics }: AnalyticsChartProps) => 
                 nameKey="category"
                 cx="50%"
                 cy="50%"
-                outerRadius={100}
+                outerRadius="65%"
                 label={({ category, percentageOfTotal }) =>
                   `${category} (${percentageOfTotal.toFixed(1)}%)`
                 }

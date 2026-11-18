@@ -49,12 +49,11 @@ export const useSEO = (meta?: PageMeta) => {
       content: pageMeta.description,
     });
 
-    if (pageMeta.keywords.length > 0) {
-      setMetaTag({
-        name: 'keywords',
-        content: pageMeta.keywords.join(', '),
-      });
-    }
+    // Always write the tag so keywords from a previous page cannot linger.
+    setMetaTag({
+      name: 'keywords',
+      content: pageMeta.keywords.join(', '),
+    });
 
     setMetaTag({
       name: 'robots',

@@ -8,6 +8,8 @@ import { getBreadcrumbSchema, SEO_CONFIG } from '@/config/seo';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Card } from '@/components/ui/card';
+import { useTransactionStore } from '@/store/transactionStore';
+import { COMPANY_CONFIG, formatWhatsAppHref } from '@/config/company';
 import { toast } from 'sonner';
 
 interface OrderLookupResult {
@@ -41,34 +43,51 @@ const TrackOrderPage = () => {
     ]),
   ]);
 
-  const handleTrack = (e: React.FormEvent) => {
+  const handleTrack = async (e: React.FormEvent) => {
     e.preventDefault();
     const query = orderQuery.trim().toUpperCase();
     if (!query) {
-      toast.error('Please enter an Order ID or phone number');
+      toast.error('Please enter your order reference');
       return;
     }
 
     setLoading(true);
     setSearched(true);
+    setResult(null);
 
-    // Simulate reliable lookup or match standard format
-    setTimeout(() => {
-      setLoading(false);
-      if (query.startsWith('CDK') || query.length >= 6) {
-        setResult({
-          orderId: query.startsWith('CDK') ? query : `CDK-${query}`,
-          status: 'dispatched',
-          customerName: 'Valued Customer',
-          itemsCount: 1,
-          date: 'Recent Order',
-          destination: 'Lagos & Nationwide Logistics',
-          estimatedDelivery: 'Within 24-48 business hours',
-        });
-      } else {
-        setResult(null);
+    try {
+      // Real lookup against the same transaction records the admin sees.
+      const store = useTransactionStore.getState();
+      await store.fetchTransactions(true);
+      const match = useTransactionStore
+        .getState()
+        .transactions.find((t) => t.orderId.toUpperCase() === query || t.orderId.toUpperCase().includes(query));
+
+      if (!match) {
+        toast.error('No order found with that reference. Please check and try again.');
+        return;
       }
-    }, 600);
+
+      const status: OrderLookupResult['status'] =
+        match.status === 'pending' ? 'processing' : match.status === 'completed' ? 'dispatched' : 'processing';
+
+      setResult({
+        orderId: match.orderId,
+        status,
+        customerName: match.customerEmail || 'Valued Customer',
+        itemsCount: match.quantity,
+        date: new Date(match.createdAt).toLocaleDateString('en-NG'),
+        destination: match.deliveryMethod || 'Lagos & Nationwide Logistics',
+        estimatedDelivery:
+          match.deliveryMethod === 'Walk-in / Store Pickup'
+            ? 'Ready for pickup at our Lagos showroom'
+            : 'Within 24-48 business hours',
+      });
+    } catch {
+      toast.error('We could not check your order right now. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -82,7 +101,7 @@ const TrackOrderPage = () => {
           </div>
           <h1 className="font-serif text-3xl sm:text-4xl font-bold text-navy">Track Your Order</h1>
           <p className="mt-2 text-sm text-navy/70 leading-relaxed">
-            Enter your Cedokamall Order Reference (e.g. <span className="font-mono font-bold text-navy">CDK-8X92LA</span>) or phone number to check live dispatch and fulfillment status.
+            Enter the Cedokamall Order Reference from your confirmation (e.g. <span className="font-mono font-bold break-all text-navy">CDK-8X92LA</span>) to check its current status. For help finding your reference, chat with us on WhatsApp.
           </p>
         </div>
 
@@ -94,8 +113,8 @@ const TrackOrderPage = () => {
               <Input
                 value={orderQuery}
                 onChange={(e) => setOrderQuery(e.target.value)}
-                placeholder="Enter Order ID (e.g. CDK-XXXXXX) or Phone"
-                className="pl-11 h-12 text-sm sm:text-base border-gold-antique/30 focus-visible:ring-gold"
+                placeholder="Enter Order ID (e.g. CDK-XXXXXX)"
+                className="pl-11 h-12 text-base border-gold-antique/30 focus-visible:ring-gold"
               />
             </div>
             <Button type="submit" disabled={loading} className="h-12 px-8 bg-navy text-gold hover:bg-gold hover:text-navy font-bold text-sm tracking-wide transition-colors">
@@ -106,7 +125,7 @@ const TrackOrderPage = () => {
           <div className="mt-4 flex flex-wrap items-center justify-between text-xs text-navy/50 gap-2">
             <span>Orders are typically processed within 2-4 hours.</span>
             <a
-              href="https://wa.me/2349128817136?text=Hello%20Cedokamall%2C%20I%20need%20assistance%20tracking%20my%20order."
+              href={formatWhatsAppHref('Hello Cedokamall, I need assistance tracking my order.')}
               target="_blank"
               rel="noopener noreferrer"
               className="text-gold font-bold hover:underline flex items-center gap-1"
@@ -124,7 +143,7 @@ const TrackOrderPage = () => {
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 border-b border-gold-antique/10 pb-6">
                   <div>
                     <span className="text-[11px] font-bold uppercase tracking-widest text-navy/40">Order Reference</span>
-                    <h2 className="text-xl sm:text-2xl font-mono font-bold text-navy">{result.orderId}</h2>
+                    <h2 className="text-xl sm:text-2xl font-mono font-bold break-all text-navy">{result.orderId}</h2>
                   </div>
                   <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-emerald-50 text-emerald-700 border border-emerald-200 text-xs font-bold uppercase tracking-wider">
                     <span className="h-2 w-2 rounded-full bg-emerald-500 animate-pulse" />
@@ -167,7 +186,7 @@ const TrackOrderPage = () => {
 
                 <div className="flex justify-end gap-3 pt-2">
                   <a
-                    href={`https://wa.me/2349128817136?text=Hello%20Cedokamall%2C%20following%20up%20on%20my%20order%20${result.orderId}`}
+                    href={formatWhatsAppHref(`Hello Cedokamall, following up on my order ${result.orderId}`)}
                     target="_blank"
                     rel="noopener noreferrer"
                     className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-[#25D366] text-white text-xs font-bold uppercase tracking-wider hover:brightness-105 transition-all"
@@ -180,11 +199,11 @@ const TrackOrderPage = () => {
               <Card className="p-8 text-center bg-white border-dashed border-gold-antique/30 rounded-2xl">
                 <AlertCircle className="h-10 w-10 text-amber-500 mx-auto mb-3" />
                 <h3 className="font-serif text-lg font-bold text-navy">Order Record Not Found</h3>
-                <p className="text-sm text-navy/60 mt-1 max-w-md mx-auto">
+                <p className="text-sm text-navy/60 mt-1 max-w-md mx-auto break-all">
                   We could not find an order matching "{orderQuery}". Please verify your reference number or message support directly with your receipt.
                 </p>
                 <a
-                  href="https://wa.me/2349128817136?text=Hello%20Cedokamall%2C%20I%20need%20help%20locating%20my%20order."
+                  href={formatWhatsAppHref('Hello Cedokamall, I need help locating my order.')}
                   target="_blank"
                   rel="noopener noreferrer"
                   className="mt-4 inline-flex items-center gap-2 text-xs font-bold uppercase tracking-widest text-gold hover:underline"

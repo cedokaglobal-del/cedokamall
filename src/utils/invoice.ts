@@ -28,7 +28,7 @@ const COMPANY = {
   name: 'Cedokamall',
   address: '35 Ailegun Road, Ejigbo, Lagos',
   phone: '+234 912 881 7136',
-  email: 'support@cedokamall.com',
+  email: 'hello@cedokamall.com',
   website: 'cedokamall.com',
 };
 

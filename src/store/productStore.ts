@@ -597,10 +597,16 @@ export const useProductStore = create<ProductState>((set, get) => ({
     });
 
     if (error) {
-      // The function only exists once SECURITY_HARDENING.sql has been applied.
-      // Say so plainly rather than leaving a silently unsaved rating.
-      console.warn('Could not save rating through the database:', error.message);
-      return;
+      // Revert the optimistic update so the user's star selection is not lost
+      // silently, and let the caller show an error instead of a thank-you.
+      set((state) => {
+        const products = state.products.map((product) =>
+          product.id === id ? { ...product, rating: oldRating, reviews: oldReviews } : product
+        );
+        persistProducts(products);
+        return { products };
+      });
+      throw new Error(error.message || 'Could not save your rating.');
     }
 
     // Read back the authoritative values the function committed.

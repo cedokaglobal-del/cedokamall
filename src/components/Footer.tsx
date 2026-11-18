@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Phone, Mail, Shield, RotateCcw, CreditCard, Send } from 'lucide-react';
 import { toast } from 'sonner';
+import { COMPANY_CONFIG, formatWhatsAppHref } from '@/config/company';
 
 const Footer = () => {
   const [newsletterEmail, setNewsletterEmail] = useState('');
@@ -13,8 +14,19 @@ const Footer = () => {
       toast.error('Please enter a valid email address');
       return;
     }
+    // There is no newsletter endpoint yet; deliver the request to our team via
+    // WhatsApp so it can be actioned, and say exactly what happened.
+    const chat = window.open(
+      formatWhatsAppHref(`Please add ${newsletterEmail.trim()} to the Cedokamall updates list.`),
+      '_blank',
+      'noopener,noreferrer'
+    );
+    if (!chat) {
+      toast.error('Please allow pop-ups so we can receive your subscription request.');
+      return;
+    }
     setSubscribed(true);
-    toast.success('Thank you! You are now subscribed to Cedokamall updates and exclusive drops.');
+    toast.success('Your request is ready in WhatsApp. Tap Send to complete it.');
   };
 
   return (
@@ -23,7 +35,7 @@ const Footer = () => {
     <div className="border-b border-gold-antique/10">
       <div className="container py-4 sm:py-6 md:py-8 grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6 md:gap-8">
         {[
-          { icon: Shield, label: 'Secure Payment', sub: 'Paystack & Flutterwave' },
+          { icon: Shield, label: 'Secure Payment', sub: 'Bank transfer & verified receipts' },
           { icon: RotateCcw, label: 'Easy Returns', sub: '7-day money back' },
           { icon: CreditCard, label: 'Multiple Payment', sub: 'Cards, Transfer, COD' },
         ].map(({ icon: Icon, label, sub }) => (
@@ -66,7 +78,7 @@ const Footer = () => {
           </p>
           <p className="flex items-start gap-3">
             <Mail className="w-3 h-3 text-gold flex-shrink-0 mt-0.5" />
-            <a href="mailto:hello@cedokamall.com" className="hover:text-gold transition-colors">hello@cedokamall.com</a>
+            <a href={`mailto:${COMPANY_CONFIG.email}`} className="hover:text-gold transition-colors break-all">{COMPANY_CONFIG.email}</a>
           </p>
         </div>
       </div>
@@ -135,7 +147,7 @@ const Footer = () => {
               onChange={(e) => setNewsletterEmail(e.target.value)}
               placeholder="Your Email Address" 
               required
-              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-xs sm:text-sm bg-navy border border-gold-antique/20 focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-all duration-200 text-champagne placeholder:text-champagne/40"
+              className="w-full px-3 sm:px-4 py-2.5 sm:py-3 rounded-lg text-base sm:text-sm bg-navy border border-gold-antique/20 focus:outline-none focus:border-gold focus:ring-2 focus:ring-gold/20 transition-all duration-200 text-champagne placeholder:text-champagne/40"
               aria-label="Email for newsletter"
             />
             <button 
@@ -150,13 +162,13 @@ const Footer = () => {
     </div>
 
     {/* Bottom bar */}
-    <div className="border-t border-gold-antique/10 py-3 sm:py-4">
-      <div className="container flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-3 text-[10px] sm:text-xs opacity-50 font-sans uppercase tracking-widest">
+    <div className="border-t border-gold-antique/10 pb-24 pt-3 sm:pb-4 sm:pt-4">
+      <div className="container flex flex-col sm:flex-row justify-between items-center gap-2 sm:gap-3 text-[11px] sm:text-xs opacity-50 font-sans uppercase tracking-widest">
         <p>© {new Date().getFullYear()} Cedokamall. All rights reserved.</p>
         <p className="flex items-center gap-2">
           Built with Integrity 
           <span className="text-gold">|</span> 
-          Secured by Paystack
+          Verified bank transfers
         </p>
       </div>
     </div>

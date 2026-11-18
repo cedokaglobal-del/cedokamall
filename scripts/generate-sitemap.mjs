@@ -90,6 +90,11 @@ function writeStaticSitemap(products) {
     { path: '/farms', priority: '0.8' },
     { path: '/brands', priority: '0.8' },
     { path: '/calculator', priority: '0.8' },
+    { path: '/track-order', priority: '0.6' },
+    { path: '/shipping', priority: '0.6' },
+    { path: '/returns', priority: '0.6' },
+    { path: '/faq', priority: '0.6' },
+    { path: '/contact', priority: '0.6' },
   ];
 
   publicRoutes.forEach(({ path, priority }) => {

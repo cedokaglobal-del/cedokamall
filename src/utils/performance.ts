@@ -61,7 +61,9 @@ export function getOptimizedImageUrl(
       params.set('h', height.toString());
     }
     
-    return `${url}?${params.toString()}`;
+    // Existing query strings (e.g. seeded plan images) must keep working.
+    const joiner = url.includes('?') ? '&' : '?';
+    return `${url}${joiner}${params.toString()}`;
   }
 
   // Handle Supabase Storage URLs

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { LogOut, Menu, X, Home, Package, BarChart3, ShoppingCart, Sun, ExternalLink, Tags } from 'lucide-react';
 import { Button } from '@/components/ui/button';
@@ -13,6 +13,19 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
   const navigate = useNavigate();
   const location = useLocation();
   const { logout, adminEmail } = useAuth();
+
+  // Dismiss the mobile drawer with Escape, and when the route changes.
+  useEffect(() => {
+    const onKeyDown = (event: KeyboardEvent) => {
+      if (event.key === 'Escape') setSidebarOpen(false);
+    };
+    window.addEventListener('keydown', onKeyDown);
+    return () => window.removeEventListener('keydown', onKeyDown);
+  }, []);
+
+  useEffect(() => {
+    setSidebarOpen(false);
+  }, [location.pathname]);
 
   const handleLogout = async () => {
     await logout();
@@ -55,7 +68,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
             type="button"
             onClick={() => setSidebarOpen(false)}
             aria-label="Close admin menu"
-            className="lg:hidden p-1.5 rounded-md text-champagne/60 hover:text-gold hover:bg-white/10 transition-colors"
+            className="lg:hidden p-2.5 rounded-md text-champagne/60 hover:text-gold hover:bg-white/10 transition-colors"
           >
             <X className="w-5 h-5" />
           </button>
@@ -113,7 +126,7 @@ const AdminLayout = ({ children }: AdminLayoutProps) => {
               onClick={() => setSidebarOpen(!sidebarOpen)}
               aria-label={sidebarOpen ? 'Close admin menu' : 'Open admin menu'}
               aria-expanded={sidebarOpen}
-              className="lg:hidden p-2 -ml-2 text-gray-600 hover:bg-navy/5 rounded-lg transition-colors"
+              className="lg:hidden p-3 -ml-2 text-gray-600 hover:bg-navy/5 rounded-lg transition-colors"
             >
               <Menu className="w-5 h-5" />
             </button>

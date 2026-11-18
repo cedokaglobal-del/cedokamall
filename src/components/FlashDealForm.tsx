@@ -4,24 +4,45 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card } from '@/components/ui/card';
-import { FlashDealRequest } from '@/types/flashDeal';
+import { FlashDeal, FlashDealRequest } from '@/types/flashDeal';
 import { useProductStore } from '@/store/productStore';
 
 interface FlashDealFormProps {
   onSubmit: (data: FlashDealRequest) => void;
   isLoading?: boolean;
+  /** When supplied the form edits an existing deal instead of creating one. */
+  initialDeal?: FlashDeal;
+  onCancel?: () => void;
 }
 
-const FlashDealForm = ({ onSubmit, isLoading = false }: FlashDealFormProps) => {
-  const { register, handleSubmit, formState: { errors } } = useForm<FlashDealRequest>();
-  const [selectedProduct, setSelectedProduct] = useState<string>('');
+const toLocalInput = (value: Date | string) => {
+  const date = new Date(value);
+  const offset = date.getTimezoneOffset() * 60000;
+  return new Date(date.getTime() - offset).toISOString().slice(0, 16);
+};
+
+const FlashDealForm = ({ onSubmit, isLoading = false, initialDeal, onCancel }: FlashDealFormProps) => {
+  const { register, handleSubmit, formState: { errors } } = useForm<FlashDealRequest>({
+    defaultValues: initialDeal
+      ? ({
+          productId: initialDeal.productId,
+          discountPercentage: initialDeal.discountPercentage,
+          startTime: toLocalInput(initialDeal.startTime),
+          endTime: toLocalInput(initialDeal.endTime),
+          maxQuantity: initialDeal.maxQuantity,
+        } as unknown as FlashDealRequest)
+      : undefined,
+  });
+  const [selectedProduct, setSelectedProduct] = useState<string>(initialDeal?.productId || '');
+  const [formError, setFormError] = useState('');
   const products = useProductStore((s) => s.products);
 
   const handleFormSubmit = (data: FlashDealRequest) => {
     if (!selectedProduct) {
-      alert('Please select a product');
+      setFormError('Please select a product.');
       return;
     }
+    setFormError('');
     onSubmit({
       ...data,
       productId: selectedProduct,
@@ -32,7 +53,7 @@ const FlashDealForm = ({ onSubmit, isLoading = false }: FlashDealFormProps) => {
 
   return (
     <Card className="overflow-hidden p-6">
-      <h2 className="text-2xl font-bold mb-6">Create Flash Deal</h2>
+      <h2 className="text-2xl font-bold mb-6">{initialDeal ? 'Edit Flash Deal' : 'Create Flash Deal'}</h2>
       <form onSubmit={handleSubmit(handleFormSubmit)} className="space-y-6">
         {/* Product Selection */}
         <div>
@@ -51,6 +72,7 @@ const FlashDealForm = ({ onSubmit, isLoading = false }: FlashDealFormProps) => {
             ))}
           </select>
           {!selectedProduct && <p className="text-destructive text-sm mt-1">Product is required</p>}
+          {formError && <p className="text-destructive text-sm mt-1" role="alert">{formError}</p>}
         </div>
 
         {/* Discount Percentage */}
@@ -125,10 +147,17 @@ const FlashDealForm = ({ onSubmit, isLoading = false }: FlashDealFormProps) => {
           )}
         </div>
 
-        {/* Submit Button */}
-        <Button type="submit" disabled={isLoading} className="w-full">
-          {isLoading ? 'Creating...' : 'Create Flash Deal'}
-        </Button>
+        {/* Actions */}
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Button type="submit" disabled={isLoading} className="w-full sm:flex-1">
+            {isLoading ? 'Saving...' : initialDeal ? 'Update Flash Deal' : 'Create Flash Deal'}
+          </Button>
+          {(onCancel || initialDeal) && (
+            <Button type="button" variant="outline" onClick={onCancel} className="w-full sm:w-auto">
+              Cancel
+            </Button>
+          )}
+        </div>
       </form>
     </Card>
   );

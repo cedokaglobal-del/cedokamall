@@ -39,7 +39,7 @@ export class ErrorBoundary extends Component<Props, State> {
 
       return (
         this.props.fallback || (
-          <div className="flex h-screen flex-col items-center justify-center bg-background px-4">
+          <div className="flex min-h-[100dvh] p-4 flex-col items-center justify-center bg-background px-4">
             <div className="text-center space-y-6 max-w-md">
               <div className="flex justify-center">
                 <AlertCircle className="w-16 h-16 text-destructive" />
@@ -59,7 +59,7 @@ export class ErrorBoundary extends Component<Props, State> {
                   </pre>
                 )}
               </div>
-              <div className="flex gap-3 justify-center">
+              <div className="flex flex-wrap gap-3 justify-center">
                 <Button onClick={() => window.location.reload()} className="gap-2 shadow-lg shadow-primary/20">
                   <RefreshCw className="w-4 h-4" />
                   Refresh Page

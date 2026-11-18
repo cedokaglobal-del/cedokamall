@@ -190,7 +190,7 @@ const FarmsPage = () => {
               Fresh farm produce, agricultural products, equipment and supplies across Nigeria.
             </p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
             <select
               value={sortBy}
               onChange={(event) => setSortBy(event.target.value)}
@@ -209,7 +209,7 @@ const FarmsPage = () => {
             >
               Home
             </Link>
-            <div className="relative w-full md:w-56">
+            <div className="relative w-full shrink-0 sm:w-56">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-navy/40" aria-hidden="true" />
             <input
               type="text"
@@ -261,7 +261,7 @@ const FarmsPage = () => {
         {isLoading && products.length === 0 ? (
           <ProductGridSkeleton count={9} />
         ) : filteredProducts.length > 0 ? (
-          <div className="fade-rise grid grid-cols-3 gap-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+          <div className="fade-rise grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
             {filteredProducts.map((product) => (
               <ProductCard key={product.id} product={product} />
             ))}

@@ -133,7 +133,7 @@ const WelcomeGreeting = () => {
       animate={{ opacity: 1, x: 0, scale: 1 }}
       exit={{ opacity: 0, x: 50, scale: 0.95 }}
       transition={{ type: 'spring', stiffness: 300, damping: 30 }}
-      className="fixed bottom-24 right-8 z-[100] max-w-sm overflow-hidden rounded-md bg-white p-6 shadow-2xl border-l-4 border-gold"
+      className="fixed bottom-24 left-4 right-4 z-[100] max-w-sm sm:left-auto sm:right-8 overflow-hidden rounded-md bg-white p-6 shadow-2xl border-l-4 border-gold"
     >
       <div className="flex items-start gap-4">
         <div className="flex h-12 w-12 items-center justify-center rounded-full bg-gold/10 flex-shrink-0 animate-pulse">
@@ -321,7 +321,7 @@ const Index = () => {
 
       {/* Major Categories */}
       <section className="container py-6 sm:py-10">
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-3">
           {MAJOR_CATEGORIES.map((category) => (
             <Link
               key={category.slug}
@@ -332,8 +332,8 @@ const Index = () => {
                 <category.icon className="h-4 w-4 text-navy" />
               </div>
               <h3 className="text-[11px] sm:text-xs font-bold text-navy leading-snug">{category.name}</h3>
-              <p className="mt-1 text-[10px] text-navy/50 leading-relaxed line-clamp-2">{category.tagline}</p>
-              <span className="mt-auto pt-2 flex items-center gap-1 text-[9px] font-bold uppercase tracking-widest text-gold">
+              <p className="mt-1 text-[11px] text-navy/50 leading-relaxed line-clamp-2">{category.tagline}</p>
+              <span className="mt-auto pt-2 flex items-center gap-1 text-[10px] font-bold uppercase tracking-widest text-gold">
                 Shop now
                 <svg className="h-2.5 w-2.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2">
                   <path d="M5 12h14M12 5l7 7-7 7" />
@@ -360,7 +360,7 @@ const Index = () => {
               <ChevronRight className="h-3 w-3 sm:h-4 sm:w-4 group-hover:translate-x-1 transition-transform" />
             </Link>
           </div>
-          <div className="grid grid-cols-4 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-6 lg:grid-cols-8 gap-2 sm:gap-4">
             {topCategories.map((category, index) => (
                 <Link 
                   key={category.slug} 
@@ -375,8 +375,8 @@ const Index = () => {
                     <div className="mb-2 sm:mb-4 flex h-8 w-8 sm:h-12 sm:w-12 items-center justify-center rounded-full bg-ivory mx-auto group-hover:bg-gold/10 transition-colors">
                       <category.icon className="h-4 w-4 sm:h-6 sm:w-6 text-navy group-hover:text-gold transition-colors" />
                     </div>
-                    <p className="text-[9px] sm:text-[10px] font-bold uppercase tracking-widest text-navy line-clamp-1">{category.name}</p>
-                    <p className="hidden sm:block text-[9px] text-navy/40 mt-1">Explore Collection</p>
+                    <p className="text-[10px] sm:text-[11px] font-bold uppercase tracking-widest text-navy line-clamp-1">{category.name}</p>
+                    <p className="hidden sm:block text-[10px] text-navy/40 mt-1">Explore Collection</p>
                   </motion.div>
                 </Link>
               ))}
@@ -389,7 +389,7 @@ const Index = () => {
         <div className="container">
           <div className="mb-8 flex flex-wrap items-end justify-between gap-3">
             <div>
-              <span className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold sm:text-xs">
+              <span className="text-[11px] font-bold uppercase tracking-[0.2em] text-gold sm:text-xs">
                 Solar Plans
               </span>
               <h2 className="mt-2 font-serif text-2xl font-bold text-navy sm:text-3xl">Solar System Plans</h2>
@@ -413,7 +413,7 @@ const Index = () => {
               </p>
               <button
                 type="button"
-                onClick={() => fetchPlans()}
+                onClick={() => void fetchPlans(true)}
                 className="inline-flex shrink-0 items-center gap-1.5 rounded-lg border border-amber-400 bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest text-amber-800 transition-colors hover:bg-amber-100"
               >
                 <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" />
@@ -423,7 +423,7 @@ const Index = () => {
           )}
 
           {activePlans.length > 0 ? (
-            <div className="grid grid-cols-3 gap-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
               {activePlans.slice(0, 5).map((plan, index) => (
                 <SolarPlanProductCard key={plan.id} plan={plan} priority={index < 5} />
               ))}
@@ -461,7 +461,7 @@ const Index = () => {
           </Link>
         </div>
         {isLoading && products.length === 0 ? (
-          <div className="fade-rise grid grid-cols-3 gap-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+          <div className="fade-rise grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
             {[...Array(10)].map((_, i) => (
               <div key={i} className="aspect-[4/5] animate-pulse rounded-lg bg-ivory" />
             ))}
@@ -523,7 +523,7 @@ const Index = () => {
 
             {listingTab === 'plans' ? (
               activePlans.length > 0 ? (
-                <div className="fade-rise grid grid-cols-3 gap-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+                <div className="fade-rise grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
                   {activePlans.map((plan, idx) => (
                     <SolarPlanProductCard key={plan.id} plan={plan} priority={idx < 5} />
                   ))}
@@ -535,13 +535,13 @@ const Index = () => {
                 </div>
               )
             ) : listingTab === 'products' ? (
-              <div className="fade-rise grid grid-cols-3 gap-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              <div className="fade-rise grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {homepageProducts.map((product, idx) => (
                   <ProductCard key={product.id} product={product} priority={idx < 4} />
                 ))}
               </div>
             ) : (
-              <div className="fade-rise grid grid-cols-3 gap-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+              <div className="fade-rise grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
                 {homepageProducts.map((product, idx) => (
                   <ProductCard key={product.id} product={product} priority={idx < 4} />
                 ))}
@@ -614,13 +614,13 @@ const Index = () => {
       {/* Popular Search Section */}
       <section className="container py-12">
         <div className="mb-12 flex flex-col md:flex-row md:items-end justify-between gap-4">
-          <h2 className="font-serif text-4xl font-bold text-navy">Popular Search</h2>
+          <h2 className="font-serif text-2xl sm:text-4xl font-bold text-navy">Popular Search</h2>
           <Link to="/shop" className="group flex items-center gap-2 text-sm font-bold uppercase tracking-widest text-gold hover:text-gold-antique transition-colors">
             View All Trending
             <ChevronRight className="h-4 w-4 group-hover:translate-x-1 transition-transform" />
           </Link>
         </div>
-        <div className="fade-rise grid grid-cols-3 gap-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+        <div className="fade-rise grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
           {isLoading && products.length === 0 ? (
             [...Array(5)].map((_, i) => (
               <div key={i} className="aspect-[4/5] animate-pulse rounded-lg bg-ivory" />
@@ -647,7 +647,7 @@ const Index = () => {
               </div>
               <CountdownTimer />
             </div>
-            <div className="fade-rise grid grid-cols-3 gap-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            <div className="fade-rise grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {isLoading && products.length === 0 ? (
                 [...Array(5)].map((_, i) => (
                   <div key={i} className="aspect-[4/5] animate-pulse rounded-lg bg-ivory" />
@@ -703,7 +703,7 @@ const Index = () => {
                   </div>
                   <div>
                     <p className="text-xs font-bold text-navy">{testimonial.name}</p>
-                    <p className="text-[10px] text-navy/40">{testimonial.loc}</p>
+                    <p className="text-[11px] text-navy/40">{testimonial.loc}</p>
                   </div>
                 </div>
               </div>

@@ -1,6 +1,7 @@
+import { createPortal } from 'react-dom';
 import { Trash2, X } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { useCartStore } from '@/store/cartStore';
+import { FREE_SHIPPING_THRESHOLD, useCartStore } from '@/store/cartStore';
 
 const formatPrice = (amount: number) => `\u20A6${amount.toLocaleString()}`;
 
@@ -12,18 +13,20 @@ const MiniCart = () => {
   const getSubtotal = useCartStore((state) => state.getSubtotal);
   const clearCart = useCartStore((state) => state.clearCart);
   const subtotal = getSubtotal();
-  const freeShippingRemaining = Math.max(0, 50000 - subtotal);
-  const freeShippingProgress = Math.min(100, (subtotal / 50000) * 100);
+  const freeShippingRemaining = Math.max(0, FREE_SHIPPING_THRESHOLD - subtotal);
+  const freeShippingProgress = Math.min(100, (subtotal / FREE_SHIPPING_THRESHOLD) * 100);
 
   if (!isOpen) return null;
 
-  return (
-    <div className="fixed inset-0 z-[60]">
+  // Portal to <body> so the drawer is not trapped inside the sticky header's
+  // stacking context (which previously let the bottom nav paint over it).
+  return createPortal(
+    <div className="fixed inset-0 z-[80]">
       <div className="absolute inset-0 bg-foreground/40" onClick={toggleCart} />
-      <div className="absolute right-0 top-0 flex h-full w-full max-w-md flex-col bg-background text-foreground shadow-2xl animate-in slide-in-from-right">
+      <div className="absolute right-0 top-0 flex h-[100dvh] w-full max-w-md flex-col bg-background text-foreground shadow-2xl animate-in slide-in-from-right pb-[env(safe-area-inset-bottom)]">
         <div className="flex items-center justify-between border-b p-4">
           <h3 className="font-display text-lg font-bold">Your Cart ({items.length})</h3>
-          <button type="button" onClick={toggleCart} aria-label="Close cart">
+          <button type="button" onClick={toggleCart} aria-label="Close cart" className="flex h-11 w-11 items-center justify-center rounded-md">
             <X className="h-5 w-5" />
           </button>
         </div>
@@ -103,7 +106,8 @@ const MiniCart = () => {
           </>
         )}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 };
 

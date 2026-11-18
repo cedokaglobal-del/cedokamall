@@ -902,12 +902,12 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
         </AnimatePresence>
       </Tabs>
 
-      <div className="flex items-center justify-end gap-3 pt-6 border-t border-border/50">
+      <div className="flex flex-col-reverse items-stretch justify-end gap-3 pt-6 sm:flex-row sm:items-center border-t border-border/50">
         <Button
           type="button"
           variant="ghost"
           onClick={onCancel}
-          className="h-11 px-8 rounded-xl font-semibold"
+          className="h-11 w-full px-8 rounded-xl font-semibold sm:w-auto"
           disabled={isLoading || isUploadingImages}
         >
           Cancel
@@ -915,7 +915,7 @@ const ProductForm = ({ product, onSubmit, onCancel, isLoading = false }: Product
         <Button 
           type="submit" 
           disabled={isLoading || isUploadingImages}
-          className="h-11 px-10 rounded-xl font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] min-w-[160px]"
+          className="h-11 w-full px-6 rounded-xl font-bold shadow-lg shadow-primary/20 transition-all hover:scale-[1.02] active:scale-[0.98] sm:w-auto sm:min-w-[160px] sm:px-10"
         >
           {isLoading ? (
             <div className="flex items-center gap-2">

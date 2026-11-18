@@ -1,5 +1,11 @@
 import { create } from 'zustand';
 
+/** Single source of truth for delivery pricing (used by cart, drawer and invoice). */
+export const FREE_SHIPPING_THRESHOLD = 50000;
+export const STANDARD_DELIVERY_FEE = 2500;
+export const calculateDeliveryFee = (subtotal: number): number =>
+  subtotal >= FREE_SHIPPING_THRESHOLD ? 0 : STANDARD_DELIVERY_FEE;
+
 export interface CartItem {
   id: string;
   name: string;

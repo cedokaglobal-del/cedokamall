@@ -186,8 +186,11 @@ const AdminProducts = () => {
     key: K,
     value: ProductFilter[K]
   ) => {
+    // Read the latest filter from the store so consecutive changes in one
+    // handler cannot overwrite each other with a stale render-time value.
+    const current = useProductStore.getState().filter;
     setFilter({
-      ...filter,
+      ...current,
       [key]: value === 'all' ? undefined : value,
     });
   };
@@ -198,12 +201,16 @@ const AdminProducts = () => {
 
       if (editingProduct) {
         await updateProduct(editingProduct.id, formData);
+        toast.success('Product updated');
       } else {
         await addProduct(formData);
+        toast.success('Product created');
       }
 
       setIsFormOpen(false);
       setEditingProduct(undefined);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not save the product. Please try again.');
     } finally {
       setIsLoading(false);
     }
@@ -341,7 +348,7 @@ const AdminProducts = () => {
             </div>
           </form>
 
-          <div className="grid grid-cols-2 lg:grid-cols-3 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
 
             {/* Category Filter */}
             <div>

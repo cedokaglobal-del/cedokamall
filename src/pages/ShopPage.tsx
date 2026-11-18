@@ -17,6 +17,7 @@ import {
 import { useSEO, useStructuredData } from '@/hooks/useSEO';
 import { useProductStore } from '@/store/productStore';
 import { useSolarCategoryStore } from '@/store/solarCategoryStore';
+import { flashDealStore } from '@/store/flashDealStore';
 import { trackSearch } from '@/utils/tracking';
 
 const DEFAULT_PRICE_RANGE: [number, number] = [0, 0];
@@ -28,6 +29,27 @@ const ShopPage = () => {
   const searchTerm = searchParams.get('q') || searchParams.get('search');
   const dealsOnly = searchParams.get('deals') === 'true';
   const viewAll = searchParams.get('view') === 'all';
+  // Flash deals are managed in the admin and stored in localStorage. Re-read
+  // them when another tab saves a deal so the storefront stays in sync.
+  const [dealsVersion, setDealsVersion] = useState(0);
+  useEffect(() => {
+    const onStorage = (event: StorageEvent) => {
+      if (event.key === 'flashDeals') setDealsVersion((v) => v + 1);
+    };
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+  const activeDeals = useMemo(() => {
+    void dealsVersion;
+    const now = Date.now();
+    return flashDealStore
+      .getAllDeals()
+      .filter((deal) => deal.isActive && new Date(deal.startTime).getTime() <= now && new Date(deal.endTime).getTime() >= now);
+  }, [dealsVersion]);
+  const dealByProduct = useMemo(
+    () => new Map(activeDeals.map((deal) => [deal.productId, deal])),
+    [activeDeals]
+  );
 
   useEffect(() => { if (searchTerm) trackSearch(searchTerm); }, [searchTerm]);
 
@@ -139,7 +161,7 @@ const ShopPage = () => {
         );
 
     if (dealsOnly) {
-      next = next.filter((product) => product.badge === 'FLASH DEAL');
+      next = next.filter((product) => product.badge === 'FLASH DEAL' || dealByProduct.has(product.id));
     }
 
     if (selectedCategory !== 'all') {
@@ -165,19 +187,22 @@ const ShopPage = () => {
       (product) => product.price >= priceRange[0] && product.price <= priceRange[1]
     );
 
+    let sorted;
     switch (sortBy) {
       case 'price-low':
-        return next.sort((left, right) => left.price - right.price);
+        sorted = next.sort((left, right) => left.price - right.price);
+        break;
       case 'price-high':
-        return next.sort((left, right) => right.price - left.price);
+        sorted = next.sort((left, right) => right.price - left.price);
+        break;
       case 'newest':
-        return next.sort(
-          (left, right) => right.updatedAt.getTime() - left.updatedAt.getTime()
-        );
+        sorted = next.sort((left, right) => right.updatedAt.getTime() - left.updatedAt.getTime());
+        break;
       case 'rating':
-        return next.sort((left, right) => (right.rating || 0) - (left.rating || 0));
+        sorted = next.sort((left, right) => (right.rating || 0) - (left.rating || 0));
+        break;
       default:
-        return next.sort((a, b) => {
+        sorted = next.sort((a, b) => {
           const scoreA = (a.salesCount || 0) + (a.searchCount || 0);
           const scoreB = (b.salesCount || 0) + (b.searchCount || 0);
           if (scoreA === scoreB) {
@@ -186,7 +211,19 @@ const ShopPage = () => {
           return scoreB - scoreA;
         });
     }
-  }, [brandParam, dealsOnly, priceRange, products, searchTerm, selectedCategory, solarCategories, sortBy, viewAll]);
+
+    // Apply admin-managed flash discounts as a product view override.
+    return sorted.map((product) => {
+      const deal = dealByProduct.get(product.id);
+      if (!deal) return product;
+      return {
+        ...product,
+        price: Math.max(1, Math.round(product.price * (1 - deal.discountPercentage / 100))),
+        originalPrice: product.price,
+        badge: 'FLASH DEAL',
+      };
+    });
+  }, [brandParam, dealByProduct, dealsOnly, priceRange, products, searchTerm, selectedCategory, solarCategories, sortBy, viewAll]);
 
   const pageTitle = viewAll
     ? 'All Products - Cedokamall'
@@ -279,7 +316,7 @@ const ShopPage = () => {
             <div className="mt-2 h-1 w-16 bg-gold" />
             <p className="mt-4 max-w-2xl break-words text-sm leading-6 text-navy/60">{pageDescription}</p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
             <select
               value={sortBy}
               onChange={(event) => setSortBy(event.target.value)}
@@ -298,7 +335,7 @@ const ShopPage = () => {
               <ArrowLeft className="h-4 w-4" />
               Home
             </Link>
-            <div className="relative w-full md:w-56">
+            <div className="relative w-full shrink-0 sm:w-56">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-navy/40" aria-hidden="true" />
             <input
               type="text"
@@ -359,7 +396,7 @@ const ShopPage = () => {
               </div>
             ) : (
               <>
-                <div className="fade-rise grid grid-cols-3 gap-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-4">
+                <div className="fade-rise grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-4">
                   {filteredProducts.map((product) => (
                     <ProductCard key={product.id} product={product} />
                   ))}

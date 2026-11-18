@@ -28,7 +28,7 @@ const MobileBottomNav = () => {
   if (location.pathname.startsWith('/admin')) return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-[60] border-t-2 border-gold bg-navy pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_rgba(0,0,0,0.4)] md:hidden" aria-label="Mobile navigation">
+    <nav className="fixed bottom-0 left-0 right-0 z-[60] border-t-2 border-gold bg-navy pb-[env(safe-area-inset-bottom)] shadow-[0_-4px_20px_rgba(0,0,0,0.4)] lg:hidden" aria-label="Mobile navigation">
       <div className="grid h-16 grid-cols-6 px-1">
         {NAV_ITEMS.map((item) => {
           const Icon = item.icon;
@@ -47,7 +47,7 @@ const MobileBottomNav = () => {
             >
               <Icon className={cn('h-4 w-4', active && 'text-gold')} />
               <span className={cn(
-                'max-w-full truncate text-[8px] font-bold uppercase tracking-tight leading-tight',
+                'max-w-full truncate text-[10px] font-bold uppercase tracking-tight leading-tight',
                 active ? 'text-gold' : 'text-champagne/40'
               )}>
                 {item.label}

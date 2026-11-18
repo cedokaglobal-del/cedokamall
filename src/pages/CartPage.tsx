@@ -3,7 +3,8 @@ import { Link, useNavigate } from 'react-router-dom';
 import { Trash2, Minus, Plus, ArrowRight, Tag, ArrowLeft, Check, Smartphone, MapPin, CreditCard, Upload, X, FileText } from 'lucide-react';
 import Header from '@/components/Header';
 import Footer from '@/components/Footer';
-import { useCartStore } from '@/store/cartStore';
+import { calculateDeliveryFee, useCartStore } from '@/store/cartStore';
+import { formatWhatsAppHref } from '@/config/company';
 import { transactionStore } from '@/store/transactionStore';
 import { useProductStore } from '@/store/productStore';
 import { generateInvoicePDF } from '@/utils/invoice';
@@ -40,7 +41,9 @@ const CartPage = () => {
 
   const handleCoupon = () => {
     if (applyCoupon(coupon)) {
-      toast.success('Coupon applied! You saved ' + Math.round(discount * 100) + '%');
+      // Read the freshly committed value from the store, not this render's closure.
+      const saved = useCartStore.getState().discount;
+      toast.success('Coupon applied! You saved ' + Math.round(saved * 100) + '%');
     } else {
       toast.error('Invalid coupon code');
     }
@@ -55,6 +58,8 @@ const CartPage = () => {
       }
       setReceiptFile(file);
       setReceiptFileName(file.name);
+      // A receipt means the customer has already transferred funds.
+      setPaymentMethod('online');
       toast.success('Receipt uploaded successfully');
     }
   };
@@ -93,12 +98,9 @@ const CartPage = () => {
   };
 
   const sendWhatsAppMessage = (message: string) => {
-    const whatsappNumber = '2349128817136'; // Company WhatsApp number
-    const encodedMessage = encodeURIComponent(message);
-    window.open(`https://wa.me/${whatsappNumber}?text=${encodedMessage}`, '_blank');
+    window.open(formatWhatsAppHref(message), '_blank', 'noopener,noreferrer');
   };
 
-  const decrementPromises: Promise<void>[] = [];
   const handleDecrementStock = async () => {
     const productStore = useProductStore.getState();
     const decrements = items.map(item => productStore.decrementStock(item.id, item.quantity));
@@ -106,9 +108,10 @@ const CartPage = () => {
   };
 
   const buildInvoiceData = (orderNumber: string, timestamp: string) => {
-    const subtotal = getTotal();
-    const deliveryFee = 0;
-    const totalAmount = subtotal + deliveryFee;
+    const subtotal = getSubtotal();
+    const discountAmount = subtotal * discount;
+    const deliveryFee = deliveryMethod === 'delivery' ? calculateDeliveryFee(subtotal) : 0;
+    const totalAmount = subtotal - discountAmount + deliveryFee;
 
     let paymentNote = '';
     if (paymentMethod === 'online') {
@@ -126,7 +129,7 @@ const CartPage = () => {
         `Receipt: ${receiptFileName || 'Not provided'}`,
       ].join('\n');
     } else {
-      paymentNote = deliveryMethod === 'delivery' ? 'Online Payment - Bank Transfer' : 'Cash Payment - Pay at pickup';
+      paymentNote = deliveryMethod === 'delivery' ? 'Cash on delivery - pay when you receive your order' : 'Cash Payment - Pay at pickup';
     }
 
     return {
@@ -217,9 +220,10 @@ Payment: ${invoiceData.paymentMethod}
         amount: item.price * item.quantity,
         currency: 'NGN',
         quantity: item.quantity,
-        status: 'completed',
+        // The merchant must reply CONFIRMED before this becomes a completed sale.
+        status: 'pending',
         type: 'sale',
-        paymentMethod: paymentMethod === 'online' ? 'Transfer' : 'Cash',
+        paymentMethod: paymentMethod === 'online' ? 'Bank Transfer' : 'Cash on delivery',
         deliveryMethod: deliveryMethod === 'walk-in' ? 'Walk-in / Store Pickup' : 'Home Delivery',
         category: item.category || 'General',
         profit: item.price * item.quantity * 0.3,
@@ -248,9 +252,12 @@ Payment: ${invoiceData.paymentMethod}
     toast.success('Invoice PDF downloaded successfully');
   };
 
-  const steps = deliveryMethod === 'walk-in' 
-    ? ['Cart', 'Delivery Method', 'Payment', 'Confirm']
-    : ['Cart', 'Delivery Method', 'Address & Payment', 'Confirm'];
+  // Three stages matching the actual step state (0 = cart, 1 = details, 2 = confirm).
+  const steps = [
+    'Cart',
+    deliveryMethod === 'walk-in' ? 'Payment' : deliveryMethod === 'delivery' ? 'Address & Payment' : 'Delivery Method',
+    'Confirm Order',
+  ];
 
   if (items.length === 0 && step === 0) {
     return (
@@ -289,7 +296,7 @@ Payment: ${invoiceData.paymentMethod}
   return (
     <div className="min-h-screen bg-background">
       <Header />
-      <div className="container py-6">
+      <div className="container py-6 pb-24 sm:pb-32">
         {/* Steps indicator */}
         <div className="hidden sm:flex items-center justify-center gap-2 mb-8">
           {steps.map((s, i) => (
@@ -343,7 +350,7 @@ Payment: ${invoiceData.paymentMethod}
               <div className="flex gap-2">
                 <div className="flex-1 relative">
                   <Tag className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-                  <input type="text" value={coupon} onChange={(e) => setCoupon(e.target.value)} placeholder="Coupon code" className="w-full pl-9 pr-3 py-2 border rounded-lg text-sm" />
+                  <input type="text" aria-label="Coupon code" value={coupon} onChange={(e) => setCoupon(e.target.value)} placeholder="Coupon code" className="w-full pl-9 pr-3 py-2 border rounded-lg text-base" />
                 </div>
                 <button onClick={handleCoupon} className="px-4 py-2 bg-muted text-sm font-medium rounded-lg hover:bg-muted-foreground/10">Apply</button>
               </div>
@@ -389,7 +396,7 @@ Payment: ${invoiceData.paymentMethod}
                       <li>✓ Available 9 AM - 6 PM</li>
                       <li>✓ Pay upon pickup</li>
                     </ul>
-                    <div className="mt-4 p-2 bg-amber-50 border border-amber-200 rounded text-[10px] font-bold text-amber-800 uppercase tracking-wider flex items-center gap-2">
+                    <div className="mt-4 p-2 bg-amber-50 border border-amber-200 rounded text-[11px] font-bold text-amber-800 uppercase tracking-wider flex items-center gap-2">
                       <span className="text-base">⚠️</span>
                       Note: Payments must be confirmed at least 48hrs prior to pickup
                     </div>
@@ -432,7 +439,7 @@ Payment: ${invoiceData.paymentMethod}
               <p className="text-sm font-medium mb-2">📍 Pickup Location</p>
               <p className="text-sm">35 Ailegun Road, Ejigbo, Lagos</p>
               <p className="text-sm text-muted-foreground mt-1">Available 9 AM - 6 PM daily</p>
-              <div className="mt-4 p-2 bg-amber-50 border border-amber-200 rounded text-[10px] font-bold text-amber-800 uppercase tracking-wider flex items-center gap-2">
+              <div className="mt-4 p-2 bg-amber-50 border border-amber-200 rounded text-[11px] font-bold text-amber-800 uppercase tracking-wider flex items-center gap-2">
                 <span className="text-base">⚠️</span>
                 Note: Payments must be confirmed at least 48hrs prior to pickup
               </div>
@@ -544,7 +551,7 @@ Payment: ${invoiceData.paymentMethod}
                   className="w-full pl-9 pr-3 py-2.5 border border-dashed rounded-lg text-sm bg-muted/30 text-muted-foreground/60 cursor-not-allowed"
                 />
               </div>
-              <p className="text-[10px] text-muted-foreground/50 mt-1">Promo discount codes will be available soon</p>
+              <p className="text-[11px] text-muted-foreground/50 mt-1">Promo discount codes will be available soon</p>
             </div>
 
             <button onClick={() => setStep(2)} className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold hover:bg-primary/90 transition-colors">
@@ -567,20 +574,20 @@ Payment: ${invoiceData.paymentMethod}
               placeholder="Full Name" 
               value={customerName}
               onChange={(e) => setCustomerName(e.target.value)}
-              className="w-full px-4 py-3 border rounded-lg" 
+              className="w-full px-4 py-3 text-base border rounded-lg" 
             />
             <input 
               type="tel" 
               placeholder="Phone Number (e.g., +234 801 234 5678)" 
               value={phone}
               onChange={(e) => setPhone(e.target.value)}
-              className="w-full px-4 py-3 border rounded-lg" 
+              className="w-full px-4 py-3 text-base border rounded-lg" 
             />
             <textarea 
               placeholder="Street Address, Apartment, Landmark, etc." 
               value={address}
               onChange={(e) => setAddress(e.target.value)}
-              className="w-full px-4 py-3 border rounded-lg min-h-24"
+              className="w-full px-4 py-3 text-base border rounded-lg min-h-24"
             />
 
             <div className="bg-green-50 rounded-lg p-4 border border-green-200">
@@ -690,10 +697,21 @@ Payment: ${invoiceData.paymentMethod}
             <div className="border-t pt-4">
               <p className="text-sm font-medium mb-3">Order Summary</p>
               <div className="text-sm space-y-2 mb-4">
-                <div className="flex justify-between"><span>Subtotal</span><span>{formatPrice(getTotal())}</span></div>
-                <div className="flex justify-between"><span>Delivery</span><span>₦2,500</span></div>
-                {discount > 0 && <div className="flex justify-between text-primary"><span>Discount ({couponCode})</span><span>-{Math.round(discount * 100)}%</span></div>}
-                <div className="border-t pt-2 flex justify-between font-bold"><span>Total</span><span>{formatPrice(getTotal())}</span></div>
+                <div className="flex justify-between"><span>Subtotal</span><span>{formatPrice(getSubtotal())}</span></div>
+                {discount > 0 && (
+                  <div className="flex justify-between text-primary">
+                    <span>Discount ({couponCode})</span>
+                    <span>-{formatPrice(getSubtotal() * discount)}</span>
+                  </div>
+                )}
+                <div className="flex justify-between">
+                  <span>Delivery</span>
+                  <span>{formatPrice(calculateDeliveryFee(getSubtotal()))}</span>
+                </div>
+                <div className="border-t pt-2 flex justify-between font-bold">
+                  <span>Total</span>
+                  <span>{formatPrice(getTotal() + calculateDeliveryFee(getSubtotal()))}</span>
+                </div>
               </div>
             </div>
 
@@ -708,7 +726,7 @@ Payment: ${invoiceData.paymentMethod}
                   className="w-full pl-9 pr-3 py-2.5 border border-dashed rounded-lg text-sm bg-muted/30 text-muted-foreground/60 cursor-not-allowed"
                 />
               </div>
-              <p className="text-[10px] text-muted-foreground/50 mt-1">Promo discount codes will be available soon</p>
+              <p className="text-[11px] text-muted-foreground/50 mt-1">Promo discount codes will be available soon</p>
             </div>
 
             <button onClick={() => setStep(2)} className="w-full py-3 rounded-xl bg-primary text-primary-foreground font-bold hover:bg-primary/90 transition-colors">
@@ -734,7 +752,7 @@ Payment: ${invoiceData.paymentMethod}
                 placeholder="Full Name" 
                 value={customerName}
                 onChange={(e) => setCustomerName(e.target.value)}
-                className="w-full px-4 py-3 border rounded-lg"
+                className="w-full px-4 py-3 text-base border rounded-lg"
               />
               <p className="text-xs text-muted-foreground mt-2">This will be included in your WhatsApp confirmation message</p>
             </div>
@@ -824,7 +842,7 @@ Payment: ${invoiceData.paymentMethod}
                   className="w-full pl-9 pr-3 py-2.5 border border-dashed rounded-lg text-sm bg-muted/30 text-muted-foreground/60 cursor-not-allowed"
                 />
               </div>
-              <p className="text-[10px] text-muted-foreground/50 mt-1">Promo discount codes will be available soon</p>
+              <p className="text-[11px] text-muted-foreground/50 mt-1">Promo discount codes will be available soon</p>
             </div>
 
             <div className="space-y-3">

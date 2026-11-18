@@ -52,15 +52,15 @@ const SpinWheel = () => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[70] flex items-center justify-center bg-foreground/60"
+            className="fixed inset-0 z-[70] flex items-center justify-center overflow-y-auto bg-foreground/60 p-4"
           >
             <motion.div
               initial={{ scale: 0.8, opacity: 0 }}
               animate={{ scale: 1, opacity: 1 }}
               exit={{ scale: 0.8, opacity: 0 }}
-              className="bg-background rounded-2xl p-6 max-w-sm w-full mx-4 text-center relative"
+              className="relative mx-auto w-full max-w-sm max-h-[90dvh] overflow-y-auto rounded-2xl bg-background p-4 text-center sm:p-6"
             >
-              <button onClick={() => { setIsOpen(false); setResult(null); }} className="absolute top-3 right-3">
+              <button onClick={() => { setIsOpen(false); setResult(null); }} aria-label="Close spin wheel" className="absolute right-2 top-2 flex h-11 w-11 items-center justify-center rounded-md">
                 <X className="w-5 h-5" />
               </button>
               <h3 className="font-display text-2xl font-bold mb-1">🎡 Daily Spin</h3>

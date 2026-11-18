@@ -282,7 +282,10 @@ const ProductPage = () => {
 
       setReviewForm({ name: '', rating: 0, text: '' });
       setShowReviewForm(false);
-      if (migrated) {
+      const localOnly = useReviewStore.getState().localOnlyByProduct[productKey || ''];
+      if (localOnly) {
+        toast.warning('Your review was saved on this device and will sync when the connection returns.');
+      } else if (migrated) {
         toast.success('Review submitted — we moved it out of the name box for you.');
       } else {
         toast.success('Review submitted!');
@@ -470,7 +473,7 @@ const ProductPage = () => {
               Collections
             </Link>
             <ChevronRight className="h-3 w-3" />
-            <span className="max-w-[100px] sm:max-w-[200px] truncate text-navy">{product.name}</span>
+            <span className="min-w-0 max-w-[130px] truncate text-navy sm:max-w-[200px]">{product.name}</span>
           </nav>
           <Link
             to={backTo || `/shop?category=${product?.category?.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-+|-+$/g, '') || ''}`}
@@ -488,12 +491,12 @@ const ProductPage = () => {
             <div className="relative aspect-square overflow-hidden rounded-[1.5rem] border border-gold-antique/10 bg-white shadow-premium group">
               <div className="absolute left-5 top-5 z-10 flex flex-wrap gap-2">
                 {product.badge && (
-                  <span className="rounded-full bg-navy px-3 py-1 text-[10px] font-bold uppercase tracking-[0.22em] text-gold shadow-md">
+                  <span className="rounded-full bg-navy px-3 py-1 text-[11px] font-bold uppercase tracking-[0.22em] text-gold shadow-md">
                     {product.badge}
                   </span>
                 )}
                 {discount > 0 && (
-                  <span className="rounded-full bg-gold px-3 py-1 text-[10px] font-bold uppercase tracking-[0.2em] text-navy shadow-md">
+                  <span className="rounded-full bg-gold px-3 py-1 text-[11px] font-bold uppercase tracking-[0.2em] text-navy shadow-md">
                     Save {discount}%
                   </span>
                 )}
@@ -621,7 +624,7 @@ const ProductPage = () => {
                                 <Tag className="h-4 w-4 text-gold" aria-hidden="true" />
                               </div>
                               <div className="min-w-0 flex-1 pt-1.5">
-                                <p className="text-[10px] font-bold uppercase tracking-[0.18em] text-navy/50">
+                                <p className="text-[11px] font-bold uppercase tracking-[0.18em] text-navy/50">
                                   {key.replace(/_/g, ' ')}
                                 </p>
                                 <p className="mt-1 break-words text-[13px] leading-6 text-navy/70">
@@ -729,7 +732,7 @@ const ProductPage = () => {
                               const pct = totalReviewCount > 0 ? Math.round((count / totalReviewCount) * 100) : 0;
                               return (
                                 <div key={star} className="flex items-center gap-2">
-                                  <span className="w-2 text-[10px] font-bold text-navy/55">{star}</span>
+                                  <span className="w-2 text-[11px] font-bold text-navy/55">{star}</span>
                                   <Star className="h-2.5 w-2.5 fill-gold text-gold" />
                                   <div className="flex-1 h-2 overflow-hidden rounded-full bg-navy/8">
                                     <div
@@ -737,7 +740,7 @@ const ProductPage = () => {
                                       style={{ width: `${pct}%` }}
                                     />
                                   </div>
-                                  <span className="w-8 text-right text-[10px] text-navy/45 tabular-nums">{count}</span>
+                                  <span className="w-8 text-right text-[11px] text-navy/45 tabular-nums">{count}</span>
                                 </div>
                               );
                             })}
@@ -809,13 +812,13 @@ const ProductPage = () => {
                                         {review.name}
                                       </p>
                                       {review.is_verified && (
-                                        <span className="flex items-center gap-0.5 rounded-full bg-gold/15 px-1.5 py-0.5 text-[9px] font-bold uppercase text-gold">
+                                        <span className="flex items-center gap-0.5 rounded-full bg-gold/15 px-1.5 py-0.5 text-[10px] font-bold uppercase text-gold">
                                           <BadgeCheck className="h-2.5 w-2.5" />
                                           Verified
                                         </span>
                                       )}
                                     </div>
-                                    <p className="flex items-center gap-1 text-[10px] text-navy/40">
+                                    <p className="flex items-center gap-1 text-[11px] text-navy/40">
                                       <Clock className="h-2.5 w-2.5" />
                                       {new Date(review.created_at).toLocaleDateString('en-US', {
                                         year: 'numeric',
@@ -844,7 +847,7 @@ const ProductPage = () => {
                                 <button
                                   type="button"
                                   onClick={() => productKey && markHelpful(productKey, review.id)}
-                                  className="group flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-[0.16em] text-navy/35 transition-colors hover:text-gold"
+                                  className="group flex items-center gap-1.5 text-[11px] font-bold uppercase tracking-[0.16em] text-navy/35 transition-colors hover:text-gold"
                                 >
                                   <ThumbsUp className="h-3 w-3 transition-transform group-hover:scale-110" />
                                   Helpful{review.helpful_count > 0 ? ` (${review.helpful_count})` : ''}
@@ -988,11 +991,11 @@ const ProductPage = () => {
                         </div>
 
                         <div className="flex flex-wrap items-center justify-between gap-2">
-                          <p className="text-[10px] text-navy/40">
+                          <p className="text-[11px] text-navy/40">
                             {reviewForm.text.length}/{MAX_REVIEW_TEXT_LENGTH}
                           </p>
                           {isOffline && (
-                            <p className="text-[10px] font-bold uppercase tracking-wider text-amber-700">
+                            <p className="text-[11px] font-bold uppercase tracking-wider text-amber-700">
                               Offline — saved on this device
                             </p>
                           )}
@@ -1017,7 +1020,7 @@ const ProductPage = () => {
 
                   <aside className="space-y-3 order-1 xl:order-2">
                   <div className="overflow-hidden rounded-[1.5rem] border border-gold-antique/10 bg-navy p-3 text-champagne shadow-sm">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-champagne/70">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-champagne/70">
                       Today&apos;s Price
                     </p>
                     <div className="mt-2 flex flex-wrap items-end gap-2">
@@ -1076,7 +1079,7 @@ const ProductPage = () => {
                       )}
                     </div>
 
-                    <div className="mt-4 flex items-center gap-5 text-[10px] font-bold uppercase tracking-[0.16em] text-champagne/60 md:text-[11px]">
+                    <div className="mt-4 flex items-center gap-5 text-[11px] font-bold uppercase tracking-[0.16em] text-champagne/60 md:text-[11px]">
                       <button
                         type="button"
                         onClick={toggleWishlist}
@@ -1105,8 +1108,12 @@ const ProductPage = () => {
                               toast.success('Product link copied to clipboard!');
                             }
                           } catch {
-                            await navigator.clipboard.writeText(shareData.url);
-                            toast.success('Product link copied to clipboard!');
+                            try {
+                              await navigator.clipboard.writeText(shareData.url);
+                              toast.success('Product link copied to clipboard!');
+                            } catch {
+                              toast.error('Sharing is unavailable. Please copy the link from your browser.');
+                            }
                           }
                         }}
                         className="group flex items-center gap-2 transition-colors hover:text-gold"
@@ -1198,12 +1205,12 @@ const ProductPage = () => {
         {relatedProducts.length > 0 && (
           <section className="mt-24">
             <div className="mb-12 flex items-center justify-between border-b border-gold-antique/10 pb-6">
-              <h2 className="font-serif text-3xl font-bold text-navy">You may also like</h2>
+              <h2 className="font-serif text-2xl font-bold sm:text-3xl text-navy">You may also like</h2>
               <Link to="/shop" className="text-xs font-bold uppercase tracking-widest text-gold hover:text-gold-antique">
                 Discover More
               </Link>
             </div>
-            <div className="fade-rise grid grid-cols-3 gap-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
+            <div className="fade-rise grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
               {relatedProducts.map((entry) => (
                 <ProductCard key={entry.id} product={entry} />
               ))}
@@ -1214,7 +1221,7 @@ const ProductPage = () => {
 
       {/* Sticky Mobile Add-to-Cart Bar */}
       {!product.outOfStock && (
-        <div className="fixed inset-x-0 bottom-0 z-[55] border-t border-gold-antique/20 bg-navy px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.3)] kb-safe md:hidden">
+        <div className="fixed inset-x-0 bottom-16 z-[70] border-t border-gold-antique/20 bg-navy px-4 py-3 shadow-[0_-4px_20px_rgba(0,0,0,0.3)] kb-safe md:hidden">
           <div className="flex items-center gap-3">
             <div className="flex-1 min-w-0">
               <p className="truncate text-[11px] font-bold uppercase tracking-[0.16em] text-champagne/60">

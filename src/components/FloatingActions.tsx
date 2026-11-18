@@ -23,11 +23,6 @@ const FloatingActions = () => {
   const [isCalculatorOpen, setIsCalculatorOpen] = useState(false);
   const [applianceCount, setApplianceCount] = useState(0);
 
-  // Hide WhatsApp and calculator icon completely on any admin route
-  if (location.pathname.startsWith('/admin')) {
-    return null;
-  }
-
   // Keep the calculator badge in step with what has been added.
   useEffect(() => {
     const updateCount = () => {
@@ -58,6 +53,11 @@ const FloatingActions = () => {
     window.addEventListener('keydown', onKeyDown);
     return () => window.removeEventListener('keydown', onKeyDown);
   }, [isCalculatorOpen]);
+
+  // Hooks must run unconditionally; hide the UI only after all hooks are called.
+  if (location.pathname.startsWith('/admin')) {
+    return null;
+  }
 
   return (
     <>
@@ -99,7 +99,7 @@ const FloatingActions = () => {
       {/* Drawer */}
       <div
         className={cn(
-          'fixed right-0 top-0 z-[60] h-full w-full max-w-2xl overflow-y-auto bg-ivory shadow-2xl transition-transform duration-300 ease-out',
+          'fixed right-0 top-0 z-[60] h-[100dvh] w-full max-w-2xl overflow-y-auto bg-ivory shadow-2xl transition-transform duration-300 ease-out',
           isCalculatorOpen ? 'translate-x-0' : 'translate-x-full'
         )}
         role="dialog"
@@ -120,7 +120,7 @@ const FloatingActions = () => {
             <X className="h-5 w-5" />
           </button>
         </div>
-        <div className="p-4 md:p-6">
+        <div className="p-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:p-6">
           <EnergyCalculator />
         </div>
       </div>
@@ -130,7 +130,7 @@ const FloatingActions = () => {
 
 const WA_POSITION_KEY = 'cedoka_wa_position';
 const WA_MIN_BOTTOM = 88;
-const WA_MAX_BOTTOM = 260;
+const WA_MAX_BOTTOM = 132;
 
 /**
  * WhatsApp bubble, bottom slot of the rail. Draggable on phones so a thumb can

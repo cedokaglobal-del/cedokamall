@@ -62,6 +62,7 @@ export const FilterSidebar = ({
           <input
             type="text"
             placeholder="Search products…"
+            aria-label="Search products"
             value={searchTerm}
             onChange={(e) => handleSearchChange(e.target.value)}
             className="w-full rounded-lg border border-gold-antique/10 bg-ivory py-2 pl-9 pr-3 text-sm text-navy placeholder:text-navy/30 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold"
@@ -187,6 +188,7 @@ export const FilterMobileBar = ({
             <input
               type="text"
               placeholder="Search products…"
+              aria-label="Search products"
               value={searchTerm}
               onChange={(e) => handleSearchChange(e.target.value)}
               className="w-full rounded-lg border border-gold-antique/10 bg-ivory py-2 pl-9 pr-3 text-sm text-navy placeholder:text-navy/30 focus:border-gold focus:outline-none focus:ring-1 focus:ring-gold"

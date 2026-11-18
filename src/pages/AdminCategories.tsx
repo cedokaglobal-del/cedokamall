@@ -172,8 +172,9 @@ const AdminCategories = () => {
               <li key={name} className="flex items-center gap-2 p-2.5">
                 <div className="min-w-0 flex-1">
                   {isEditingThis ? (
-                    <div className="flex gap-2">
+                    <div className="flex flex-wrap gap-2">
                       <Input
+                        className="min-w-0 flex-1"
                         value={editing.value}
                         onChange={(e) => setEditing({ ...editing, value: e.target.value })}
                         onKeyDown={(e) => {
@@ -207,7 +208,7 @@ const AdminCategories = () => {
                       <Button
                         variant="ghost"
                         size="sm"
-                        className="h-8 w-8 p-0"
+                        className="h-10 w-10 p-0"
                         onClick={() => setEditing({ section, oldName: name, value: name })}
                         aria-label={`Rename ${name}`}
                       >

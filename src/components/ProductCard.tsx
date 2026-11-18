@@ -31,6 +31,9 @@ const ProductCard = ({ product, priority = false }: { product: Product, priority
             loading={priority ? "eager" : "lazy"}
             decoding="async"
             onError={(event) => {
+              // One-shot guard: never reassign the same fallback repeatedly.
+              if (event.currentTarget.dataset.fallbackApplied) return;
+              event.currentTarget.dataset.fallbackApplied = 'true';
               event.currentTarget.src = '/placeholder-product.jpg';
             }}
           />
@@ -48,7 +51,7 @@ const ProductCard = ({ product, priority = false }: { product: Product, priority
       <div className="p-2 sm:p-5 flex flex-col gap-2 sm:gap-3">
         {/* Product Name — fixed 2-line height so cards in a row stay aligned */}
         <Link to={`/product/${product.id}`} state={{ from }}>
-          <h3 className="font-serif text-[11px] sm:text-[15px] font-bold leading-snug text-charcoal transition-colors duration-200 hover:text-gold line-clamp-2 group-hover:text-gold min-h-[1.6rem] sm:min-h-[2.35rem]">
+          <h3 className="font-serif text-xs sm:text-[15px] font-bold leading-snug text-charcoal transition-colors duration-200 hover:text-gold line-clamp-2 group-hover:text-gold min-h-[1.6rem] sm:min-h-[2.35rem]">
             {product.name}
           </h3>
         </Link>
@@ -64,7 +67,7 @@ const ProductCard = ({ product, priority = false }: { product: Product, priority
               )}
             />
           ))}
-          <span className="ml-1 text-[10px] sm:text-xs font-bold text-charcoal/60 tabular-nums">
+          <span className="ml-1 text-[11px] sm:text-xs font-bold text-charcoal/60 tabular-nums">
             ({product.reviews})
           </span>
         </div>
@@ -76,7 +79,7 @@ const ProductCard = ({ product, priority = false }: { product: Product, priority
               {formatPrice(product.price)}
             </span>
             {product.originalPrice && (
-              <span className="text-[10px] sm:text-xs text-charcoal/40 line-through">
+              <span className="text-[11px] sm:text-xs text-charcoal/40 line-through">
                 {formatPrice(product.originalPrice)}
               </span>
             )}
@@ -101,7 +104,7 @@ const ProductCard = ({ product, priority = false }: { product: Product, priority
                 duration: 2000,
               });
             }}
-            className="flex h-9 w-9 sm:h-10 sm:w-10 min-h-[36px] min-w-[36px] sm:min-h-[40px] sm:min-w-[40px] shrink-0 items-center justify-center rounded-md bg-navy text-gold shadow-premium-sm transition-all duration-200 hover:scale-110 hover:bg-gold hover:text-navy active:scale-95 focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:bg-navy disabled:hover:text-gold"
+            className="flex h-11 w-11 sm:h-11 sm:w-11 min-h-[44px] min-w-[44px] shrink-0 items-center justify-center rounded-md bg-navy text-gold shadow-premium-sm transition-all duration-200 hover:scale-110 hover:bg-gold hover:text-navy active:scale-95 focus:outline-none focus:ring-2 focus:ring-gold focus:ring-offset-2 disabled:opacity-40 disabled:cursor-not-allowed disabled:hover:scale-100 disabled:hover:bg-navy disabled:hover:text-gold"
             aria-label={product.outOfStock ? 'Out of stock' : 'Add to cart'}
           >
             <ShoppingCart className="h-4 w-4 sm:h-5 sm:w-5 transition-transform duration-200 pointer-events-none" />

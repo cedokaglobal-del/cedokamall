@@ -649,7 +649,7 @@ const EnergyCalculator = () => {
               <button
                 type="button"
                 onClick={() => setMode('basic')}
-                className={`px-2.5 py-1.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider rounded-md transition-all ${
+                className={`px-2.5 py-1.5 text-[11px] sm:text-[11px] font-bold uppercase tracking-wider rounded-md transition-all ${
                   mode === 'basic' ? 'bg-gold text-navy shadow-sm' : 'text-champagne/60 hover:text-champagne'
                 }`}
               >
@@ -658,7 +658,7 @@ const EnergyCalculator = () => {
               <button
                 type="button"
                 onClick={() => setMode('advanced')}
-                className={`px-2.5 py-1.5 text-[10px] sm:text-[11px] font-bold uppercase tracking-wider rounded-md transition-all ${
+                className={`px-2.5 py-1.5 text-[11px] sm:text-[11px] font-bold uppercase tracking-wider rounded-md transition-all ${
                   mode === 'advanced' ? 'bg-gold text-navy shadow-sm' : 'text-champagne/60 hover:text-champagne'
                 }`}
               >
@@ -746,7 +746,7 @@ const EnergyCalculator = () => {
                       <select
                         value={appliance.usage}
                         onChange={(e) => setApplianceUsage(appliance.id, e.target.value as ApplianceRow['usage'])}
-                        className="w-[6.4rem] shrink-0 rounded-md border border-gold-antique/20 bg-ivory px-1.5 py-1 text-[10px] font-bold uppercase tracking-wider text-navy focus:border-gold focus:outline-none"
+                        className="w-auto shrink-0 sm:w-[6.4rem] rounded-md border border-gold-antique/20 bg-ivory px-1.5 py-1 text-[11px] font-bold uppercase tracking-wider text-navy focus:border-gold focus:outline-none"
                         aria-label={`${appliance.name || 'Appliance'} time of use`}
                       >
                         <option value="day">Day use</option>
@@ -764,14 +764,14 @@ const EnergyCalculator = () => {
                   {mode === 'basic' && (
                   <>
                   <div className="flex flex-wrap items-end gap-3">
-                    <div className="flex-1 min-w-[140px]">
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-navy/40 block mb-1">
+                    <div className="flex-1 min-w-0 sm:min-w-[140px]">
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-navy/40 block mb-1">
                         Hours per day
                       </label>
                       {appliance.usage === 'all-day' ? (
                         <div className="flex items-center gap-2 rounded-md bg-gold/10 border border-gold/30 px-3 py-2">
                           <span className="text-sm font-bold text-navy">22h auto</span>
-                          <span className="text-[10px] text-navy/50">All-day appliances run round the clock — no time entry needed.</span>
+                          <span className="text-[11px] text-navy/50">All-day appliances run round the clock — no time entry needed.</span>
                         </div>
                       ) : (
                         <>
@@ -801,7 +801,7 @@ const EnergyCalculator = () => {
                                 type="button"
                                 onClick={() => updateAppliance(appliance.id, 'minutes', chip.minutes)}
                                 className={cn(
-                                  'rounded-full px-2.5 py-1 text-[10px] font-bold transition-all active:scale-95',
+                                  'rounded-full px-2.5 py-1 text-[11px] font-bold transition-all active:scale-95',
                                   appliance.minutes === chip.minutes
                                     ? 'bg-navy text-gold'
                                     : 'bg-ivory text-navy/60 border border-gold-antique/20 hover:border-gold hover:text-navy'
@@ -815,7 +815,7 @@ const EnergyCalculator = () => {
                       )}
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-navy/40 block mb-1">Qty</label>
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-navy/40 block mb-1">Qty</label>
                       <div className="flex items-center gap-1">
                         <button
                           type="button"
@@ -831,7 +831,7 @@ const EnergyCalculator = () => {
                       </div>
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-navy/40 block mb-1">Device size</label>
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-navy/40 block mb-1">Device size</label>
                       <select
                         value={
                           appliance.watts <= 30 ? 10 :
@@ -850,7 +850,7 @@ const EnergyCalculator = () => {
                   </div>
                   <div className="flex flex-wrap items-end gap-3 mt-2.5 pt-2.5 border-t border-gold-antique/10">
                     <div className="w-24">
-                      <label className="text-[9px] font-bold uppercase tracking-wider text-navy/30 block mb-0.5">Exact watts (opt.)</label>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-navy/30 block mb-0.5">Exact watts (opt.)</label>
                       <NumberField
                         min={1} value={appliance.watts} emptyFallback={appliance.watts || 1}
                         onChange={(v) => updateAppliance(appliance.id, 'watts', v || 1)}
@@ -859,7 +859,7 @@ const EnergyCalculator = () => {
                       />
                     </div>
                     <div className="w-24">
-                      <label className="text-[9px] font-bold uppercase tracking-wider text-navy/30 block mb-0.5">Exact volts (opt.)</label>
+                      <label className="text-[10px] font-bold uppercase tracking-wider text-navy/30 block mb-0.5">Exact volts (opt.)</label>
                       <NumberField
                         min={1} step={0.1} value={appliance.volts} emptyFallback={appliance.volts || 1}
                         onChange={(v) => updateAppliance(appliance.id, 'volts', v || 1)}
@@ -867,7 +867,7 @@ const EnergyCalculator = () => {
                         inputClassName="w-full bg-white rounded-md border border-gold-antique/10 px-2 py-1 text-xs text-navy focus:border-gold focus:outline-none placeholder:text-navy/20"
                       />
                     </div>
-                    <p className="text-[10px] text-navy/30 italic leading-tight pt-1">
+                    <p className="text-[11px] text-navy/30 italic leading-tight pt-1">
                       Know the exact watts/volts? Enter them here for a more accurate sizing.
                     </p>
                   </div>
@@ -875,9 +875,9 @@ const EnergyCalculator = () => {
                   )}
 
                   {mode === 'advanced' && (
-                  <div className="grid grid-cols-3 sm:grid-cols-5 gap-2">
+                  <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
                     <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-navy/40">Watts</label>
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-navy/40">Watts</label>
                       <NumberField
                         min={1} value={appliance.watts} emptyFallback={1}
                         onChange={(v) => updateAppliance(appliance.id, 'watts', v)}
@@ -885,7 +885,7 @@ const EnergyCalculator = () => {
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-navy/40">Volts</label>
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-navy/40">Volts</label>
                       <NumberField
                         min={1} step={0.1} value={appliance.volts} emptyFallback={12}
                         onChange={(v) => updateAppliance(appliance.id, 'volts', v)}
@@ -893,7 +893,7 @@ const EnergyCalculator = () => {
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-navy/40">Qty</label>
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-navy/40">Qty</label>
                       <NumberField
                         min={1} value={appliance.quantity} emptyFallback={1}
                         onChange={(v) => updateAppliance(appliance.id, 'quantity', v)}
@@ -901,7 +901,7 @@ const EnergyCalculator = () => {
                       />
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-navy/40">Hours</label>
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-navy/40">Hours</label>
                       {appliance.usage === 'all-day' ? (
                         <p className="mt-1.5 rounded-md bg-gold/10 border border-gold/30 px-2 py-1.5 text-sm font-bold text-navy">22h auto</p>
                       ) : (
@@ -915,7 +915,7 @@ const EnergyCalculator = () => {
                       )}
                     </div>
                     <div>
-                      <label className="text-[10px] font-bold uppercase tracking-wider text-navy/40">Wh</label>
+                      <label className="text-[11px] font-bold uppercase tracking-wider text-navy/40">Wh</label>
                       <p className="mt-1.5 text-sm font-bold text-navy pt-0.5">
                         {(appliance.watts * appliance.quantity * (appliance.minutes / 60)).toLocaleString()}
                       </p>
@@ -1029,7 +1029,7 @@ const EnergyCalculator = () => {
 
             {/* Advanced Settings (for experts) */}
             <details className="group" ref={detailsRef}>
-              <summary className="text-[10px] font-bold uppercase tracking-[0.2em] text-navy/40 hover:text-navy/70 cursor-pointer transition-colors select-none list-none flex items-center gap-1.5">
+              <summary className="text-[11px] font-bold uppercase tracking-[0.2em] text-navy/40 hover:text-navy/70 cursor-pointer transition-colors select-none list-none flex items-center gap-1.5">
                 <span className="inline-block transition-transform group-open:rotate-90">&#9654;</span>
                 Advanced Settings (for experts)
               </summary>
@@ -1150,7 +1150,7 @@ const EnergyCalculator = () => {
               </div>
               <p className="text-xl md:text-2xl font-bold text-gold">{results.totalKwh} <span className="text-sm font-normal text-champagne/60">kWh</span></p>
               <p className="text-[11px] text-champagne/40 mt-1">{results.totalWh.toLocaleString()} Wh</p>
-              <div className="flex gap-2 mt-1.5 text-[10px]">
+              <div className="flex gap-2 mt-1.5 text-[11px]">
                 <span className="text-amber-400/80">{results.dayWh.toLocaleString()} Wh day</span>
                 <span className="text-indigo-400/80">{results.nightWh.toLocaleString()} Wh night</span>
               </div>
@@ -1258,7 +1258,7 @@ const EnergyCalculator = () => {
               <div className="mt-3 rounded-xl border border-gold/30 bg-gold/10 p-3.5 sm:p-4">
                 <div className="flex flex-wrap items-start justify-between gap-2">
                   <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold">
+                    <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-gold">
                       {planMatches.bestIsCovering ? 'Best match' : 'Closest match'}
                     </p>
                     <p className="text-sm sm:text-base font-bold text-champagne">{planMatches.best.plan.name}</p>
@@ -1289,7 +1289,7 @@ const EnergyCalculator = () => {
                   <button
                     type="button"
                     onClick={revealPlans}
-                    className="inline-flex items-center gap-1.5 rounded-lg bg-gold px-3.5 py-2 text-[10px] font-bold uppercase tracking-widest text-navy transition-all hover:bg-gold-antique hover:text-white"
+                    className="inline-flex items-center gap-1.5 rounded-lg bg-gold px-3.5 py-2 text-[11px] font-bold uppercase tracking-widest text-navy transition-all hover:bg-gold-antique hover:text-white"
                   >
                     View {planMatches.best.plan.name}
                   </button>
@@ -1299,7 +1299,7 @@ const EnergyCalculator = () => {
                     )}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-gold/40 px-3.5 py-2 text-[10px] font-bold uppercase tracking-widest text-gold transition-all hover:bg-gold hover:text-navy"
+                    className="inline-flex items-center gap-1.5 rounded-lg border border-gold/40 px-3.5 py-2 text-[11px] font-bold uppercase tracking-widest text-gold transition-all hover:bg-gold hover:text-navy"
                   >
                     <MessageSquare className="h-3.5 w-3.5" />
                     Ask about it
@@ -1315,7 +1315,7 @@ const EnergyCalculator = () => {
 
             {planMatches.others.length > 0 && (
               <div className="mt-4">
-                <p className="text-[10px] font-bold uppercase tracking-[0.2em] text-champagne/50">Other drafted options</p>
+                <p className="text-[11px] font-bold uppercase tracking-[0.2em] text-champagne/50">Other drafted options</p>
                 <ul className="mt-2 space-y-2">
                   {planMatches.others.map((entry) => (
                     <li
@@ -1326,7 +1326,7 @@ const EnergyCalculator = () => {
                         <span className="block truncate text-xs sm:text-sm font-semibold text-champagne">
                           {entry.plan.name}
                         </span>
-                        <span className="block truncate text-[10px] text-champagne/50">
+                        <span className="block truncate text-[11px] text-champagne/50">
                           {[
                             entry.plan.capacity,
                             entry.coverage !== null ? `${Math.round(entry.coverage * 100)}% of this load` : null,
@@ -1510,10 +1510,9 @@ const EnergyCalculator = () => {
       const app = infoAppliance;
       const info = energyInfo(app);
       return (
-      <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 md:p-6" onClick={() => setInfoApplianceId(null)}>
-        {/* removed overlay div */}
+      <div className="fixed inset-0 z-[100] flex items-center justify-center bg-black/50 p-4 pb-[max(1rem,env(safe-area-inset-bottom))] md:p-6" onClick={() => setInfoApplianceId(null)}>
         <div
-          className="relative w-full max-w-md md:max-w-lg max-h-[80vh] overflow-y-auto rounded-2xl bg-white shadow-2xl border border-gold-antique/10 animate-fade-in"
+          className="relative w-full max-w-md md:max-w-lg max-h-[85dvh] overflow-y-auto rounded-2xl bg-white shadow-2xl border border-gold-antique/10 animate-fade-in"
           onClick={(e) => e.stopPropagation()}
         >
           {/* Header */}
@@ -1532,7 +1531,7 @@ const EnergyCalculator = () => {
           <div className="p-5 space-y-5">
             {/* Power Rating */}
             <div>
-              <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold mb-2.5">Power Rating</h4>
+              <h4 className="text-[11px] font-bold uppercase tracking-[0.2em] text-gold mb-2.5">Power Rating</h4>
               <div className="rounded-xl border border-gold-antique/10 bg-ivory/30 divide-y divide-gold-antique/5">
                 <div className="flex items-center justify-between px-4 py-2.5">
                   <span className="text-xs font-semibold text-navy/60">Voltage</span>
@@ -1540,7 +1539,7 @@ const EnergyCalculator = () => {
                 </div>
                 <div className="flex items-center justify-between px-4 py-2.5">
                   <span className="text-xs font-semibold text-navy/60">Current</span>
-                  <span className="text-sm font-bold text-navy">{info.amps.toFixed(2)}A <span className="text-[10px] font-normal text-navy/40">({info.isAcAppliance ? 'AC' : 'DC'})</span></span>
+                  <span className="text-sm font-bold text-navy">{info.amps.toFixed(2)}A <span className="text-[11px] font-normal text-navy/40">({info.isAcAppliance ? 'AC' : 'DC'})</span></span>
                 </div>
                 <div className="flex items-center justify-between px-4 py-2.5">
                   <span className="text-xs font-semibold text-navy/60">Power</span>
@@ -1551,7 +1550,7 @@ const EnergyCalculator = () => {
 
             {/* Your Usage */}
             <div>
-              <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold mb-2.5">Your Usage</h4>
+              <h4 className="text-[11px] font-bold uppercase tracking-[0.2em] text-gold mb-2.5">Your Usage</h4>
               <div className="rounded-xl border border-gold-antique/10 bg-ivory/30 divide-y divide-gold-antique/5">
                 <div className="flex items-center justify-between px-4 py-2.5">
                   <span className="text-xs font-semibold text-navy/60">Quantity</span>
@@ -1563,7 +1562,7 @@ const EnergyCalculator = () => {
                 </div>
                 <div className="flex items-center justify-between px-4 py-2.5">
                   <span className="text-xs font-semibold text-navy/60">Daily Energy</span>
-                  <span className="text-sm font-bold text-navy">{info.dailyWh.toLocaleString()} Wh <span className="text-[10px] font-normal text-navy/40">({(info.dailyWh / 1000).toFixed(3)} kWh)</span></span>
+                  <span className="text-sm font-bold text-navy">{info.dailyWh.toLocaleString()} Wh <span className="text-[11px] font-normal text-navy/40">({(info.dailyWh / 1000).toFixed(3)} kWh)</span></span>
                 </div>
                 <div className="flex items-center justify-between px-4 py-2.5">
                   <span className="text-xs font-semibold text-navy/60">Monthly Energy</span>
@@ -1580,11 +1579,11 @@ const EnergyCalculator = () => {
 
             {/* Battery Impact */}
             <div>
-              <h4 className="text-[10px] font-bold uppercase tracking-[0.2em] text-gold mb-2.5">Battery Impact</h4>
+              <h4 className="text-[11px] font-bold uppercase tracking-[0.2em] text-gold mb-2.5">Battery Impact</h4>
               <div className="rounded-xl border border-gold-antique/10 bg-ivory/30 divide-y divide-gold-antique/5">
                 <div className="flex items-center justify-between px-4 py-2.5">
                   <span className="text-xs font-semibold text-navy/60">Daily Draw</span>
-                  <span className="text-sm font-bold text-navy">{info.dailyAh.toFixed(2)} Ah <span className="text-[10px] font-normal text-navy/40">@ {app.volts}V</span></span>
+                  <span className="text-sm font-bold text-navy">{info.dailyAh.toFixed(2)} Ah <span className="text-[11px] font-normal text-navy/40">@ {app.volts}V</span></span>
                 </div>
               </div>
             </div>

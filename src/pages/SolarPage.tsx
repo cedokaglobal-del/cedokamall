@@ -5,13 +5,14 @@ import Header from '@/components/Header';
 import Footer from '@/components/Footer';
 import ProductCard from '@/components/ProductCard';
 import { ProductGridSkeleton } from '@/components/ProductCardSkeleton';
-import SolarPlanProductCard from '@/components/SolarPlanProductCard';
+import SolarPlansByCategory from '@/components/SolarPlansByCategory';
 import EnergyCalculator from '@/components/EnergyCalculator';
 import { FilterSidebar, FilterMobileBar, type FilterOption } from '@/components/CategoryFilter';
 import { useProductStore } from '@/store/productStore';
 import { useSolarCategoryStore } from '@/store/solarCategoryStore';
 import { useSolarPlanStore } from '@/store/solarPlanStore';
 import { useSEO, useStructuredData } from '@/hooks/useSEO';
+import { SOLAR_PLAN_SECTION_ORDER, getPlanCategories } from '@/utils/solarPlans';
 import { getBreadcrumbSchema, getCollectionPageSchema, getFaqSchema, SEO_CONFIG } from '@/config/seo';
 
 const slugify = (value: string) =>
@@ -26,12 +27,28 @@ const SolarPage = () => {
   const fetchProducts = useProductStore((s) => s.fetchProducts);
   const solarCategories = useSolarCategoryStore((s) => s.categories);
   const plans = useSolarPlanStore((s) => s.plans);
+  const plansLoading = useSolarPlanStore((s) => s.isLoading);
+  const plansError = useSolarPlanStore((s) => s.error);
   const activePlans = useMemo(() => plans.filter((plan) => plan.isActive), [plans]);
   const fetchPlans = useSolarPlanStore((s) => s.fetchPlans);
 
   useEffect(() => {
     void fetchPlans();
   }, [fetchPlans]);
+
+  // Plan categories are separate from the component-product filters above.
+  const selectedPlanCategory = searchParams.get('planCategory') || 'all';
+  const planCategoryOptions = useMemo(() => {
+    const present = new Set(getPlanCategories(plans));
+    return SOLAR_PLAN_SECTION_ORDER.filter((category) => present.has(category));
+  }, [plans]);
+  const plansForSections = useMemo(
+    () =>
+      selectedPlanCategory === 'all'
+        ? activePlans
+        : activePlans.filter((plan) => plan.category.toLowerCase() === selectedPlanCategory.toLowerCase()),
+    [activePlans, selectedPlanCategory]
+  );
 
   const SOLAR_TABS = useMemo(() => [
     { slug: 'all', label: 'All Solar' },
@@ -213,7 +230,7 @@ const SolarPage = () => {
               Premium solar panels, inverters, batteries and accessories at the best prices in Nigeria.
             </p>
           </div>
-          <div className="flex items-center gap-4">
+          <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:gap-4">
             <select
               value={sortBy}
               onChange={(event) => setSortBy(event.target.value)}
@@ -232,7 +249,7 @@ const SolarPage = () => {
               <ArrowLeft className="h-4 w-4" />
               Home
             </Link>
-            <div className="relative w-full md:w-56">
+            <div className="relative w-full shrink-0 sm:w-56">
               <Search className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-navy/40" aria-hidden="true" />
             <input
               type="text"
@@ -295,7 +312,7 @@ const SolarPage = () => {
                 </div>
               ) : (
                 <>
-                  <div className="fade-rise grid grid-cols-3 gap-2 sm:gap-6 lg:grid-cols-3 xl:grid-cols-3">
+                  <div className="fade-rise grid grid-cols-2 gap-2 sm:grid-cols-3 sm:gap-4 lg:grid-cols-3 xl:grid-cols-3">
                     {filteredProducts.map((product) => (
                       <ProductCard key={product.id} product={product} />
                     ))}
@@ -335,24 +352,87 @@ const SolarPage = () => {
           <EnergyCalculator />
         </section>
 
-        {/* System plans */}
-        {activePlans.length > 0 && (
-          <section id="solar-plans" className="mt-16 scroll-mt-24">
-            <div className="mb-8 text-center">
-              <span className="text-xs font-bold uppercase tracking-[0.2em] text-gold">Solar Plans</span>
-              <h2 className="mt-3 font-serif text-2xl font-bold text-navy sm:text-3xl">Solar System Plans</h2>
-              <div className="mx-auto mt-3 h-1 w-16 bg-gold" />
-              <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-navy/60">
-                Ready-made solar packages designed for homes and offices. Each plan details exactly what you get, what it can power, and how long it lasts.
-              </p>
-            </div>
-            <div className="grid grid-cols-3 gap-2 sm:gap-6 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5">
-              {activePlans.map((plan) => (
-                <SolarPlanProductCard key={plan.id} plan={plan} />
+        {/* System plans — grouped by the category chosen in the admin dashboard */}
+        <section id="solar-plans" className="mt-16 scroll-mt-24">
+          <div className="mb-8 text-center">
+            <span className="text-xs font-bold uppercase tracking-[0.2em] text-gold">Solar Plans</span>
+            <h2 className="mt-3 font-serif text-2xl font-bold text-navy sm:text-3xl">Solar System Plans</h2>
+            <div className="mx-auto mt-3 h-1 w-16 bg-gold" />
+            <p className="mx-auto mt-4 max-w-xl text-sm leading-7 text-navy/60">
+              Ready-made solar packages designed for homes and offices. Each plan details exactly what you get, what it
+              can power, and how long it lasts.
+            </p>
+          </div>
+
+          {planCategoryOptions.length > 1 && (
+            <div className="mb-8 flex flex-wrap justify-center gap-2">
+              <button
+                type="button"
+                onClick={() => {
+                  const params = new URLSearchParams(searchParams);
+                  params.delete('planCategory');
+                  setSearchParams(params, { replace: true });
+                }}
+                className={`press rounded-full border px-4 py-2 text-[11px] font-bold uppercase tracking-wider transition-colors ${
+                  selectedPlanCategory === 'all'
+                    ? 'border-navy bg-navy text-gold'
+                    : 'border-gold-antique/25 bg-white text-navy/60 hover:border-gold hover:text-navy'
+                }`}
+              >
+                All Plans
+              </button>
+              {planCategoryOptions.map((category) => (
+                <button
+                  key={category}
+                  type="button"
+                  onClick={() => {
+                    const params = new URLSearchParams(searchParams);
+                    params.set('planCategory', category);
+                    setSearchParams(params, { replace: true });
+                  }}
+                  className={`press rounded-full border px-4 py-2 text-[11px] font-bold uppercase tracking-wider transition-colors ${
+                    selectedPlanCategory.toLowerCase() === category.toLowerCase()
+                      ? 'border-navy bg-navy text-gold'
+                      : 'border-gold-antique/25 bg-white text-navy/60 hover:border-gold hover:text-navy'
+                  }`}
+                >
+                  {category}
+                </button>
               ))}
             </div>
-          </section>
-        )}
+          )}
+
+          {plansError && activePlans.length === 0 && (
+            <div className="mb-6 flex flex-wrap items-center gap-3 rounded-md border border-amber-300 bg-amber-50 px-4 py-3">
+              <p className="min-w-0 flex-1 text-[12px] leading-5 text-amber-900">
+                Solar plans could not be synced right now. Please try again shortly.
+              </p>
+              <button
+                type="button"
+                onClick={() => void fetchPlans(true)}
+                className="inline-flex shrink-0 items-center gap-1.5 rounded-md border border-amber-400 bg-white px-3 py-1.5 text-[11px] font-bold uppercase tracking-widest text-amber-800 hover:bg-amber-100"
+              >
+                <RotateCcw className="h-3.5 w-3.5" aria-hidden="true" /> Retry
+              </button>
+            </div>
+          )}
+
+          {plansLoading && activePlans.length === 0 ? (
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4">
+              {Array.from({ length: 4 }).map((_, index) => (
+                <div key={index} className="overflow-hidden rounded-md border border-gold-antique/10 bg-white">
+                  <div className="aspect-[4/5] animate-pulse bg-ivory" />
+                  <div className="space-y-2 p-5">
+                    <div className="h-4 w-3/4 animate-pulse rounded bg-ivory" />
+                    <div className="h-3 w-1/2 animate-pulse rounded bg-ivory" />
+                  </div>
+                </div>
+              ))}
+            </div>
+          ) : (
+            <SolarPlansByCategory plans={plansForSections} idPrefix="catalog" />
+          )}
+        </section>
 
       </div>
 

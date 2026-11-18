@@ -15,7 +15,7 @@ export default {
       fontSize: {
         xs: ["13px", { lineHeight: "19px", letterSpacing: "0.2px" }],
         sm: ["14px", { lineHeight: "22px", letterSpacing: "0.1px" }],
-        base: ["15px", { lineHeight: "24px", letterSpacing: "0" }],
+        base: ["16px", { lineHeight: "24px", letterSpacing: "0" }],
         lg: ["17px", { lineHeight: "28px", letterSpacing: "0" }],
         xl: ["20px", { lineHeight: "28px", letterSpacing: "0" }],
         "2xl": ["24px", { lineHeight: "32px", letterSpacing: "0" }],

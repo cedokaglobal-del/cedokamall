@@ -119,7 +119,8 @@ const FaqPage = () => {
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             placeholder="Search questions (e.g. solar, delivery, warranty)..."
-            className="pl-10 h-11 bg-white border-gold-antique/30 rounded-xl text-sm"
+            aria-label="Search frequently asked questions"
+            className="pl-10 h-11 bg-white border-gold-antique/30 rounded-xl text-base"
           />
         </div>
 

@@ -57,7 +57,6 @@ import { supabase } from '@/lib/supabase';
 import { cn } from '@/lib/utils';
 import { safeLazy } from '@/utils/lazy';
 import { toast } from 'sonner';
-import { seedHistoricalSales } from '@/utils/seedSales';
 
 const ProductForm = safeLazy(() => import('@/components/ProductForm'));
 
@@ -78,7 +77,6 @@ const AdminDashboard = () => {
   const deleteProduct = useProductStore((s) => s.deleteProduct);
   const clearAllProducts = useProductStore((s) => s.clearAllProducts);
 
-  useEffect(() => { void seedHistoricalSales(); }, []);
   const fetchProducts = useProductStore((s) => s.fetchProducts);
   const lastSyncedAt = useProductStore((s) => s.lastSyncedAt);
 
@@ -247,11 +245,15 @@ const AdminDashboard = () => {
       setIsSubmitting(true);
       if (editingProduct) {
         await updateProduct(editingProduct.id, formData);
+        toast.success('Product updated');
       } else {
         await addProduct(formData);
+        toast.success('Product created');
       }
       setEditingProduct(undefined);
       setIsFormOpen(false);
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not save the product. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -283,6 +285,9 @@ const AdminDashboard = () => {
       setIsSubmitting(true);
       await deleteProduct(deleteTarget.id);
       setDeleteTarget(null);
+      toast.success('Product deleted');
+    } catch (error) {
+      toast.error(error instanceof Error ? error.message : 'Could not delete the product. Please try again.');
     } finally {
       setIsSubmitting(false);
     }
@@ -371,7 +376,7 @@ const AdminDashboard = () => {
         )}
 
         {/* Stats Grid */}
-        <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
           {businessStats.map((stat) => {
             const Icon = stat.icon;
             return (
@@ -381,7 +386,7 @@ const AdminDashboard = () => {
                     <Icon className={cn("w-4 h-4", stat.color)} />
                   </div>
                   <div className="min-w-0">
-                    <p className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground">{stat.label}</p>
+                    <p className="text-[11px] font-bold uppercase tracking-wider text-muted-foreground">{stat.label}</p>
                     <p className="text-lg font-bold truncate">{stat.value}</p>
                   </div>
                 </div>
@@ -399,7 +404,7 @@ const AdminDashboard = () => {
                 View All
               </Button>
             </div>
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
               {stats.map((stat) => {
                 const Icon = stat.icon;
                 return (
@@ -408,7 +413,7 @@ const AdminDashboard = () => {
                       <Icon className="w-4 h-4 text-navy" />
                     </div>
                     <div className="min-w-0">
-                      <p className="text-[10px] font-bold uppercase text-muted-foreground">{stat.label}</p>
+                      <p className="text-[11px] font-bold uppercase text-muted-foreground">{stat.label}</p>
                       <p className="text-sm font-bold truncate">{stat.value}</p>
                     </div>
                   </div>
@@ -518,7 +523,7 @@ const AdminDashboard = () => {
                     <p className="text-xs text-muted-foreground">{product.category}</p>
                     <p className="text-sm font-bold text-navy mt-0.5">{currency.format(product.price)}</p>
                     <div className="flex gap-1.5 mt-2">
-                      <Button variant="outline" size="sm" onClick={() => handleEditProduct(product)} className="h-7 px-2 text-xs gap-1">
+                      <Button variant="outline" size="sm" onClick={() => handleEditProduct(product)} className="h-9 px-3 text-xs gap-1">
                         <Edit2 className="w-3 h-3" /> Edit
                       </Button>
                       <Button variant="destructive" size="sm" className="h-7 px-2 text-xs gap-1" onClick={() => { setPendingDeleteProduct(product); setIsDeletePasswordOpen(true); }}>
